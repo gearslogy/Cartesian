@@ -211,6 +211,18 @@ namespace Cartesian{
             return glm::normalize(temp);
         };
 
+        auto normalize_vector_float = [](const float &x,const float &y, const float&z) {
+            glm::vec3 temp(x,y,z);
+            return glm::normalize(temp);
+        };
+        auto normalize_vector2_float = [](const float &x,const float &y) {
+            glm::vec2 temp(x,y);
+            return glm::normalize(temp);
+        };
+        auto normalize_vector4_float = [](const float &x,const float &y, const float&z, const float &w) {
+            glm::vec4 temp(x,y,z,w);
+            return glm::normalize(temp);
+        };
 
         // arg is glm::vec* type should be first overload,it's a bug sol::overload
         // this only support normalize({1,2,3})
@@ -218,10 +230,14 @@ namespace Cartesian{
                 normalize_vector<glm::vec2>,
                 normalize_vector<glm::vec3>,
                 normalize_vector<glm::vec4>,
+                normalize_vector_float,
+                normalize_vector2_float,
+                normalize_vector4_float,
                 normalize_vector_table));
 
 
         // ------------------------------ Cross vector -----------------------------------------------
+        // cross(table3,table3)
         auto table_cross = [](const sol::table &vec1, const sol::table &vec2){
             if(vec1.size() != 3){
                 std::cout << "CARTESIAN::PLUGIN::BIND glm error , arg1 must has 3 element";
@@ -235,12 +251,33 @@ namespace Cartesian{
             glm::vec3 temp2(vec2.get<float>(1),vec2.get<float>(2),vec2.get<float>(3));
             return glm::cross(temp1,temp2);
         };
+        // cross ({1,2,3},vector)
+        auto table_mix_cross1 = [](const sol::table &vec1, const glm::vec3 &vec2){
+            if(vec1.size() != 3){
+                std::cout << "CARTESIAN::PLUGIN::BIND glm error , arg1 must has 3 element";
+                return glm::vec3(0,0,0);
+            }
+            glm::vec3 temp(vec1.get<float>(1),vec1.get<float>(2),vec1.get<float>(3));
+            return glm::cross(temp,vec2);
+        };
+        // cross (vector,{1,2,3})
+        auto table_mix_cross2 = [](const glm::vec3 &vec1, const sol::table &vec2){
+            if(vec2.size() != 3){
+                std::cout << "CARTESIAN::PLUGIN::BIND glm error , arg2 must has 3 element";
+                return glm::vec3(0,0,0);
+            }
+            glm::vec3 temp(vec2.get<float>(1),vec2.get<float>(2),vec2.get<float>(3));
+            return glm::cross(vec1,temp);
+        };
+
+
         // arg is glm::vec3 type should be first overload,it's a bug sol::overload
         lua->set_function("cross",sol::overload(
-                cross_vector<glm::vec2>,
                 cross_vector<glm::vec3>,
-                cross_vector<glm::vec4>,
-                table_cross));
+                table_mix_cross1,
+                table_mix_cross2,
+                table_cross
+                ));
 
 
         // houdini set() function
