@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+#include <vector>
 using namespace  std;
 
 
@@ -74,7 +75,39 @@ namespace Cartesian{
         std::string ret =  to_string(vec.x) + std::string(",") + to_string(vec.y) + std::string(",") + std::to_string(vec.z)+ std::string(",") + std::to_string(vec.w);
         return ret;
     }
+    // vector to table
+    auto vec2_to_table(const glm::vec2 &vec){
+        std::vector<float> vals;
+        vals.emplace_back(vec.x);
+        vals.emplace_back(vec.y);
+        return sol::as_table(vals);
+    }
+    auto vec3_to_table(const glm::vec3 &vec){
+        std::vector<float> vals;
+        vals.emplace_back(vec.x);
+        vals.emplace_back(vec.y);
+        vals.emplace_back(vec.z);
+        return sol::as_table(vals);
+    }
+    auto vec4_to_table(const glm::vec4 &vec){
+        std::vector<float> vals;
+        vals.emplace_back(vec.x);
+        vals.emplace_back(vec.y);
+        vals.emplace_back(vec.z);
+        vals.emplace_back(vec.w);
+        return sol::as_table(vals);
+    }
+    // normalize vector
+    template <typename T>
+    T normalize_vector(const T&vec){
+        return glm::normalize(vec);
+    }
 
+    // cross vector
+    template <typename T>
+    T cross_vector(const T&vec1,const T&vec2){
+        return glm::cross(vec1,vec2);
+    }
 
 
     void BindGLM_Vec::bind(sol::state * lua) {
@@ -136,17 +169,79 @@ namespace Cartesian{
         vector4["length"] = &glm::vec4::length;
 
 
-        // length
-        auto len = [](const glm::vec3 &vec3)->float {
+        // ---------------- vector length expose --------------------------------
+        auto len_vec4 = [](const glm::vec4 &vec4)->float {
+            return glm::length(vec4);
+        };
+        auto len_vec3 = [](const glm::vec3 &vec3)->float {
             return glm::length(vec3);
         };
-        lua->set_function("length",len );
-
-        // normalize
-        auto norm = [](const glm::vec3 &vec3)->glm::vec3 {
-            return glm::normalize(vec3);
+        auto len_vec2 = [](const glm::vec2 &vec2)->float {
+            return glm::length(vec2);
         };
-        lua->set_function("normalize",norm );
+        auto len_table = [](const sol::table &vec)->float {
+            if(vec.valid()){
+                std::cout << "CARTESIAN::PLUGIN::BIND::ERROR, length(param), param is not valid\n";
+                return -1;
+            }
+            if(vec.size() == 2){
+                glm::vec2 temp (vec.get<float>(1),vec.get<float>(2) );
+                return glm::length(temp);
+            }
+            if(vec.size() == 3){
+                glm::vec3 temp (vec.get<float>(1),vec.get<float>(2),vec.get<float>(3) );
+                return glm::length(temp);
+            }
+            if(vec.size() == 4){
+                glm::vec4 temp (vec.get<float>(1),vec.get<float>(2),vec.get<float>(3),vec.get<float>(4) );
+                return glm::length(temp);
+            }
+            return -1;
+        };
+        lua->set_function("length",sol::overload(len_vec2,len_vec3,len_vec4,len_table) );
+
+
+        // ---------------- normalize vector ------------------------------------------
+        auto normalize_vector_table = [](const sol::table &vec3) {
+            if(vec3.size()!= 3){
+                std::cout << "CARTESIAN::PLUGIN::BIND::ERROR normalize error , just support normalize({1,2,3}) lua table with 3 args";
+                return glm::vec3(0,0,0);
+            }
+            glm::vec3 temp(vec3.get<float>(1),vec3.get<float>(2),vec3.get<float>(3));
+            return glm::normalize(temp);
+        };
+
+
+        // arg is glm::vec* type should be first overload,it's a bug sol::overload
+        // this only support normalize({1,2,3})
+        lua->set_function("normalize",sol::overload(
+                normalize_vector<glm::vec2>,
+                normalize_vector<glm::vec3>,
+                normalize_vector<glm::vec4>,
+                normalize_vector_table));
+
+
+        // ------------------------------ Cross vector -----------------------------------------------
+        auto table_cross = [](const sol::table &vec1, const sol::table &vec2){
+            if(vec1.size() != 3){
+                std::cout << "CARTESIAN::PLUGIN::BIND glm error , arg1 must has 3 element";
+                return glm::vec3(0,0,0);
+            }
+            if(vec2.size() != 3){
+                std::cout << "CARTESIAN::PLUGIN::BIND glm error , arg2 must has 3 element";
+                return glm::vec3(0,0,0);
+            }
+            glm::vec3 temp1(vec1.get<float>(1),vec1.get<float>(2),vec1.get<float>(3));
+            glm::vec3 temp2(vec2.get<float>(1),vec2.get<float>(2),vec2.get<float>(3));
+            return glm::cross(temp1,temp2);
+        };
+        // arg is glm::vec3 type should be first overload,it's a bug sol::overload
+        lua->set_function("cross",sol::overload(
+                cross_vector<glm::vec2>,
+                cross_vector<glm::vec3>,
+                cross_vector<glm::vec4>,
+                table_cross));
+
 
         // houdini set() function
         auto set2 = [](const float &x,const float &y)->glm::vec2{
@@ -158,8 +253,11 @@ namespace Cartesian{
         auto set4 = [](const float &x,const float &y,const float &z,const float &w)->glm::vec4{
             return glm::vec4(x,y,z,w);
         };
-
         lua->set_function("set",sol::overload(set2,set3,set4));
+
+        // convert vector to lua table
+        lua->set_function("astable", sol::overload(vec2_to_table,vec3_to_table,vec4_to_table) );
+
 
     }
 }
