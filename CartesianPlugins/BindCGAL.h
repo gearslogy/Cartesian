@@ -4,11 +4,13 @@
 
 #ifndef BUILDINGCTSLUAJIT_BINDCGAL_H
 #define BUILDINGCTSLUAJIT_BINDCGAL_H
+#include "sol.hpp"
+namespace Cartesian{
 
-namespace Cartesian
 class BindCGAL {
     static void bind(sol::state *lua) ;
 };
 
+}
 
 #endif //BUILDINGCTSLUAJIT_BINDCGAL_H
