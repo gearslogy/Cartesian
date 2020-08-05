@@ -41,7 +41,7 @@ void newOp(void *lua){
 * the whole new lua function for katana
 * Similar to Houdini vex function, BUT NOW IT WAS BASED LUAJIT
 
-[!image](imgs/katana_01.png)
+![](imgs/katana_01.png)
 
 
 ### Sandbox
