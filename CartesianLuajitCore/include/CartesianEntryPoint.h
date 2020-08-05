@@ -1,0 +1,15 @@
+//
+// Created by admin on 2020/8/1.
+//
+
+#ifndef BUILDINGCTSLUAJIT_CARTESIANENTRYPOINT_H
+#define BUILDINGCTSLUAJIT_CARTESIANENTRYPOINT_H
+
+
+#include "CartesianConfig.h"
+
+extern "C" CARTESIAN_EXPORT void newOp(void *lua);
+
+
+
+#endif //BUILDINGCTSLUAJIT_CARTESIANENTRYPOINT_H
