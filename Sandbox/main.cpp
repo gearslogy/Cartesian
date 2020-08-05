@@ -31,6 +31,19 @@ print("p3 lua:",p3.x, p3.y, p3.z)
 print(p3)
 p4 = set(1,0,1)
 print(p4)
+print("-------------- cross ------------------")
+print(cross(   {1,0,0},      {0,1,0})   )            -- cross(table,    table)
+print(cross(   set(1,0,0),   {0,1,0})   )            -- cross(vector,   table)
+print(cross(   vector.new(1,0,0),   {0,1,0})   )     -- cross(vector,   table)
+print(cross(   {1,0,0}  ,set(0,1,0) ))               -- cross(table,   vector)
+
+print('--------- normalize() ----------------')
+print(normalize(1,2,0) )
+print(normalize({1,2,0}) )
+print(normalize(vector2.new(1,2)) )
+print(normalize(vector3.new(1,2,1)) )
+print(normalize(set(1,2,1) ) )
+
 )");
     }
     catch (...) {
