@@ -114,7 +114,7 @@ namespace Cartesian{
 
         // ----------------------- vector3 ---------------------------------
         sol::usertype<glm::vec2> vector2 = (*lua).new_usertype<glm::vec2>(
-                "vector" , // class type
+                "vector2" , // class type
                 sol::constructors<glm::vec2(),glm::vec2(float,float)>(),
                 sol::meta_function::addition,        sol::overload(vec_add_vec<glm::vec2>,vec_add_float<glm::vec2>),
                 sol::meta_function::subtraction,     sol::overload(vec_sub_vec<glm::vec2>,vec_sub_float<glm::vec2>),
