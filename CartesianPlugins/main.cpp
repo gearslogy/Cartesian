@@ -5,7 +5,6 @@
 #include "CartesianEntryPoint.h"
 #include "sol.hpp"
 #include <cmath>
-
 #include "BindGLM_Vec.h"
 using namespace std;
 
@@ -22,7 +21,6 @@ void newOp(void *lua){
     luaPtr->set_function("ceil",static_cast<double(*) (double)> (&ceil));
     luaPtr->set_function("floor",static_cast<double(*) (double)> (&floor));
 
-
     Cartesian::BindGLM_Vec::bind(luaPtr);
-    Cartesian::BindGLM_Matrix::bind(luaPtr);
+
 }
