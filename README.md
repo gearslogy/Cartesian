@@ -1,7 +1,7 @@
 ### OPENSOURCE LIBS:
 * boost::dll
 * boost::filesystem
-* sol3
+* sol3 & luajit
 * GLM
 * CGAL
 
