@@ -6,10 +6,9 @@
 #include "sol.hpp"
 #include <cmath>
 #include "BindGLM_Vec.h"
+#include "BindGLM_PublicFunction.h"
+#include "BindGLM_Matrix.h"
 using namespace std;
-
-
-
 
 void newOp(void *lua){
     auto *luaPtr = static_cast<sol::state *> (lua);
@@ -22,5 +21,7 @@ void newOp(void *lua){
     luaPtr->set_function("floor",static_cast<double(*) (double)> (&floor));
 
     Cartesian::BindGLM_Vec::bind(luaPtr);
+    Cartesian::BindGLM_Matrix::bind(luaPtr);
+    Cartesian::BindGLM_PublicFunction::bind(luaPtr);
 
 }
