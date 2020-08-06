@@ -36,59 +36,7 @@ namespace Cartesian{
         return sol::as_table(vals);
     }
 
-    auto mat2_to_table(const glm::mat2 &mat){
-        std::vector<float> values; // num should 4
-        // insert col1
-        values.emplace_back(mat[0].x);
-        values.emplace_back(mat[0].y);
-        // insert col2
-        values.emplace_back(mat[1].x);
-        values.emplace_back(mat[1].y);
-        return sol::as_table(values);
-    }
 
-    auto mat3_to_table(const glm::mat3 &mat){
-        std::vector<float> values; // num should 4
-        // insert col1
-        values.emplace_back(mat[0].x);
-        values.emplace_back(mat[0].y);
-        values.emplace_back(mat[0].z);
-        // insert col2
-        values.emplace_back(mat[1].x);
-        values.emplace_back(mat[1].y);
-        values.emplace_back(mat[1].z);
-        // insert col3
-        values.emplace_back(mat[2].x);
-        values.emplace_back(mat[2].y);
-        values.emplace_back(mat[2].z);
-        return sol::as_table(values);
-    }
-
-    auto mat4_to_table(const glm::mat4 &mat){
-        std::vector<float> values; // num should 4
-        // insert col1
-        values.emplace_back(mat[0].x);
-        values.emplace_back(mat[0].y);
-        values.emplace_back(mat[0].z);
-        values.emplace_back(mat[0].w);
-        // insert col2
-        values.emplace_back(mat[1].x);
-        values.emplace_back(mat[1].y);
-        values.emplace_back(mat[1].z);
-        values.emplace_back(mat[1].w);
-        // insert col3
-        values.emplace_back(mat[2].x);
-        values.emplace_back(mat[2].y);
-        values.emplace_back(mat[2].z);
-        values.emplace_back(mat[2].w);
-        //insert col4
-        values.emplace_back(mat[3].x);
-        values.emplace_back(mat[3].y);
-        values.emplace_back(mat[3].z);
-        values.emplace_back(mat[3].w);
-
-        return sol::as_table(values);
-    }
 
     template <typename T>
     T transpose(const T&mat){
@@ -182,9 +130,9 @@ namespace Cartesian{
                 vec2_to_table,
                 vec3_to_table,
                 vec4_to_table,
-                mat2_to_table,
-                mat3_to_table,
-                mat4_to_table) );
+                GLM_Matrix_Helper::mat2_to_table,
+                GLM_Matrix_Helper::mat3_to_table,
+                GLM_Matrix_Helper::mat4_to_table) );
 
         // ----------------------------- perspective return mat4 ----------------------------------------
         lua->set_function("persp",glm::perspective<float>);
