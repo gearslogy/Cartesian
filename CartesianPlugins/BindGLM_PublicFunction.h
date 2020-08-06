@@ -5,6 +5,7 @@
 #ifndef BUILDINGCTSLUAJIT_BINDGLM_PUBLICFUNCTION_H
 #define BUILDINGCTSLUAJIT_BINDGLM_PUBLICFUNCTION_H
 
+#include "sol.hpp"
 namespace Cartesian{
 
 class BindGLM_PublicFunction {
