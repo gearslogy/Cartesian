@@ -8,11 +8,99 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <vector>
-#include "BindGLM_Public_Vec.h"
 #include "BindGLM_Vec.h"
-
+#include <cmath>
 using namespace  std;
 namespace Cartesian{
+
+    // ----------------------- vector3 register to lua:vector---------------------------------
+    // +
+    template <typename T>
+    auto vec_add_vec = [](const T &o1, const T &o2){
+        return o1 + o2;
+    };
+
+    template <typename T>
+    auto vec_add_float = [](const T &o1, const float &o2){
+        return o1 + o2;
+    };
+    // -
+    template <typename T>
+    auto vec_sub_vec = [](const T &o1, const T &o2){
+        return o1 - o2;
+    };
+
+    template <typename T>
+    auto vec_sub_float = [](const T &o1, const float &o2){
+        return o1 - o2;
+    };
+
+    // *
+    template <typename T>
+    auto vec_mul_vec = [](const T &o1, const T &o2){
+        return o1 * o2;
+    };
+
+    template <typename T>
+    auto vec_mul_float = [](const T &o1, const float &o2){
+        return o1 * o2;
+    };
+    // /
+    template <typename T>
+    auto vec_div_vec = [](const T &o1, const T &o2){
+        return o1 / o2;
+    };
+
+    template <typename T>
+    auto vec_div_float = [](const T &o1, const float &o2) {
+        return o1 / o2;
+    };
+
+    // =
+    template <typename T>
+    auto vec_equal_vec = []( T &o1,  const T &o2) -> bool{
+        return o1 == o2;
+    };
+
+    // vector to string , lua can direct print(glm::vec*)
+    std::string vec2ToString(const glm::vec2 &vec){
+        std::string ret =  std::to_string(vec.x) + std::string(",") + std::to_string(vec.y) ;
+        return ret;
+    }
+    std::string vec3ToString(const glm::vec3 &vec){
+        std::string ret =  std::to_string(vec.x) + std::string(",") + std::to_string(vec.y) + std::string(",") + std::to_string(vec.z);
+        return ret;
+    }
+    std::string vec4ToString(const glm::vec4 &vec){
+        std::string ret =  std::to_string(vec.x) + std::string(",") + std::to_string(vec.y) + std::string(",") + std::to_string(vec.z)+ std::string(",") + std::to_string(vec.w);
+        return ret;
+    }
+
+    // normalize vector
+    template <typename T>
+    T normalize_vector(const T&vec){
+        return glm::normalize(vec);
+    }
+
+    // cross vector
+    template <typename T>
+    T cross_vector(const T&vec1,const T&vec2){
+        return glm::cross(vec1,vec2);
+    }
+    // dot vector
+    template <typename T>
+    float dot_vector(const T&vec1, const T&vec2){
+        return glm::dot(vec1,vec2);
+    }
+    // distance
+    template <typename T>
+    double distance(const T&p1, const T&p2){
+        return glm::distance(p1,p2);
+    }
+
+
+
+
     void BindGLM_Vec::bind(sol::state * lua) {
 
         // ----------------------- vector3 ---------------------------------
@@ -82,24 +170,18 @@ namespace Cartesian{
         auto len_vec2 = [](const glm::vec2 &vec2)->float {
             return glm::length(vec2);
         };
-        auto len_table = [](const sol::table &vec)->float {
-            if(vec.valid()){
+        auto len_table = [](const sol::lua_table &vec)->double {
+            if(!vec.valid()){
                 std::cout << "CARTESIAN::PLUGIN::BIND::ERROR, length(param), param is not valid\n";
                 return -1;
             }
-            if(vec.size() == 2){
-                glm::vec2 temp (vec.get<float>(1),vec.get<float>(2) );
-                return glm::length(temp);
+            float acc = 0;
+            for(auto i= 1; i<vec.size();i++){
+                float val = vec.get<double>(i);
+                acc += val*val;
             }
-            if(vec.size() == 3){
-                glm::vec3 temp (vec.get<float>(1),vec.get<float>(2),vec.get<float>(3) );
-                return glm::length(temp);
-            }
-            if(vec.size() == 4){
-                glm::vec4 temp (vec.get<float>(1),vec.get<float>(2),vec.get<float>(3),vec.get<float>(4) );
-                return glm::length(temp);
-            }
-            return -1;
+            return sqrt(acc);
+
         };
         lua->set_function("length",sol::overload(len_vec2,len_vec3,len_vec4,len_table) );
 
@@ -202,6 +284,23 @@ namespace Cartesian{
                 dot_vector<glm::vec4>,
                 table_dot_table
                 ));
+
+
+        auto distance_table = [](const sol::lua_table &vec1, const sol::lua_table &vec2)->double{
+            if(vec1.size() != vec2.size()){
+                std::cout << "CARETSIAN::PLUGIN::BIND::ERROR, two table have same size\n";
+                return 0;
+            }
+            double acc = 0;
+            for(auto i=1;i<=vec1.size();i++){
+                double dir = vec2.get<double>(i) - vec1.get<double>(i);
+                acc += dir*dir;
+            }
+            acc = sqrt(acc);
+            return acc;
+        };
+
+        lua->set_function("distance",sol::overload(distance<glm::vec2>,distance<glm::vec3>,distance_table) );
 
 
     }
