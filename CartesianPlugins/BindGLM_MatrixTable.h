@@ -12,11 +12,11 @@
  */
 
 #include "sol.hpp"
-
-class BindGLM_MatrixTable {
-public:
-    static void bind(sol::state *state);
-};
-
+namespace Cartesian {
+    class BindGLM_MatrixTable {
+    public:
+        static void bind(sol::state *state);
+    };
+}
 
 #endif //BUILDINGCTSLUAJIT_BINDGLM_MATRIXTABLE_H
