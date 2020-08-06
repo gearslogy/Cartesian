@@ -13,9 +13,9 @@
 * so if you write app based on cartesian, just link cartesian, only include there headers
 
 ## CartesianPlugins
-* google :sol3 lua, because your function only register from this wrapper
 * write the plugin for Cartesian core
-* if you want write plugin for cartesian,just try this:
+* google :sol3 lua 
+* if you want write plugin for cartesian,just try this,signal just same as Houdini:newSopOperator(table *table)
 ```C++
 #include "CartesianEntryPoint.h"
 #include "sol.hpp"
