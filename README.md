@@ -1,4 +1,4 @@
-### OPENSOURCE LIBS:
+## OPENSOURCE LIBS:
 * boost::dll
 * boost::filesystem
 * sol3 & luajit
@@ -6,13 +6,13 @@
 * CGAL
 
 
-# CartesianLuajitCore
+## CartesianLuajitCore
 * it's a core
 * plugins based
 * compiled the luajit(static),boost::filesystem(static) ... all to the core
 * so if you write app based on cartesian, just link cartesian, only include there headers
 
-# CartesianPlugins
+## CartesianPlugins
 * write the plugin for Cartesian core
 * if you want write plugin for cartesian,just try this:
 ```C++
@@ -44,22 +44,22 @@ void newOp(void *lua){
 ![](imgs/katana_01.png)
 
 
-### Sandbox
+## Sandbox
 * only for test 
 * application based Cartesian
 
 
-### Write your own application based the cartesian
+## Write your own application based the cartesian
 * 1, see the Sandbox cmakeslist.txt
 * 2, link the CartesianLuajit.lib and the dll should in env PATH 
 
 
-### LUAJIT SPEED
+## LUAJIT SPEED
 * Table is highly recommended
 * But if you like. You can also use my exposed UserData, as you know, luajit doesn't optimize it
 * Even though you still want to use it, try to use all the C++ functions I exposed.
 
-### Build-IN Houdini VEX-Styles
+## Build-IN Houdini VEX-Styles
 vector:
 
 ```lua
@@ -175,5 +175,5 @@ print(astable(mat4))
 
 
 
-### Final
+## Final
 爱用不用
