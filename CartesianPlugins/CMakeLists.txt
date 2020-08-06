@@ -7,6 +7,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/CartesianPlugins/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/CartesianPlugins/bin)
 
 
+# CGAL
+INCLUDE_DIRECTORIES(D:/plugin_dev/libs/CGAL-5.1-beta1/include)
+INCLUDE_DIRECTORIES(D:./plugin_dev/libs/CGAL-5.1-beta1/auxiliary/gmp/include)
+
 
 # GLM
 include_directories(D:/plugin_dev/libs/GLM_include)
