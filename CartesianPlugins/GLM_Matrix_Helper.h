@@ -7,6 +7,7 @@
 #include <string>
 #include <sstream>
 #include "sol.hpp"
+#include <vector>
 namespace Cartesian{
 
     class GLM_Matrix_Helper{
@@ -14,7 +15,7 @@ namespace Cartesian{
         template <typename T, int DIM>
         static float getMatrix(const T &mat, int col, int row) {
             if(col>DIM || row>DIM){
-                std::cout << "CARTESIAN::PLUGIN::BIND::ERROR, col,row <=2\n";
+                std::cout << "CARTESIAN::PLUGIN::BIND::ERROR, getmatrix(mat,col,row) col,row <=2\n";
                 return 0;
             }
             return mat[col][row];
@@ -23,12 +24,67 @@ namespace Cartesian{
         template <typename T, int DIM>
         static void setMatrix(T &mat, int col, int row, const float val){
             if(col>DIM || row>DIM){
-                std::cout << "CARTESIAN::PLUGIN::BIND::ERROR, col,row <=2\n";
+                std::cout << "CARTESIAN::PLUGIN::BIND::ERROR, setmatrix(mat,col,row,val) col,row <=2\n";
                 return ;
             }
             mat[col][row] = val;
         };
 
+
+        static inline auto mat2_to_table(const glm::mat2 &mat){
+            std::vector<float> values; // num should 4
+            // insert col1
+            values.emplace_back(mat[0].x);
+            values.emplace_back(mat[0].y);
+            // insert col2
+            values.emplace_back(mat[1].x);
+            values.emplace_back(mat[1].y);
+            return sol::as_table(values);
+        }
+
+        static inline auto mat3_to_table(const glm::mat3 &mat)
+        {
+            std::vector<float> values; // num should 4
+            // insert col1
+            values.emplace_back(mat[0].x);
+            values.emplace_back(mat[0].y);
+            values.emplace_back(mat[0].z);
+            // insert col2
+            values.emplace_back(mat[1].x);
+            values.emplace_back(mat[1].y);
+            values.emplace_back(mat[1].z);
+            // insert col3
+            values.emplace_back(mat[2].x);
+            values.emplace_back(mat[2].y);
+            values.emplace_back(mat[2].z);
+            return sol::as_table(values);
+        }
+
+        static inline auto mat4_to_table(const glm::mat4 &mat){
+            std::vector<float> values; // num should 4
+            // insert col1
+            values.emplace_back(mat[0].x);
+            values.emplace_back(mat[0].y);
+            values.emplace_back(mat[0].z);
+            values.emplace_back(mat[0].w);
+            // insert col2
+            values.emplace_back(mat[1].x);
+            values.emplace_back(mat[1].y);
+            values.emplace_back(mat[1].z);
+            values.emplace_back(mat[1].w);
+            // insert col3
+            values.emplace_back(mat[2].x);
+            values.emplace_back(mat[2].y);
+            values.emplace_back(mat[2].z);
+            values.emplace_back(mat[2].w);
+            //insert col4
+            values.emplace_back(mat[3].x);
+            values.emplace_back(mat[3].y);
+            values.emplace_back(mat[3].z);
+            values.emplace_back(mat[3].w);
+
+            return sol::as_table(values);
+        }
 
 
         static inline glm::mat2 table_to_mat2(const sol::lua_table &table){
