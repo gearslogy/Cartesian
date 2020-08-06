@@ -144,7 +144,40 @@ print(astable(mat4))
 }
 
 
+void testMatrixTable(sol::state * lua){
 
+
+    try {
+        lua->safe_script(
+                R"(
+print(table_to_matrix2({1,1, 2,2}) )
+print(table_to_matrix3({1,1,1, 2,2,2, 3,3,3}) )
+print(table_to_matrix({1,1,1,1, 2,2,2,2, 3,3,3,3, 4,4,4,4}) )
+
+print("----- table mat*mat ----")
+local table_mat22 = t_matrix2_mul_matrix2({1,2, 3,4},{4,2, 3,1})  -- 22 table matrix * 22 table matrix
+local mat22 = table_to_matrix2(table_mat22)                       --- convert to normal matrix2
+
+
+local table_mat33 = t_matrix3_mul_matrix3({1,2,3, 1,21,31, 21,10,13},{12,1,33, 15,0.8,25, 10,5,7})                                            -- 33 table matrix * 33 table matrix
+local mat33 = table_to_matrix3(table_mat33)          -- convert to normal matrix3
+
+local table_mat44 = t_matrix_mul_matrix({1,2,3,4, 1,21,31,13, 123,21,10,13, 76,3,1,5},{12,1,33,56, 15,0.8,10,25, 32,1,323,16, 12,1,323,16})   -- 44 table matrix * 44 table matrix
+local mat44 = table_to_matrix(table_mat44)                   --convert to normal matrix
+
+
+print(mat22)
+print(mat33)
+print(mat44)
+
+)");
+    }
+    catch (...) {
+
+    }
+
+
+}
 
 int main(int argc , char **argv)
 {
@@ -158,8 +191,8 @@ int main(int argc , char **argv)
     auto functions = Cartesian::PluginLoader::loadPlugins();
     Cartesian::PluginLoader::dispatch(functions,lua);
     std::cout << "CARTESIAN::Run main example script\n";
-    testVector(lua);
-    testmatrix(lua);
-
+    //testVector(lua);
+    //testmatrix(lua);
+    testMatrixTable(lua);
     return 0;
 }
