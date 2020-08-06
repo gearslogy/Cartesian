@@ -60,7 +60,7 @@ void newOp(void *lua){
 * Even though you still want to use it, try to use all the C++ functions I exposed.
 
 ## Build-IN Houdini VEX-Styles
-> more function check out:https://github.com/gearslogy/Cartesian/wiki/Cartesian-Functions
+> more functions check out:https://github.com/gearslogy/Cartesian/wiki/Cartesian-Functions
 
 vector:
 
