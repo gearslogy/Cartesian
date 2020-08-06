@@ -104,19 +104,4 @@ namespace Cartesian{
 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #endif //BUILDINGCTSLUAJIT_BINDGLM_PUBLIC_H
