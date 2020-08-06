@@ -7,6 +7,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "GLM_Matrix_Helper.h"
+#include "GLM_Vec_Helper.h"
 #include "BindGLM_PublicFunction.h"
 #include <iostream>
 
@@ -220,6 +222,46 @@ namespace Cartesian{
                                                     inverse<glm::mat3>,
                                                     inverse<glm::mat4>));
 
+        // -------------------------------- transform ----------------------------------------------------
+        auto transform = [](const glm::mat4 &trans,const glm::vec3 &pos){
+            return glm::translate(trans,pos);
+        };
+
+        auto transform1 = [](const sol::lua_table &trans,const sol::lua_table &pos){
+            if(trans.size() != 16){
+                std::cout << "CARTESIAN::PLUGIN::BIND::ERROR, transform(table_trans,table_pos),table_trans should has 16 elements\n";
+                return glm::mat4(1);
+            }
+            if(trans.size() != 3){
+                std::cout << "CARTESIAN::PLUGIN::BIND::ERROR, rotate(table_trans,table_pos),table_pos table should has 3 elements\n";
+                return glm::mat4(1);
+            }
+            auto mat = GLM_Matrix_Helper::table_to_mat4(trans);
+            auto p   = GLM_Vec_Helper::table_to_vec3(pos);
+            return glm::translate(mat,p);
+        };
+        lua->set_function("transform",sol::overload(transform,transform1));
+
+
+        // -------------------------------- scale ----------------------------------------------------
+        auto scale = [](const glm::mat4 &scale,const glm::vec3 &sv)->glm::mat4{
+            return glm::scale(scale,sv);
+        };
+        auto scale1 = [](const sol::lua_table &scale,const sol::lua_table &sv)->glm::mat4{
+            if(scale.size() != 16){
+                std::cout << "CARTESIAN::PLUGIN::BIND::ERROR, transform(table_scale,table_pos),table_scale should has 16 elements\n";
+                return glm::mat4(1);
+            }
+            if(sv.size() != 3){
+                std::cout << "CARTESIAN::PLUGIN::BIND::ERROR, rotate(table_scale,table_pos),table_pos table should has 3 elements\n";
+                return glm::mat4(1);
+            }
+            auto mat = GLM_Matrix_Helper::table_to_mat4(scale);
+            auto s   = GLM_Vec_Helper::table_to_vec3(sv);
+            return glm::scale(mat,s);
+        };
+        lua->set_function("scale",sol::overload(scale,scale1));
+
         // -------------------------------- rotate ----------------------------------------------------
         auto rotate = [](const glm::mat4 &rot,const float &angle, const glm::vec3 &axis)->glm::mat4{
             return glm::rotate(rot,angle,axis);
@@ -235,12 +277,8 @@ namespace Cartesian{
                 std::cout << "CARTESIAN::PLUGIN::BIND::ERROR, rotate(table_rot,float_angle,table_axis),table_axis table should has 3 elements\n";
                 return glm::mat4(1);
             }
-            glm::vec4 col1 (rot.get<float>(1),rot.get<float>(2),rot.get<float>(3),rot.get<float>(4));
-            glm::vec4 col2 (rot.get<float>(5),rot.get<float>(6),rot.get<float>(7),rot.get<float>(8));
-            glm::vec4 col3 (rot.get<float>(9),rot.get<float>(10),rot.get<float>(11),rot.get<float>(12));
-            glm::vec4 col4 (rot.get<float>(13),rot.get<float>(14),rot.get<float>(15),rot.get<float>(16));
-            glm::mat4 rotMat4(col1,col2,col3,col4);
-            glm::vec3 axisVec3 (axis.get<float>(1),axis.get<float>(2),axis.get<float>(3));
+            glm::mat4 rotMat4 = GLM_Matrix_Helper::table_to_mat4(rot);
+            glm::vec3 axisVec3= GLM_Vec_Helper::table_to_vec3(axis);
             return glm::rotate(rotMat4,angle,axisVec3);
         };
         lua->set_function("rotate",sol::overload(rotate,rotate1));
