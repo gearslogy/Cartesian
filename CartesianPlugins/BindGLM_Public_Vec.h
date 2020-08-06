@@ -5,7 +5,7 @@
 #ifndef BUILDINGCTSLUAJIT_BINDGLM_PUBLIC_H
 #define BUILDINGCTSLUAJIT_BINDGLM_PUBLIC_H
 #include <string>
-
+#include "sol.hpp"
 namespace Cartesian{
     // ----------------------- vector3 register to lua:vector---------------------------------
     // +
@@ -87,6 +87,19 @@ namespace Cartesian{
         return glm::dot(vec1,vec2);
     }
 
+    glm::vec2 table_to_vec2(const sol::lua_table &table){
+        return glm::vec2(table.get<float>(1),table.get<float>(2));
+    }
+
+    glm::vec3 table_to_vec3(const sol::lua_table &table){
+        return glm::vec3(table.get<float>(1),table.get<float>(2),table.get<float>(3));
+    }
+    glm::vec4 table_to_vec4(const sol::lua_table &table){
+        return glm::vec4(table.get<float>(1),
+                table.get<float>(2),
+                table.get<float>(3),
+                table.get<float>(4));
+    }
 
 
 }
