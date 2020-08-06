@@ -6,8 +6,10 @@
 #include "sol.hpp"
 #include <cmath>
 #include "BindGLM_Vec.h"
-#include "BindGLM_PublicFunction.h"
 #include "BindGLM_Matrix.h"
+#include "BindGLM_PublicFunction.h"
+
+
 using namespace std;
 
 void newOp(void *lua){
