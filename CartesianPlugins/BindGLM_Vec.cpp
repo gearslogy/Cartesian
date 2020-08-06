@@ -75,28 +75,7 @@ namespace Cartesian{
         std::string ret =  to_string(vec.x) + std::string(",") + to_string(vec.y) + std::string(",") + std::to_string(vec.z)+ std::string(",") + std::to_string(vec.w);
         return ret;
     }
-    // vector to table
-    auto vec2_to_table(const glm::vec2 &vec){
-        std::vector<float> vals;
-        vals.emplace_back(vec.x);
-        vals.emplace_back(vec.y);
-        return sol::as_table(vals);
-    }
-    auto vec3_to_table(const glm::vec3 &vec){
-        std::vector<float> vals;
-        vals.emplace_back(vec.x);
-        vals.emplace_back(vec.y);
-        vals.emplace_back(vec.z);
-        return sol::as_table(vals);
-    }
-    auto vec4_to_table(const glm::vec4 &vec){
-        std::vector<float> vals;
-        vals.emplace_back(vec.x);
-        vals.emplace_back(vec.y);
-        vals.emplace_back(vec.z);
-        vals.emplace_back(vec.w);
-        return sol::as_table(vals);
-    }
+
     // normalize vector
     template <typename T>
     T normalize_vector(const T&vec){
@@ -304,24 +283,6 @@ namespace Cartesian{
                 dot_vector<glm::vec4>,
                 table_dot_table
                 ));
-
-
-
-
-        // houdini set() function
-        auto set2 = [](const float &x,const float &y)->glm::vec2{
-                    return glm::vec2(x,y);
-        };
-        auto set3 = [](const float &x,const float &y,const float &z)->glm::vec3{
-            return glm::vec3(x,y,z);
-        };
-        auto set4 = [](const float &x,const float &y,const float &z,const float &w)->glm::vec4{
-            return glm::vec4(x,y,z,w);
-        };
-        lua->set_function("set",sol::overload(set2,set3,set4));
-
-        // convert vector to lua table
-        lua->set_function("astable", sol::overload(vec2_to_table,vec3_to_table,vec4_to_table) );
 
 
     }
