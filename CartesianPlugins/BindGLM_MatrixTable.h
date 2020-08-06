@@ -15,7 +15,7 @@
 namespace Cartesian {
     class BindGLM_MatrixTable {
     public:
-        static void bind(sol::state *state);
+        static void bind(sol::state *);
     };
 }
 
