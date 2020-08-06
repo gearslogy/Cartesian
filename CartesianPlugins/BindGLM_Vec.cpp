@@ -108,6 +108,11 @@ namespace Cartesian{
     T cross_vector(const T&vec1,const T&vec2){
         return glm::cross(vec1,vec2);
     }
+    // dot vector
+    template <typename T>
+    float dot_vector(const T&vec1, const T&vec2){
+        return glm::dot(vec1,vec2);
+    }
 
 
     void BindGLM_Vec::bind(sol::state * lua) {
@@ -238,13 +243,13 @@ namespace Cartesian{
 
         // ------------------------------ Cross vector -----------------------------------------------
         // cross(table3,table3)
-        auto table_cross = [](const sol::table &vec1, const sol::table &vec2){
+        auto table_cross = [](const sol::lua_table &vec1, const sol::lua_table &vec2){
             if(vec1.size() != 3){
-                std::cout << "CARTESIAN::PLUGIN::BIND glm error , arg1 must has 3 element";
+                std::cout << "CARTESIAN::PLUGIN::BIND::ERROR, arg1 must has 3 element";
                 return glm::vec3(0,0,0);
             }
             if(vec2.size() != 3){
-                std::cout << "CARTESIAN::PLUGIN::BIND glm error , arg2 must has 3 element";
+                std::cout << "CARTESIAN::PLUGIN::BIND::ERROR, arg2 must has 3 element";
                 return glm::vec3(0,0,0);
             }
             glm::vec3 temp1(vec1.get<float>(1),vec1.get<float>(2),vec1.get<float>(3));
@@ -252,18 +257,18 @@ namespace Cartesian{
             return glm::cross(temp1,temp2);
         };
         // cross ({1,2,3},vector)
-        auto table_mix_cross1 = [](const sol::table &vec1, const glm::vec3 &vec2){
+        auto table_mix_cross1 = [](const sol::lua_table &vec1, const glm::vec3 &vec2){
             if(vec1.size() != 3){
-                std::cout << "CARTESIAN::PLUGIN::BIND glm error , arg1 must has 3 element";
+                std::cout << "CARTESIAN::PLUGIN::BIND::ERROR, arg1 must has 3 element";
                 return glm::vec3(0,0,0);
             }
             glm::vec3 temp(vec1.get<float>(1),vec1.get<float>(2),vec1.get<float>(3));
             return glm::cross(temp,vec2);
         };
         // cross (vector,{1,2,3})
-        auto table_mix_cross2 = [](const glm::vec3 &vec1, const sol::table &vec2){
+        auto table_mix_cross2 = [](const glm::vec3 &vec1, const sol::lua_table &vec2){
             if(vec2.size() != 3){
-                std::cout << "CARTESIAN::PLUGIN::BIND glm error , arg2 must has 3 element";
+                std::cout << "CARTESIAN::PLUGIN::BIND::ERROR, arg2 must has 3 element";
                 return glm::vec3(0,0,0);
             }
             glm::vec3 temp(vec2.get<float>(1),vec2.get<float>(2),vec2.get<float>(3));
@@ -278,6 +283,29 @@ namespace Cartesian{
                 table_mix_cross2,
                 table_cross
                 ));
+
+        // ---------------------------------- dot ---------------------------------------------
+        // t.t
+        auto table_dot_table =  [](const sol::lua_table &vec1, const sol::lua_table &vec2)->float
+        {
+            if(vec1.size() != vec2.size()){
+                std::cout << "CARTESIAN::PLUGIN::BIND::ERROR  dot(table,table) need table size same\n";
+                return 0;
+            }
+            float acc = 0;
+            for(int i = 1; i<= vec1.size(); i++){
+                acc+= vec1.get<float>(i) + vec2.get<float>(i);
+            }
+            return acc;
+        };
+        lua->set_function("dot",sol::overload(
+                dot_vector<glm::vec2>,
+                dot_vector<glm::vec3>,
+                dot_vector<glm::vec4>,
+                table_dot_table
+                ));
+
+
 
 
         // houdini set() function
