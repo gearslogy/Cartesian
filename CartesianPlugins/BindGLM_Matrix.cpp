@@ -7,7 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <sstream>
-
+#include <iostream>
 #include "BindGLM_Public_Matrix.h"
 #include "BindGLM_Matrix.h"
 
@@ -52,9 +52,12 @@ namespace Cartesian{
 
 
 
-
-
-
+        lua->set_function("setmatrix2",setMatrix<glm::mat2,2>);
+        lua->set_function("getmatrix2",getMatrix<glm::mat2,2>);
+        lua->set_function("setmatrix3",setMatrix<glm::mat3,3>);
+        lua->set_function("getmatrix3",getMatrix<glm::mat3,3>);
+        lua->set_function("setmatrix",setMatrix<glm::mat4,4>);
+        lua->set_function("getmatrix",getMatrix<glm::mat4,4>);
 
     }
 
