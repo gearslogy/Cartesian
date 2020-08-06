@@ -36,7 +36,8 @@ print(normalize(set(1,2,1) ) )                       -- normalize(vector)  retur
 
 print('------------length() --------------------')
 print(length(set(0,2,0)) )
-print(length({0,2,0}) )                          -- length a table vector
+print(length({0,2,0}) )                                      -- length a table vector
+print(length({0,2,0,3,4,5,6,7,8}) )                          -- length a table vector
 
 print('------------distance()-------------------')
 print(distance(set(0,0,2), set(0,3,0) ));
