@@ -105,7 +105,7 @@ namespace Cartesian{
                 const glm::vec4 &col4){
             return glm::mat4(col1,col2,col3,col4);
         };
-        // mat3 from table's : local mat2 = {{1,2,3},{4,5,6},{7,8,9}}
+        // mat3 from table's : local mat2 = {{1,2,3,4},{4,5,6,7},{7,8,9,10}}
         auto set7_1 = [](const sol::lua_table &table1, const sol::lua_table &table2, const sol::lua_table &table3,const sol::lua_table &table4){
             if(table1.size() != 4 || table2.size() != 4 || table2.size() != 4){
                 std::cout << "CARTESIAN::PLUGIN::BIND::ERROR, you should use -> local mat2 = {{1,2,3,4},{4,5,6,7},{7,8,9,10},{10,11,12,13}}\n";
