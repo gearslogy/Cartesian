@@ -170,6 +170,19 @@ print(mat22)
 print(mat33)
 print(mat44)
 
+
+print("------ mat table * vec table -------------")
+local vec4_table = t_matrix_mul_vector4({1,2,3,4, 1,21,31,13, 123,21,10,13, 76,3,1,5},{12,1,33,56, 15,0.8,10,25, 32,1,323,16, 12,1,323,16} , {1,2,3,4})    -- 44 table matrix * vec4 table; return table
+local vec3_table = t_matrix3_mul_vector({1,2,3, 1,21,31, 21,10,13},{12,1,33, 15,0.8,25, 10,5,7},{1,2,3})                                                   -- 33 table matrix * vec3 table; return table
+local vec2_table = t_matrix2_mul_vector2({1,2, 3,4}, {1,2})                                                                                                -- 22 table matrix * vec2 table; return table
+
+local vec4 = table_to_vector4(vec4_table)    --- return vector4 type
+local vec3 = table_to_vector(vec3_table)     --- return vector type
+local vec2 = table_to_vector2(vec2_table)    --- return vector2 type
+
+print(vec4)
+print(vec3)
+print(vec2)
 )");
     }
     catch (...) {
