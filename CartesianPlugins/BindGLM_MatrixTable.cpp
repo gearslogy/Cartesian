@@ -141,5 +141,13 @@ namespace Cartesian{
         lua->set_function("table_to_vector2",GLM_Vec_Helper::table_to_vec2);
         lua->set_function("table_to_vector",GLM_Vec_Helper::table_to_vec3);
         lua->set_function("table_to_vector4",GLM_Vec_Helper::table_to_vec4);
+
+
+        // ------------------------ ident table function --------------------------
+        lua->set_function("table_ident3",[](){return GLM_Matrix_Helper::mat2_to_table(glm::mat3(1.0f)) ;} );
+        lua->set_function("table_ident",[](){return GLM_Matrix_Helper::mat2_to_table(glm::mat4(1.0f)) ;});
+        lua->set_function("table_ident2",[](){return GLM_Matrix_Helper::mat2_to_table(glm::mat2(1.0f)) ;});
+
+
     }
 }
