@@ -237,16 +237,33 @@ namespace Cartesian{
         lua->set_function("angle",glm::degrees<double>);
 
 
-        // ------------------------ ident function ---------------------------
+        // ------------------------ ident function --------------------------
         lua->set_function("ident3",[](){return glm::mat3(1.0f);});
         lua->set_function("ident",[](){return glm::mat4(1.0f);});
         lua->set_function("ident2",[](){return glm::mat2(1.0f);});
+
 
         // ------------------------ determinant -----------------------------
         auto mat2det = [](const glm::mat2 &mat){return glm::determinant(mat);};
         auto mat3det = [](const glm::mat3 &mat){return glm::determinant(mat);};
         auto mat4det = [](const glm::mat4 &mat){return glm::determinant(mat);};
-        lua->set_function("determinant",sol::overload(mat2det,mat3det,mat4det));
+        auto matdet_table = [](const sol::lua_table & table){
+            if(table.size() == 4){
+                auto mat = GLM_Matrix_Helper::table_to_mat2(table);
+                return glm::determinant(mat);
+            }
+            if(table.size() == 9){
+                auto mat = GLM_Matrix_Helper::table_to_mat3(table);
+                return glm::determinant(mat);
+            }
+            if(table.size() == 16){
+                auto mat = GLM_Matrix_Helper::table_to_mat4(table);
+                return glm::determinant(mat);
+            }
+            std::cout << "CARTESIAN::PLUGIN::BIND::ERROR, determinant() size = 4 or 9 or 16\n";
+            return -1.0f;
+        };
 
+        lua->set_function("determinant",sol::overload(mat2det,mat3det,mat4det,matdet_table));
     }
 }
