@@ -237,7 +237,16 @@ namespace Cartesian{
         lua->set_function("angle",glm::degrees<double>);
 
 
+        // ------------------------ ident function ---------------------------
+        lua->set_function("ident3",[](){return glm::mat3(1.0f);});
+        lua->set_function("ident",[](){return glm::mat4(1.0f);});
+        lua->set_function("ident2",[](){return glm::mat2(1.0f);});
 
+        // ------------------------ determinant -----------------------------
+        auto mat2det = [](const glm::mat2 &mat){return glm::determinant(mat);};
+        auto mat3det = [](const glm::mat3 &mat){return glm::determinant(mat);};
+        auto mat4det = [](const glm::mat4 &mat){return glm::determinant(mat);};
+        lua->set_function("determinant",sol::overload(mat2det,mat3det,mat4det));
 
     }
 }
