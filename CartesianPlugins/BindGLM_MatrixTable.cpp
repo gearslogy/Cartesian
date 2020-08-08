@@ -145,8 +145,8 @@ namespace Cartesian{
 
         // ------------------------ ident table function --------------------------
         lua->set_function("table_ident3",[](){return GLM_Matrix_Helper::mat2_to_table(glm::mat3(1.0f)) ;} );
-        lua->set_function("table_ident",[](){return GLM_Matrix_Helper::mat2_to_table(glm::mat4(1.0f)) ;});
-        lua->set_function("table_ident2",[](){return GLM_Matrix_Helper::mat2_to_table(glm::mat2(1.0f)) ;});
+        lua->set_function("table_ident",[](){return GLM_Matrix_Helper::mat4_to_table(glm::mat4(1.0f)) ;});
+        lua->set_function("table_ident2",[](){return GLM_Matrix_Helper::mat3_to_table(glm::mat2(1.0f)) ;});
 
 
     }
