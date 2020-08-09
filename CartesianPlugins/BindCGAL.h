@@ -8,6 +8,7 @@
 namespace Cartesian{
 
 class BindCGAL {
+public:
     static void bind(sol::state *lua) ;
 };
 
