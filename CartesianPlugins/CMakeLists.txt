@@ -32,6 +32,8 @@ if(Boost_FOUND)
     link_directories(${Boost_LIBRARY_DIRS})
 endif()
 
+# ------------------ spdlog ------------------------
+include_directories(D:/plugin_dev/libs/spdlog-1.7.0/include)
 
 
 include_directories(D:/plugin_dev/libs/sol2)
