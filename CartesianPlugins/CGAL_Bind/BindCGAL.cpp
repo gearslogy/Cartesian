@@ -48,9 +48,9 @@ void BindCGAL::bind(sol::state *lua) {
     // bind face index
     sol::usertype<PRE_TYPE::Face_descriptor> face= (*lua).new_usertype<PRE_TYPE::Face_descriptor>(
             "face",
-            sol::constructors<CGAL_face_descriptor(),CGAL_face_descriptor(int)>()
+            sol::constructors<PRE_TYPE::Face_descriptor(),PRE_TYPE::Face_descriptor(int)>()
     );
-    face["idx"] = &CGAL_face_descriptor::idx;
+    face["idx"] = &PRE_TYPE::Face_descriptor::idx;
 
 
     // bind half-edge index
