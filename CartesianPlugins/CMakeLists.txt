@@ -53,8 +53,9 @@ endif()
 include_directories(${CMAKE_SOURCE_DIR}/CartesianLuajitCore/include)
 link_directories(${CMAKE_SOURCE_DIR}/CartesianLuajitCore/bin)
 # ----------------------------- MyCore --------------------------------------------
-FILE(GLOB SRC *.cpp)
-
+FILE(GLOB SRC
+        CGAL_Bind/*.cpp
+        GLM_Bind/*.cpp)
 
 add_library(stdlib SHARED ${SRC})
 target_link_libraries(stdlib CartesianLuaJIT)
