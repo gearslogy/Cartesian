@@ -38,15 +38,15 @@ namespace Cartesian{
 
 void BindCGAL::bind(sol::state *lua) {
     // bind vertex index
-    sol::usertype<CGAL_vertex_descriptor> vertex= (*lua).new_usertype<CGAL_vertex_descriptor>(
+    sol::usertype<PRE_TYPE::Vertex_descriptor> vertex= (*lua).new_usertype<PRE_TYPE::Vertex_descriptor>(
             "vertex",
-            sol::constructors<CGAL_vertex_descriptor(),CGAL_vertex_descriptor(int)>()
+            sol::constructors<PRE_TYPE::Vertex_descriptor ,PRE_TYPE::Vertex_descriptor(int)>()
             );
-    vertex["idx"] = &CGAL_vertex_descriptor::idx;
+    vertex["idx"] = &PRE_TYPE::Vertex_descriptor::idx;
 
 
     // bind face index
-    sol::usertype<CGAL_face_descriptor> face= (*lua).new_usertype<CGAL_face_descriptor>(
+    sol::usertype<PRE_TYPE::Face_descriptor> face= (*lua).new_usertype<PRE_TYPE::Face_descriptor>(
             "face",
             sol::constructors<CGAL_face_descriptor(),CGAL_face_descriptor(int)>()
     );

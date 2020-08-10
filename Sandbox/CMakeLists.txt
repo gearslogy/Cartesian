@@ -27,7 +27,8 @@ endif()
 
 ## ---------------------------- Boost include --------------------------------------
 
-
+# ------------------ spdlog ------------------------
+include_directories(D:/plugin_dev/libs/spdlog-1.7.0/include)
 
 # ----------------------------- LUA JIT -------------------------------------------
 include_directories(D:/plugin_dev/libs/sol2)

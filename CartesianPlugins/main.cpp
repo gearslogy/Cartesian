@@ -5,11 +5,11 @@
 #include "CartesianEntryPoint.h"
 #include "sol.hpp"
 #include <cmath>
-#include "BindGLM_Vec.h"
-#include "BindGLM_Matrix.h"
-#include "BindGLM_PublicFunction.h"
-#include "BindGLM_MatrixTable.h"
-#include "BindCGAL.h"
+#include "GLM_Bind/BindGLM_Vec.h"
+#include "GLM_Bind/BindGLM_Matrix.h"
+#include "GLM_Bind/BindGLM_PublicFunction.h"
+#include "GLM_Bind/BindGLM_MatrixTable.h"
+#include "CGAL_Bind/BindCGAL.h"
 
 using namespace std;
 

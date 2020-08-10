@@ -5,3 +5,7 @@
 /CartesianPlugins/bin/
 /KatanaCartesianJIT/bin/
 /.idea/
+/.vs/
+/.out/
+/out/build/x64-Debug
+*.json

@@ -63,7 +63,8 @@ if(Boost_FOUND)
 endif()
 # -------------------------- BOOST AND CGAL ---------------------------------------
 
-
+# ------------------ spdlog ------------------------
+include_directories(D:/plugin_dev/libs/spdlog-1.7.0/include)
 
 # ----------------------------- MyCore --------------------------------------------
 include_directories(${CMAKE_SOURCE_DIR}/CartesianLuajitCore/include)

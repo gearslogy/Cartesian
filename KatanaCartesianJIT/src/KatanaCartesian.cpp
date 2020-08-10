@@ -14,7 +14,7 @@ static bool __is__init__katana__resources = false;
 static bool __is__cartesin__load__plugins = false;
 static bool __is__opened__jit__lib = false;
 static auto lua = std::make_shared<sol::state>();
-
+static std::vector<Cartesian::dllsymbolfunc> dllfuncs;
 
 void MesserOp::cook(Foundry::Katana::GeolibCookInterface &interface) {
 
@@ -81,7 +81,8 @@ void MesserOp::cook(Foundry::Katana::GeolibCookInterface &interface) {
     // only bind to lua once !
     if(!__is__cartesin__load__plugins){
         std::cout << "[KATANA::CARTESIAN]: now init internal plugins\n";
-        Cartesian::PluginLoader::loadPlugins(lua.get());
+        dllfuncs = Cartesian::PluginLoader::loadPlugins();
+        Cartesian::PluginLoader::dispatch(dllfuncs,lua.get());
         __is__cartesin__load__plugins = true;
     }
 

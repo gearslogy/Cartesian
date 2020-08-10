@@ -1,6 +1,6 @@
 #include <iostream>
 #include "CartesianPluginLoader.h"
-
+#include "CartesianLog.h"
 
 
 void testVector(sol::state * lua){
@@ -199,13 +199,14 @@ int main(int argc , char **argv)
     auto *lua = new sol::state;
     lua->open_libraries(sol::lib::base,sol::lib::jit,sol::lib::ffi,sol::lib::package,sol::lib::coroutine);
 
-
+    Cartesian::Log::initialize();
+    CARTESIAN_CORE_WARN("Starting version = {0}.{1}",0,1);
 
     auto functions = Cartesian::PluginLoader::loadPlugins();
     Cartesian::PluginLoader::dispatch(functions,lua);
-    std::cout << "CARTESIAN::Run main example script\n";
+    CARTESIAN_CORE_INFO("running script");
     //testVector(lua);
     //testmatrix(lua);
-    testMatrixTable(lua);
+    //testMatrixTable(lua);
     return 0;
 }
