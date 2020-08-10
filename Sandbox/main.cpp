@@ -192,6 +192,27 @@ print(vec2)
 
 }
 
+
+void testMesh(sol::state* lua) {
+
+    try {
+        lua->safe_script(
+            R"(
+local m = mesh.new();
+local pt0 = addpoint(m, {0,0,0} );
+local pt1 = addpoint(m, {1,0,0} );
+local pt2 = addpoint(m, {1,1,0} );
+addface(m,pt0,pt1,pt2)
+savemesh(m,"triangle.off");
+)");
+    }
+    catch (...) {
+
+    }
+
+}
+
+
 int main(int argc , char **argv)
 {
     // create state
@@ -208,5 +229,7 @@ int main(int argc , char **argv)
     //testVector(lua);
     //testmatrix(lua);
     //testMatrixTable(lua);
+    testMesh(lua);
+    std::cin.get();
     return 0;
 }

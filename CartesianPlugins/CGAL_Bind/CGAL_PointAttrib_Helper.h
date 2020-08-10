@@ -4,6 +4,9 @@
 
 #ifndef BUILDINGCTSLUAJIT_CGAL_POINTATTRIB_HELPER_H
 #define BUILDINGCTSLUAJIT_CGAL_POINTATTRIB_HELPER_H
+#define CGAL_NO_GMP 1
+
+
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
 #include <glm/glm.hpp>
