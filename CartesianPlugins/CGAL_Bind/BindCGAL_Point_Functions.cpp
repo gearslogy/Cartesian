@@ -1,7 +1,7 @@
 //
 // Created by admin on 2020/8/10.
 //
-
+#define CGAL_NO_GMP 1
 #include "BindCGAL_Point_Functions.h"
 #include <vector>
 #include <CGAL/Simple_cartesian.h>
@@ -17,7 +17,7 @@ namespace Cartesian{
 
         // ---------------------- Get all point attribute names --------------------------------------
         auto GetPointsAttribNames = [](const PRE_TYPE::Mesh& mesh){
-            std::vector<std::string> props = mesh.properties<PRE_TYPE::CGAL_vertex_descriptor>();
+            std::vector<std::string> props = mesh.properties<PRE_TYPE::Vertex_descriptor>();
             return sol::as_table(props);
         };
 

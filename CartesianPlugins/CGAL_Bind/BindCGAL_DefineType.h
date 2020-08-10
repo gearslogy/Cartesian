@@ -4,6 +4,7 @@
 
 #ifndef BUILDINGCTSLUAJIT_BINDCGAL_DEFINETYPE_H
 #define BUILDINGCTSLUAJIT_BINDCGAL_DEFINETYPE_H
+#define CGAL_NO_GMP 1
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
 

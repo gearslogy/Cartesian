@@ -1,6 +1,7 @@
 //
 // Created by admin on 2020/8/4.
 //
+#define CGAL_NO_GMP 1
 
 #include "BindCGAL.h"
 
@@ -13,12 +14,11 @@
 #include "CartesianLog.h"
 #include "BindCGAL_DefineType.h"
 
-#define CGAL_NO_GMP 1
 
 #include <vector>
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
-
+#include <fstream>;
 
 
 // ------------ add triangle by houdini------------------------
@@ -54,48 +54,61 @@ void BindCGAL::bind(sol::state *lua) {
 
 
     // bind half-edge index
-    sol::usertype<CGAL_halfedge_descriptor> half_edge= (*lua).new_usertype<CGAL_halfedge_descriptor>(
+    sol::usertype<PRE_TYPE::Halfedge_descriptor> half_edge= (*lua).new_usertype<PRE_TYPE::Halfedge_descriptor>(
             "half_edge",
-            sol::constructors<CGAL_halfedge_descriptor(),CGAL_halfedge_descriptor(int)>()
+            sol::constructors<PRE_TYPE::Halfedge_descriptor(),PRE_TYPE::Halfedge_descriptor(int)>()
     );
-    half_edge["idx"] = &CGAL_halfedge_descriptor::idx;
+    half_edge["idx"] = &PRE_TYPE::Halfedge_descriptor::idx;
 
 
     // bind edge index
-    sol::usertype<CGAL_edge_descriptor> edge= (*lua).new_usertype<CGAL_edge_descriptor>(
+    sol::usertype<PRE_TYPE::Edge_descriptor> edge= (*lua).new_usertype<PRE_TYPE::Edge_descriptor>(
             "edge",
-            sol::constructors<CGAL_edge_descriptor(),CGAL_edge_descriptor(int),CGAL_edge_descriptor(CGAL_halfedge_descriptor)>()
+            sol::constructors<PRE_TYPE::Edge_descriptor(),PRE_TYPE::Edge_descriptor(int),PRE_TYPE::Edge_descriptor(PRE_TYPE::Halfedge_descriptor)>()
     );
-    edge["idx"] = &CGAL_edge_descriptor::idx;
+    edge["idx"] = &PRE_TYPE::Edge_descriptor::idx;
 
 
     // bind mesh pointer
-    sol::usertype<CGAL_Mesh> mesh= (*lua).new_usertype<CGAL_Mesh>(
+    sol::usertype<PRE_TYPE::Mesh> mesh= (*lua).new_usertype<PRE_TYPE::Mesh>(
             "mesh"
             );
-
 
     // todo addprim() need imp in DCC software,and return mesh handle.
 
     // mesh functions
     // addpoint(mesh, pt) : return vertex descriptor
-    auto add_point = [](CGAL_Mesh & mesh, const glm::vec3 &ptpos){
-        auto vd = mesh.add_vertex(CGAL_K::Point_3(ptpos.x, ptpos.y, ptpos.z));
+    auto add_point = [](PRE_TYPE::Mesh & mesh, const glm::vec3 &ptpos){
+        auto vd = mesh.add_vertex(PRE_TYPE::K::Point_3(ptpos.x, ptpos.y, ptpos.z));
         return vd;
     };
-    auto add_point_table = [](CGAL_Mesh & mesh, const sol::lua_table & table){
+    auto add_point_table = [](PRE_TYPE::Mesh & mesh, const sol::lua_table & table){
         if(table.size() != 3){
             CARTESIAN_CORE_ERROR("addpoint(table) table length = 3");
-            return CGAL_vertex_descriptor(-1);
+            return PRE_TYPE::Vertex_descriptor(-1);
         }
         auto ptpos = GLM_Vec_Helper::table_to_vec3(table);
-        auto vd = mesh.add_vertex(CGAL_K::Point_3(ptpos.x, ptpos.y, ptpos.z));
+        auto vd = mesh.add_vertex(PRE_TYPE::K::Point_3(ptpos.x, ptpos.y, ptpos.z));
         return vd;
     };
     lua->set_function("addpoint",sol::overload(add_point,add_point_table));
 
 
+    auto add_face_triangle = [](PRE_TYPE::Mesh& mesh, const PRE_TYPE::Vertex_descriptor &u, const PRE_TYPE::Vertex_descriptor &v, const PRE_TYPE::Vertex_descriptor &w) {
+        return mesh.add_face(u, v, w);
+    };
+	auto add_face_quad = [](PRE_TYPE::Mesh& mesh, const PRE_TYPE::Vertex_descriptor& u, const PRE_TYPE::Vertex_descriptor& v, const PRE_TYPE::Vertex_descriptor& w, const PRE_TYPE::Vertex_descriptor &x) {
+		return mesh.add_face(u, v, w,x);
+	};
+    lua->set_function("addface", sol::overload(add_face_triangle, add_face_quad));
 
+
+    // mesh io save
+    auto save_mesh = [](PRE_TYPE::Mesh& mesh, const std::string& path) {
+		std::ofstream out(path);
+		out << mesh;
+    };
+    lua->set_function("savemesh", save_mesh);
 
 
 }
