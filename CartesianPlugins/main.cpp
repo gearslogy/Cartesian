@@ -10,7 +10,7 @@
 #include "GLM_Bind/BindGLM_PublicFunction.h"
 #include "GLM_Bind/BindGLM_MatrixTable.h"
 #include "CGAL_Bind/BindCGAL.h"
-
+#include "CGAL_Bind/BindCGAL_Point_Functions.h"
 using namespace std;
 
 void newOp(void *lua){
@@ -28,5 +28,5 @@ void newOp(void *lua){
     Cartesian::BindGLM_PublicFunction::bind(luaPtr);
     Cartesian::BindGLM_MatrixTable::bind(luaPtr);
     Cartesian::BindCGAL::bind(luaPtr);
-
+    Cartesian::BindCGAL_Point_Functions::bind(luaPtr);
 }

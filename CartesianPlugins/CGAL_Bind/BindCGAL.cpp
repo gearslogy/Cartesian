@@ -18,7 +18,7 @@
 #include <vector>
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
-#include <fstream>;
+#include <fstream>
 
 
 // ------------ add triangle by houdini------------------------
@@ -102,6 +102,14 @@ void BindCGAL::bind(sol::state *lua) {
 	};
     lua->set_function("addface", sol::overload(add_face_triangle, add_face_quad));
 
+
+
+	// mesh io read
+	auto read_mesh = [](PRE_TYPE::Mesh& mesh, const std::string& path) {
+		std::ifstream in(path);
+		in >> mesh;
+	};
+	lua->set_function("readmesh", read_mesh);
 
     // mesh io save
     auto save_mesh = [](PRE_TYPE::Mesh& mesh, const std::string& path) {
