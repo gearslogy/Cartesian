@@ -8,10 +8,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "GLM_Matrix_Helper.h"
-#include "GLM_Vec_Helper.h"
+#include "../GLM_Bind/GLM_Matrix_Helper.h"
+#include "../GLM_Bind/GLM_Vec_Helper.h"
 #include "CartesianLog.h"
-
+#include "BindCGAL_DefineType.h"
 
 #define CGAL_NO_GMP 1
 
@@ -19,19 +19,6 @@
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
 
-// define base mesh
-typedef CGAL::Simple_cartesian<double> CGAL_K;
-typedef CGAL::Surface_mesh<CGAL_K::Point_3> CGAL_Mesh;
-
-// define base vertex & face
-typedef CGAL_Mesh::Vertex_index CGAL_vertex_descriptor;
-typedef CGAL_Mesh::Face_index CGAL_face_descriptor;
-typedef CGAL_Mesh::edge_index CGAL_edge_descriptor;
-typedef CGAL_Mesh::halfedge_index CGAL_halfedge_descriptor;
-
-// iterator
-typedef CGAL_Mesh::face_iterator CGAL_face_iterator;
-typedef CGAL_Mesh::vertex_iterator CGAL_vertex_iterator;
 
 
 // ------------ add triangle by houdini------------------------
@@ -44,8 +31,6 @@ addvertex(geoself(), prim, 0 );
 addvertex(geoself(), prim, 1 );
 addvertex(geoself(), prim, 2 );
  */
-
-
 
 
 
@@ -108,6 +93,10 @@ void BindCGAL::bind(sol::state *lua) {
         return vd;
     };
     lua->set_function("addpoint",sol::overload(add_point,add_point_table));
+
+
+
+
 
 }
 
