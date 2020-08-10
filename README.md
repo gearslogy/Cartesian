@@ -176,7 +176,16 @@ print(astable(mat4))
 ```
 * set() is a overload same as houdini
 
-
+## Procedural Modeling
+```lua
+local m = mesh.new();
+local pt0 = addpoint(m, {0,0,0} );
+local pt1 = addpoint(m, {1,0,0} );
+local pt2 = addpoint(m, {1,1,0} );
+addface(m,pt0,pt1,pt2)
+savemesh(m,"triangle.off");
+```
+![](imgs/addpoint.png)
 
 ## Final
 爱用不用
