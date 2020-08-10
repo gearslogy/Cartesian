@@ -203,7 +203,32 @@ local pt0 = addpoint(m, {0,0,0} );
 local pt1 = addpoint(m, {1,0,0} );
 local pt2 = addpoint(m, {1,1,0} );
 addface(m,pt0,pt1,pt2)
-savemesh(m,"triangle.off");
+
+print("current mesh have points num:", npoints(m) )
+
+print("------- Debug current attrib names -------------")
+local pnt_attrib_names = pointattribnames(m)
+for k,v in ipairs(pnt_attrib_names) do
+    print(v)
+end
+print("------- now add float attrib:foo  -------------")
+add_float_pointattrib(m,"foo", 0.0)
+
+print("------- after add attrib:foo -----------")
+local pnt_attrib_names = pointattribnames(m)
+for k,v in ipairs(pnt_attrib_names) do
+    print(v)
+end
+
+print("------- change id=0 point attrib value -----------");
+set_float_pointattrib(m,"foo",0,100.0); 
+
+for k=1,npoints(m) do
+    local id = k-1
+    local foo_att_value = get_float_pointattrib(m,"foo",id)
+    print("id:",k, "foo:",foo_att_value );
+end
+
 )");
     }
     catch (...) {
