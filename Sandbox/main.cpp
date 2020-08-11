@@ -225,7 +225,9 @@ set_float_pointattrib(m,"foo",0,100.0);
 
 for k=1,npoints(m) do
     local id = k-1
-    local foo_att_value = get_float_pointattrib(m,"foo",id)
+    local vd = vertex.new(id)
+    ---local foo_att_value = get_float_pointattrib(m,"foo",vd)  // Or use this overloaded function
+    local foo_att_value = get_float_pointattrib(m,"foo",id)  
     print("id:",k, "foo:",foo_att_value );
 end
 
