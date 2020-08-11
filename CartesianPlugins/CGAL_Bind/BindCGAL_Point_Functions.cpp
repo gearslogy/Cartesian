@@ -13,9 +13,9 @@
 
 
 // check attribute is created()
-#define CHECK_POINT_ATTRIB_STATUS(STATUS,ATTRIB_NAME) \
+#define CHECK_POINT_ATTRIB_STATUS(STATUS,ATTRIB_NAME, ATTRIB_VALUE_TYPE) \
 if(!STATUS){\
-CARTESIAN_CORE_ERROR("Can not create attrib:{0},{1}, Maybe it's already created ", ATTRIB_NAME, __LINE__);\
+CARTESIAN_CORE_ERROR("Can not create attrib:{0},{1}, Maybe it's already created with this type: {2}", ATTRIB_NAME, __LINE__,#ATTRIB_VALUE_TYPE);\
 }
 
 
@@ -25,6 +25,7 @@ auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const ATT
     PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, ATTRIB_VALUE_TYPE> attmap;\
     bool created;\
     boost::tie(attmap, created) = mesh.add_property_map<PRE_TYPE::Vertex_descriptor, ATTRIB_VALUE_TYPE>(name, default);\
+    CHECK_POINT_ATTRIB_STATUS(created,name,ATTRIB_VALUE_TYPE);\
     return created;\
 }
 
@@ -40,7 +41,7 @@ auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name,const int 
         return attribMap[vd];\
 	}\
 	CARTESIAN_CORE_ERROR("Error get attribute:{0},line:{1},funciton:{2}", name, __LINE__, __FUNCTION__);\
-	return -1.2345f;\
+	return ATTRIB_VALUE_TYPE();\
 };
 // Register lambda function,get point attribute , point number index by int type
 #define DEFINE_GET_POINT_ATTRIB_VERTEX_DESCRIPTOR_FUNCTION(FUNCTION_NAME, ATTRIB_VALUE_TYPE)\
@@ -52,7 +53,7 @@ auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const PRE
         return attribMap[vd]; \
 	}\
 	CARTESIAN_CORE_ERROR("Error get attribute:{0},line:{1},funciton:{2}", name, __LINE__, __FUNCTION__); \
-	return -1.2345f; \
+	return ATTRIB_VALUE_TYPE(); \
 };
 
 
@@ -117,16 +118,41 @@ namespace Cartesian{
 
        
 
+		// --------------------------------------------------------------  int attribute operation --------------------------------------------------------------------
+		 // add attribute
+		DEFINE_ADD_POINT_ATTRIB_FUNCTION(add_int_pointattrib, int);
+		REGISTER_POINT_LUA_FUNCTION("add_int_pointattrib", add_int_pointattrib);
+
+		// get attribute
+		DEFINE_GET_POINT_ATTRIB_PTNUM_FUNCTION(get_int_pointattrib_ptnum, int);
+		DEFINE_GET_POINT_ATTRIB_VERTEX_DESCRIPTOR_FUNCTION(get_int_pointattrib,int);
+		REGISTER_POINT_LUA_OVERLOAD_FUNCTION("get_int_pointattrib", get_int_pointattrib, get_int_pointattrib_ptnum);
+
+		// set attribute
+		DEFINE_SET_POINT_ARRITB_PTNUM_FUNCTION(set_int_pointattrib_ptnum, int);
+		DEFINE_SET_POINT_ARRITB_VERTEX_DESCRIPTOR_FUNCTION(set_int_pointattrib, int);
+		REGISTER_POINT_LUA_OVERLOAD_FUNCTION("set_int_pointattrib", set_int_pointattrib, set_int_pointattrib_ptnum);
+
+		// --------------------------------------------------------------  int attribute operation --------------------------------------------------------------------
+
 
 
         // --------------------------------------------------------------  string attribute operation --------------------------------------------------------------------
-		
+		 // add attribute
+		DEFINE_ADD_POINT_ATTRIB_FUNCTION(add_string_pointattrib, std::string);
+		REGISTER_POINT_LUA_FUNCTION("add_string_pointattrib", add_string_pointattrib);
+
+		// get attribute
+		DEFINE_GET_POINT_ATTRIB_PTNUM_FUNCTION(get_string_pointattrib_ptnum, std::string);
+		DEFINE_GET_POINT_ATTRIB_VERTEX_DESCRIPTOR_FUNCTION(get_string_pointattrib, std::string);
+		REGISTER_POINT_LUA_OVERLOAD_FUNCTION("get_string_pointattrib", get_string_pointattrib, get_string_pointattrib_ptnum);
+
+		// set attribute
+		DEFINE_SET_POINT_ARRITB_PTNUM_FUNCTION(set_string_pointattrib_ptnum, std::string);
+		DEFINE_SET_POINT_ARRITB_VERTEX_DESCRIPTOR_FUNCTION(set_string_pointattrib, std::string);
+		REGISTER_POINT_LUA_OVERLOAD_FUNCTION("set_string_pointattrib", set_string_pointattrib, set_string_pointattrib_ptnum);
        
-
         // --------------------------------------------------------------  string attribute operation --------------------------------------------------------------------
-
-
-
 
 
 
@@ -141,7 +167,7 @@ namespace Cartesian{
         DEFINE_GET_POINT_ATTRIB_VERTEX_DESCRIPTOR_FUNCTION(get_float_pointattrib, float);
         REGISTER_POINT_LUA_OVERLOAD_FUNCTION("get_float_pointattrib", get_float_pointattrib,get_float_pointattrib_ptnum);
 
-        // float set
+        // set attribute
         DEFINE_SET_POINT_ARRITB_PTNUM_FUNCTION(set_float_pointattrib_ptnum, float);
         DEFINE_SET_POINT_ARRITB_VERTEX_DESCRIPTOR_FUNCTION(set_float_pointattrib, float);
         REGISTER_POINT_LUA_OVERLOAD_FUNCTION("set_float_pointattrib", set_float_pointattrib, set_float_pointattrib_ptnum);

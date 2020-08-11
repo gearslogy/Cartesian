@@ -50,6 +50,11 @@ include_directories(${CMAKE_SOURCE_DIR}/CartesianLuajitCore/include)
 link_directories(${CMAKE_SOURCE_DIR}/CartesianLuajitCore/bin)
 # ----------------------------- MyCore --------------------------------------------
 
-add_executable(Sandbox main.cpp)
+FILE(GLOB SRC
+        *.cpp
+       )
+
+
+add_executable(Sandbox ${SRC})
 target_link_libraries(Sandbox CartesianLuaJIT)
 
