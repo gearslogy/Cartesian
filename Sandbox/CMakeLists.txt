@@ -50,8 +50,12 @@ include_directories(${CMAKE_SOURCE_DIR}/CartesianLuajitCore/include)
 link_directories(${CMAKE_SOURCE_DIR}/CartesianLuajitCore/bin)
 # ----------------------------- MyCore --------------------------------------------
 
+
+include_directories(${CMAKE_SOURCE_DIR}/Sandbox/CASE_TEST_include)
 FILE(GLOB SRC
         *.cpp
+        CASE_TEST_SRC/*.cpp
+        CASE_TEST_include/*.h
        )
 
 

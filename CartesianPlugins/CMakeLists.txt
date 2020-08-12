@@ -56,6 +56,8 @@ link_directories(${CMAKE_SOURCE_DIR}/CartesianLuajitCore/bin)
 FILE(GLOB SRC
         CGAL_Bind/*.cpp
         GLM_Bind/*.cpp
+        CGAL_Bind/*.h
+        GLM_Bind/*.h
         main.cpp)
 
 add_library(stdlib SHARED ${SRC})

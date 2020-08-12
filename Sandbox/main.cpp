@@ -2,7 +2,7 @@
 #include "CartesianPluginLoader.h"
 #include "CartesianLog.h"
 #include "test_point_attib.h"
-
+#include "test_point_attrib_table.h"
 void testVector(sol::state * lua){
 
 
@@ -209,8 +209,21 @@ int main(int argc , char **argv)
     CARTESIAN_CORE_INFO("running script");
 
     // TEST
-    TEST_RUN_CASE(TEST_POINT_ATTRIB, lua);
+    /*
+    CARTESIAN_CORE_INFO("RUNNING POINT ATTRIBUTE FLOAT/INT/STRING GLM TEST");
+    TEST_RUN_CASE(TEST_POINT_ATTRIB_FLOAT_STRING_INT, lua);
+
+	CARTESIAN_CORE_INFO("RUNNING ATTRIBUTE VALUES TEST");
+    TEST_RUN_CASE(TEST_POINT_ATTRIB_VALUES, lua);
+
+    CARTESIAN_CORE_INFO("RUNNING ATTRIBUTE GLM TEST");
+	TEST_RUN_CASE(TEST_POINT_ATTRIB_GLM, lua);
+    */
+
+    TEST_RUN_CASE(TEST_POINT_ATTRIB_TABLE, lua);
+
 
     std::cin.get();
+
     return 0;
 }
