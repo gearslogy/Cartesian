@@ -44,7 +44,7 @@ auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const ATT
 }
 
 
-// Register lambda function,get point attribute , point number index by int type
+// Register lambda function,get attribute , point number index by int type
 #define DEFINE_GET_ATTRIB_ID_FUNCTION(SCOPE_TYPE,FUNCTION_NAME, ATTRIB_VALUE_TYPE)\
 auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name,const int &ptnum ) {\
     SCOPE_TYPE vd(ptnum);\
@@ -57,7 +57,7 @@ auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name,const int 
 	CARTESIAN_CORE_ERROR("Error get attribute:{0},line:{1},funciton:{2}", name, __LINE__, __FUNCTION__);\
 	return ATTRIB_VALUE_TYPE();\
 };
-// Register lambda function,get point attribute , point number index by int type
+// Register lambda function,get attribute , point number index by int type
 #define DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(SCOPE_TYPE,FUNCTION_NAME, ATTRIB_VALUE_TYPE)\
 auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const SCOPE_TYPE& vd) {\
     PRE_TYPE::Mesh::Property_map<SCOPE_TYPE, ATTRIB_VALUE_TYPE> attribMap; \
@@ -71,7 +71,7 @@ auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const SCO
 };
 
 
-// Register lambda function,set point attribute , point number by Vertex_descriptor
+// Register lambda function,set attribute , point number by Vertex_descriptor
 #define DEFINE_SET_ARRITB_PTNUM_FUNCTION(SCOPE_TYPE,FUNCTION_NAME,SET_ATTRIB_VALUE_TYPE)\
 auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const int& vd, const SET_ATTRIB_VALUE_TYPE& value)->void {\
 	SCOPE_TYPE vtex(vd);\
@@ -84,7 +84,7 @@ auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const int
 	}\
 	CARTESIAN_CORE_ERROR("Error set not existed attribute:{0}, line:{1}, function:{2}", name, __LINE__, __FUNCTION__);\
 };
-// Register lambda function,set point attribute , point number by Vertex_descriptor
+// Register lambda function,set attribute , point number by Vertex_descriptor
 #define DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(SCOPE_TYPE, FUNCTION_NAME,SET_ATTRIB_VALUE_TYPE)\
 auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const SCOPE_TYPE& vd, const SET_ATTRIB_VALUE_TYPE& value)->void {\
 	PRE_TYPE::Mesh::Property_map<SCOPE_TYPE, SET_ATTRIB_VALUE_TYPE> attribMap;\
@@ -143,6 +143,30 @@ namespace Cartesian
 
 	};
 
+	// For General face 
+	template <typename T>
+	class GetAttribValues<PRE_TYPE::Face_descriptor, T>
+	{
+	public:
+		// Return lua table
+		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName) {
+			std::vector <T> values;
+			PRE_TYPE::Mesh::Property_map<PRE_TYPE::Face_descriptor, T> attribMap;
+			bool found;
+			boost::tie(attribMap, found) = mesh.property_map<PRE_TYPE::Face_descriptor, T>(attribName);
+			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, T);
+			if (found) {
+				for (PRE_TYPE::Face_descriptor vd : mesh.faces())
+				{
+					values.push_back(attribMap[vd]);
+				}
+			}
+			return sol::as_table(values);
+		}
+
+	};
+
+
 	
 
 
@@ -172,6 +196,32 @@ namespace Cartesian
 	};
 
 
+	// For General face glm::vec2 type, return a flat tables,{x1,y1, x1,y1 ...}
+	template <>
+	class GetAttribValues<PRE_TYPE::Face_descriptor, glm::vec2> {
+	public:
+		// Return lua table
+		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName) {
+			std::vector <float> values;
+			PRE_TYPE::Mesh::Property_map<PRE_TYPE::Face_descriptor, glm::vec2> attribMap;
+			bool found;
+			boost::tie(attribMap, found) = mesh.property_map<PRE_TYPE::Face_descriptor, glm::vec2>(attribName);
+			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::vec2);
+			if (!found) {
+				return sol::as_table(values);
+			}
+
+			for (PRE_TYPE::Face_descriptor vd : mesh.faces()) {
+				auto val = attribMap[vd];
+				values.push_back(val.x);
+				values.push_back(val.y);
+			}
+			return sol::as_table(values);
+		}
+	};
+
+
+
 	// For General vertex glm::vec3 type, return flat tables {x1,y1,z1, x1,y1,z1 ...}
 	template <>
 	class GetAttribValues<PRE_TYPE::Vertex_descriptor, glm::vec3>{
@@ -196,6 +246,33 @@ namespace Cartesian
 			return sol::as_table(values);
 		}
 	};
+
+	// For General face glm::vec3 type, return flat tables {x1,y1,z1, x1,y1,z1 ...}
+	template <>
+	class GetAttribValues<PRE_TYPE::Face_descriptor, glm::vec3> {
+	public:
+		// Return lua table
+		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName) {
+			std::vector <float> values;
+			PRE_TYPE::Mesh::Property_map<PRE_TYPE::Face_descriptor, glm::vec3> attribMap;
+			bool found;
+			boost::tie(attribMap, found) = mesh.property_map<PRE_TYPE::Face_descriptor, glm::vec3>(attribName);
+			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::vec3);
+			if (!found) {
+				return sol::as_table(values);
+			}
+
+			for (PRE_TYPE::Face_descriptor vd : mesh.faces()) {
+				auto val = attribMap[vd];
+				values.push_back(val.x);
+				values.push_back(val.y);
+				values.push_back(val.z);
+			}
+			return sol::as_table(values);
+		}
+	};
+
+
 
 	// For General vertex glm::vec4 type  return a flat tables,{x1,y1,z1,w1, x1,y1,z1,w1 ...}
 	template <>
@@ -223,33 +300,98 @@ namespace Cartesian
 		}
 	};
 
+	// For General face glm::vec4 type  return a flat tables,{x1,y1,z1,w1, x1,y1,z1,w1 ...}
+	template <>
+	class GetAttribValues<PRE_TYPE::Face_descriptor, glm::vec4> {
+	public:
+		// Return lua table
+		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName) {
+			std::vector <float> values;
+			PRE_TYPE::Mesh::Property_map<PRE_TYPE::Face_descriptor, glm::vec4> attribMap;
+			bool found;
+			boost::tie(attribMap, found) = mesh.property_map<PRE_TYPE::Face_descriptor, glm::vec4>(attribName);
+			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::vec4);
+			if (!found) {
+				return sol::as_table(values);
+			}
+
+			for (PRE_TYPE::Face_descriptor vd : mesh.faces()) {
+				auto val = attribMap[vd];
+				values.push_back(val.x);
+				values.push_back(val.y);
+				values.push_back(val.z);
+				values.push_back(val.w);
+			}
+			return sol::as_table(values);
+		}
+	};
+
+
 
 	
-	// For General vertex lua table type, let you write : get_table_values(m,"foo"), return table
+	// base , let you write : get_table_values(m,"foo"), return table
 	template <typename scope, typename tableValueType>
 	class GetTableAttribValues
 	{
 	public:
 		// Return lua table
 		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName) {
-			std::vector<tableValueType> values; 
-		
-			PRE_TYPE::Mesh::Property_map<scope, sol::lua_table> attribMap;
+			std::vector<float> values; 
+			return sol::as_table(values);
+		}
+	};
+	
+	// for vertex , let you write : get_table_values(m,"foo"), return table
+	template <typename tableValueType>
+	class GetTableAttribValues<PRE_TYPE::Vertex_descriptor, tableValueType >
+	{
+	public:
+		// Return lua table
+		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName) {
+			std::vector<tableValueType> values;
+
+			PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, sol::lua_table> attribMap;
 			bool found;
-			boost::tie(attribMap, found) = mesh.property_map<scope, sol::lua_table>(attribName);
+			boost::tie(attribMap, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, sol::lua_table>(attribName);
 			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, tableValueType);
 
 			if (found) {
-				for (scope vd : mesh.vertices()) {
+				for (PRE_TYPE::Vertex_descriptor vd : mesh.vertices()) {
 					auto per_vertex_table = attribMap[vd];
 					for (auto i = 0; i < per_vertex_table.size(); i++) {
-						values.push_back(per_vertex_table.get<tableValueType>(i+1));
+						values.push_back(per_vertex_table.get<tableValueType>(i + 1));
 					}
 				}
 			}
 			return sol::as_table(values);
 		}
 	};
-	
+
+	// for face , let you write : get_table_values(m,"foo"), return table
+	template <typename tableValueType>
+	class GetTableAttribValues<PRE_TYPE::Face_descriptor, tableValueType >
+	{
+	public:
+		// Return lua table
+		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName) {
+			std::vector<tableValueType> values;
+
+			PRE_TYPE::Mesh::Property_map<PRE_TYPE::Face_descriptor, sol::lua_table> attribMap;
+			bool found;
+			boost::tie(attribMap, found) = mesh.property_map<PRE_TYPE::Face_descriptor, sol::lua_table>(attribName);
+			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, tableValueType);
+
+			if (found) {
+				for (PRE_TYPE::Face_descriptor vd : mesh.faces()) {
+					auto per_vertex_table = attribMap[vd];
+					for (auto i = 0; i < per_vertex_table.size(); i++) {
+						values.push_back(per_vertex_table.get<tableValueType>(i + 1));
+					}
+				}
+			}
+			return sol::as_table(values);
+		}
+	};
+
 
 }// end of name space 
