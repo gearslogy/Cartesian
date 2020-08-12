@@ -1,92 +1,8 @@
 //
 // Created by admin on 2020/8/10.
 //
-#define CGAL_NO_GMP 1
+#include "CGAL_Attrib_Helper.h"
 #include "BindCGAL_Point_Functions.h"
-#include <vector>
-#include <CGAL/Simple_cartesian.h>
-#include <CGAL/Surface_mesh.h>
-#include "BindCGAL_DefineType.h"
-#include "CartesianLog.h"
-
-
-
-
-// check attribute is created()
-#define CHECK_POINT_ATTRIB_STATUS(STATUS,ATTRIB_NAME, ATTRIB_VALUE_TYPE) \
-if(!STATUS){\
-CARTESIAN_CORE_ERROR("Can not create attrib:{0},{1}, Maybe it's already created with this type: {2}", ATTRIB_NAME, __LINE__,#ATTRIB_VALUE_TYPE);\
-}
-
-
-// Register lambda function and body and register to lua
-#define DEFINE_ADD_POINT_ATTRIB_FUNCTION(FUNCTION_NAME,ATTRIB_VALUE_TYPE) \
-auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const ATTRIB_VALUE_TYPE& default) {\
-    PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, ATTRIB_VALUE_TYPE> attmap;\
-    bool created;\
-    boost::tie(attmap, created) = mesh.add_property_map<PRE_TYPE::Vertex_descriptor, ATTRIB_VALUE_TYPE>(name, default);\
-    CHECK_POINT_ATTRIB_STATUS(created,name,ATTRIB_VALUE_TYPE);\
-    return created;\
-}
-
-
-// Register lambda function,get point attribute , point number index by int type
-#define DEFINE_GET_POINT_ATTRIB_PTNUM_FUNCTION(FUNCTION_NAME, ATTRIB_VALUE_TYPE)\
-auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name,const int &ptnum ) {\
-    PRE_TYPE::Vertex_descriptor vd(ptnum);\
-	PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, ATTRIB_VALUE_TYPE> attribMap; \
-    bool found;\
-    boost::tie(attribMap, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, ATTRIB_VALUE_TYPE>(name);\
-    if (found) {\
-        return attribMap[vd];\
-	}\
-	CARTESIAN_CORE_ERROR("Error get attribute:{0},line:{1},funciton:{2}", name, __LINE__, __FUNCTION__);\
-	return ATTRIB_VALUE_TYPE();\
-};
-// Register lambda function,get point attribute , point number index by int type
-#define DEFINE_GET_POINT_ATTRIB_VERTEX_DESCRIPTOR_FUNCTION(FUNCTION_NAME, ATTRIB_VALUE_TYPE)\
-auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const PRE_TYPE::Vertex_descriptor& vd) {\
-    PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, ATTRIB_VALUE_TYPE> attribMap; \
-    bool found; \
-    boost::tie(attribMap, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, ATTRIB_VALUE_TYPE>(name); \
-    if (found) {\
-        return attribMap[vd]; \
-	}\
-	CARTESIAN_CORE_ERROR("Error get attribute:{0},line:{1},funciton:{2}", name, __LINE__, __FUNCTION__); \
-	return ATTRIB_VALUE_TYPE(); \
-};
-
-
-// Register lambda function,set point attribute , point number by Vertex_descriptor
-#define DEFINE_SET_POINT_ARRITB_PTNUM_FUNCTION(FUNCTION_NAME,SET_ATTRIB_VALUE_TYPE)\
-auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const int& vd, const SET_ATTRIB_VALUE_TYPE& value)->void {\
-	PRE_TYPE::Vertex_descriptor vtex(vd);\
-	PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, SET_ATTRIB_VALUE_TYPE> attribMap;\
-	bool found;\
-	boost::tie(attribMap, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, SET_ATTRIB_VALUE_TYPE>(name);\
-	if (found) {\
-		attribMap[vtex] = value;\
-		return;\
-	}\
-	CARTESIAN_CORE_ERROR("Error set not existed attribute:{0}, line:{1}, function:{2}", name, __LINE__, __FUNCTION__);\
-};
-// Register lambda function,set point attribute , point number by Vertex_descriptor
-#define DEFINE_SET_POINT_ARRITB_VERTEX_DESCRIPTOR_FUNCTION(FUNCTION_NAME,SET_ATTRIB_VALUE_TYPE)\
-auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const PRE_TYPE::Vertex_descriptor& vd, const SET_ATTRIB_VALUE_TYPE& value)->void {\
-	PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, SET_ATTRIB_VALUE_TYPE> attribMap;\
-	bool found;\
-	boost::tie(attribMap, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, SET_ATTRIB_VALUE_TYPE>(name);\
-	if (found) {\
-		attribMap[vd] = value;\
-		return;\
-	}\
-	CARTESIAN_CORE_ERROR("Error set not existed attribute:{0}, line:{1}, function:{2}", name, __LINE__, __FUNCTION__);\
-};
-
-// Register to lua
-#define REGISTER_POINT_LUA_FUNCTION(FUNCTION_NAME, FUNCTION) lua->set_function(FUNCTION_NAME,FUNCTION);
-#define REGISTER_POINT_LUA_OVERLOAD_FUNCTION(FUNCTION_NAME, ...) lua->set_function(FUNCTION_NAME,sol::overload(__VA_ARGS__));
-
 
 namespace Cartesian{
 
@@ -120,17 +36,17 @@ namespace Cartesian{
 
 		// --------------------------------------------------------------  int attribute operation --------------------------------------------------------------------
 		 // add attribute
-		DEFINE_ADD_POINT_ATTRIB_FUNCTION(add_int_pointattrib, int);
+		DEFINE_ADD_ATTRIB_FUNCTION(PRE_TYPE::Vertex_descriptor, add_int_pointattrib, int);
 		REGISTER_POINT_LUA_FUNCTION("add_int_pointattrib", add_int_pointattrib);
 
 		// get attribute
-		DEFINE_GET_POINT_ATTRIB_PTNUM_FUNCTION(get_int_pointattrib_ptnum, int);
-		DEFINE_GET_POINT_ATTRIB_VERTEX_DESCRIPTOR_FUNCTION(get_int_pointattrib,int);
+		DEFINE_GET_ATTRIB_ID_FUNCTION(PRE_TYPE::Vertex_descriptor,get_int_pointattrib_ptnum, int);
+		DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(PRE_TYPE::Vertex_descriptor,get_int_pointattrib,int);
 		REGISTER_POINT_LUA_OVERLOAD_FUNCTION("get_int_pointattrib", get_int_pointattrib, get_int_pointattrib_ptnum);
 
 		// set attribute
-		DEFINE_SET_POINT_ARRITB_PTNUM_FUNCTION(set_int_pointattrib_ptnum, int);
-		DEFINE_SET_POINT_ARRITB_VERTEX_DESCRIPTOR_FUNCTION(set_int_pointattrib, int);
+		DEFINE_SET_ARRITB_PTNUM_FUNCTION(PRE_TYPE::Vertex_descriptor,set_int_pointattrib_ptnum, int);
+		DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(PRE_TYPE::Vertex_descriptor,set_int_pointattrib, int);
 		REGISTER_POINT_LUA_OVERLOAD_FUNCTION("set_int_pointattrib", set_int_pointattrib, set_int_pointattrib_ptnum);
 
 		// --------------------------------------------------------------  int attribute operation --------------------------------------------------------------------
@@ -139,18 +55,18 @@ namespace Cartesian{
 
         // --------------------------------------------------------------  string attribute operation --------------------------------------------------------------------
 		 // add attribute
-		DEFINE_ADD_POINT_ATTRIB_FUNCTION(add_string_pointattrib, std::string);
+		DEFINE_ADD_ATTRIB_FUNCTION(PRE_TYPE::Vertex_descriptor,add_string_pointattrib, std::string);
 		REGISTER_POINT_LUA_FUNCTION("add_string_pointattrib", add_string_pointattrib);
 
 		// get attribute
-		DEFINE_GET_POINT_ATTRIB_PTNUM_FUNCTION(get_string_pointattrib_ptnum, std::string);
-		DEFINE_GET_POINT_ATTRIB_VERTEX_DESCRIPTOR_FUNCTION(get_string_pointattrib, std::string);
-		REGISTER_POINT_LUA_OVERLOAD_FUNCTION("get_string_pointattrib", get_string_pointattrib, get_string_pointattrib_ptnum);
+		DEFINE_GET_ATTRIB_ID_FUNCTION(PRE_TYPE::Vertex_descriptor, get_string_pointattrib_ptnum, std::string);
+		DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(PRE_TYPE::Vertex_descriptor, get_string_pointattrib, std::string);
+		REGISTER_POINT_LUA_OVERLOAD_FUNCTION( "get_string_pointattrib", get_string_pointattrib, get_string_pointattrib_ptnum);
 
 		// set attribute
-		DEFINE_SET_POINT_ARRITB_PTNUM_FUNCTION(set_string_pointattrib_ptnum, std::string);
-		DEFINE_SET_POINT_ARRITB_VERTEX_DESCRIPTOR_FUNCTION(set_string_pointattrib, std::string);
-		REGISTER_POINT_LUA_OVERLOAD_FUNCTION("set_string_pointattrib", set_string_pointattrib, set_string_pointattrib_ptnum);
+		DEFINE_SET_ARRITB_PTNUM_FUNCTION(PRE_TYPE::Vertex_descriptor, set_string_pointattrib_ptnum, std::string);
+		DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(PRE_TYPE::Vertex_descriptor, set_string_pointattrib, std::string);
+		REGISTER_POINT_LUA_OVERLOAD_FUNCTION( "set_string_pointattrib", set_string_pointattrib, set_string_pointattrib_ptnum);
        
         // --------------------------------------------------------------  string attribute operation --------------------------------------------------------------------
 
@@ -159,21 +75,73 @@ namespace Cartesian{
 
         // --------------------------------------------------------------  float attribute operation --------------------------------------------------------------------
         // add attribute
-        DEFINE_ADD_POINT_ATTRIB_FUNCTION(add_float_pointattrib, float);
+        DEFINE_ADD_ATTRIB_FUNCTION(PRE_TYPE::Vertex_descriptor, add_float_pointattrib, float);
         REGISTER_POINT_LUA_FUNCTION("add_float_pointattrib", add_float_pointattrib);
 
         // get attribute
-        DEFINE_GET_POINT_ATTRIB_PTNUM_FUNCTION(get_float_pointattrib_ptnum, float);
-        DEFINE_GET_POINT_ATTRIB_VERTEX_DESCRIPTOR_FUNCTION(get_float_pointattrib, float);
+        DEFINE_GET_ATTRIB_ID_FUNCTION(PRE_TYPE::Vertex_descriptor, get_float_pointattrib_ptnum, float);
+        DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(PRE_TYPE::Vertex_descriptor, get_float_pointattrib, float);
         REGISTER_POINT_LUA_OVERLOAD_FUNCTION("get_float_pointattrib", get_float_pointattrib,get_float_pointattrib_ptnum);
 
         // set attribute
-        DEFINE_SET_POINT_ARRITB_PTNUM_FUNCTION(set_float_pointattrib_ptnum, float);
-        DEFINE_SET_POINT_ARRITB_VERTEX_DESCRIPTOR_FUNCTION(set_float_pointattrib, float);
+        DEFINE_SET_ARRITB_PTNUM_FUNCTION(PRE_TYPE::Vertex_descriptor, set_float_pointattrib_ptnum, float);
+        DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(PRE_TYPE::Vertex_descriptor, set_float_pointattrib, float);
         REGISTER_POINT_LUA_OVERLOAD_FUNCTION("set_float_pointattrib", set_float_pointattrib, set_float_pointattrib_ptnum);
-        // --------------------------------------------------------------  float attribute operation --------------------------------------------------------------------
+		// --------------------------------------------------------------  float attribute operation --------------------------------------------------------------------
+
+		
+		 // -------------------------------------------------------------- lua table attribute operation --------------------------------------------------------------------
+		// add attribute
+		DEFINE_ADD_ATTRIB_FUNCTION(PRE_TYPE::Vertex_descriptor, add_table_pointattrib, sol::lua_table);
+		REGISTER_POINT_LUA_FUNCTION("add_table_pointattrib", add_table_pointattrib);
+
+		// get attribute
+		DEFINE_GET_ATTRIB_ID_FUNCTION(PRE_TYPE::Vertex_descriptor, get_table_pointattrib_ptnum, sol::lua_table);
+		DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(PRE_TYPE::Vertex_descriptor, get_table_pointattrib, sol::lua_table);
+		REGISTER_POINT_LUA_OVERLOAD_FUNCTION("get_table_pointattrib", get_table_pointattrib, get_table_pointattrib_ptnum);
+
+		// set attribute
+		DEFINE_SET_ARRITB_PTNUM_FUNCTION(PRE_TYPE::Vertex_descriptor, set_table_pointattrib_ptnum, sol::lua_table);
+		DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(PRE_TYPE::Vertex_descriptor, set_table_pointattrib, sol::lua_table);
+		REGISTER_POINT_LUA_OVERLOAD_FUNCTION("set_table_pointattrib", set_table_pointattrib, set_table_pointattrib_ptnum);
+		// -------------------------------------------------------------- lua table attribute operation --------------------------------------------------------------------
+
+
+		
+        // Register get tables values
+        auto func = GetAttribValues<PRE_TYPE::Vertex_descriptor, float>::get;
+        REGISTER_POINT_LUA_FUNCTION("get_float_pointattribvalues", func);
+
+		auto func2 = GetAttribValues<PRE_TYPE::Vertex_descriptor, int>::get;
+		REGISTER_POINT_LUA_FUNCTION("get_int_pointattribvalues", func2);
+
+		auto func3 = GetAttribValues<PRE_TYPE::Vertex_descriptor, std::string>::get;
+		REGISTER_POINT_LUA_FUNCTION("get_string_pointattribvalues", func3);
+
+	
+		auto func4 = GetAttribValues<PRE_TYPE::Vertex_descriptor, glm::vec2>::get;
+		REGISTER_POINT_LUA_FUNCTION("get_vector2_pointattribvalues", func4);
+	
+		
+		auto func5 = GetAttribValues<PRE_TYPE::Vertex_descriptor, glm::vec3>::get;
+		REGISTER_POINT_LUA_FUNCTION("get_vector_pointattribvalues", func5);
+
+		auto func6 = GetAttribValues<PRE_TYPE::Vertex_descriptor, glm::vec4>::get;
+		REGISTER_POINT_LUA_FUNCTION("get_vector4_pointattribvalues", func6);
+		
+
+
+		auto func7 = GetTableAttribValues<PRE_TYPE::Vertex_descriptor, float>::get;
+		REGISTER_POINT_LUA_FUNCTION("get_table_float_pointattribvalues", func7);
+
+		auto func8 = GetTableAttribValues<PRE_TYPE::Vertex_descriptor, int>::get;
+		REGISTER_POINT_LUA_FUNCTION("get_table_int_pointattribvalues", func8);
+		
+		auto func9 = GetTableAttribValues<PRE_TYPE::Vertex_descriptor, std::string>::get;
+		REGISTER_POINT_LUA_FUNCTION("get_table_string_pointattribvalues", func9);
     }
 
 
+   
 
 }
