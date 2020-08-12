@@ -100,8 +100,8 @@ auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const SCO
 
 
 // Register to lua
-#define REGISTER_POINT_LUA_FUNCTION(FUNCTION_NAME, FUNCTION) lua->set_function(FUNCTION_NAME,FUNCTION);
-#define REGISTER_POINT_LUA_OVERLOAD_FUNCTION(FUNCTION_NAME, ...) lua->set_function(FUNCTION_NAME,sol::overload(__VA_ARGS__));
+#define REGISTER_LUA_FUNCTION(FUNCTION_NAME, FUNCTION) lua->set_function(FUNCTION_NAME,FUNCTION);
+#define REGISTER_LUA_OVERLOAD_FUNCTION(FUNCTION_NAME, ...) lua->set_function(FUNCTION_NAME,sol::overload(__VA_ARGS__));
 
 
 
