@@ -34,7 +34,7 @@ CARTESIAN_CORE_ERROR("Can not find attrib:{0},{1}, Maybe it's already created wi
 
 
 // Register lambda function and body and register to lua
-#define DEFINE_ADD_ATTRIB_FUNCTION(SCOPE_TYPE,FUNCTION_NAME,ATTRIB_VALUE_TYPE) \
+#define DEFINE_ADD_ATTRIB_FUNCTION(SCOPE_TYPE, FUNCTION_NAME, ATTRIB_VALUE_TYPE) \
 auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const ATTRIB_VALUE_TYPE& default) {\
     PRE_TYPE::Mesh::Property_map<SCOPE_TYPE, ATTRIB_VALUE_TYPE> attmap;\
     bool created;\
@@ -100,9 +100,68 @@ auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const SCO
 
 
 // Register to lua
-#define REGISTER_LUA_FUNCTION(FUNCTION_NAME, FUNCTION) lua->set_function(FUNCTION_NAME,FUNCTION);
-#define REGISTER_LUA_OVERLOAD_FUNCTION(FUNCTION_NAME, ...) lua->set_function(FUNCTION_NAME,sol::overload(__VA_ARGS__));
+#define REGISTER_LUA_FUNCTION(FUNCTION_NAME, FUNCTION) lua->set_function(#FUNCTION_NAME,FUNCTION);
+#define REGISTER_LUA_OVERLOAD_FUNCTION(FUNCTION_NAME, ...) lua->set_function(#FUNCTION_NAME,sol::overload(__VA_ARGS__));
 
+
+// Register base attribute operation for this type: float,string,int,lua_table for add/get/set , FUNCTION_SCOPE_NAME is :point / prim / edge / hedge
+#define DEFINE_GENERIC_ADD_GET_SET_FUNCTIONS(GEOMETRY_SCOPE_TYPE, FUNCTION_SCOPE_NAME)\
+/*Regsiter the add function*/\
+DEFINE_ADD_ATTRIB_FUNCTION(GEOMETRY_SCOPE_TYPE, add_int_##FUNCTION_SCOPE_NAME##attrib, int);\
+REGISTER_LUA_FUNCTION(##add_int_##FUNCTION_SCOPE_NAME##attrib,add_int_##FUNCTION_SCOPE_NAME##attrib)\
+/*add float attribute*/\
+DEFINE_ADD_ATTRIB_FUNCTION(GEOMETRY_SCOPE_TYPE, add_float_##FUNCTION_SCOPE_NAME##attrib, float);\
+REGISTER_LUA_FUNCTION(##add_float_##FUNCTION_SCOPE_NAME##attrib,add_float_##FUNCTION_SCOPE_NAME##attrib)\
+/*add string attribute*/\
+DEFINE_ADD_ATTRIB_FUNCTION(GEOMETRY_SCOPE_TYPE, add_string_##FUNCTION_SCOPE_NAME##attrib, std::string);\
+REGISTER_LUA_FUNCTION(##add_string_##FUNCTION_SCOPE_NAME##attrib,add_string_##FUNCTION_SCOPE_NAME##attrib)\
+/*add table attribute*/\
+DEFINE_ADD_ATTRIB_FUNCTION(GEOMETRY_SCOPE_TYPE, add_table_##FUNCTION_SCOPE_NAME##attrib, sol::lua_table);\
+REGISTER_LUA_FUNCTION(##add_table_##FUNCTION_SCOPE_NAME##attrib,add_table_##FUNCTION_SCOPE_NAME##attrib)\
+/**/\
+/**/\
+/* get & set attribute for int */\
+/* get */\
+DEFINE_GET_ATTRIB_ID_FUNCTION(GEOMETRY_SCOPE_TYPE,get_int_##FUNCTION_SCOPE_NAME##attrib_ptnum, int);\
+DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, get_int_##FUNCTION_SCOPE_NAME##attrib, int);\
+REGISTER_LUA_OVERLOAD_FUNCTION(##get_int_##FUNCTION_SCOPE_NAME##attrib, get_int_##FUNCTION_SCOPE_NAME##attrib, get_int_##FUNCTION_SCOPE_NAME##attrib_ptnum);\
+/* set */\
+DEFINE_SET_ARRITB_PTNUM_FUNCTION(GEOMETRY_SCOPE_TYPE, set_int_##FUNCTION_SCOPE_NAME##attrib_ptnum, int);\
+DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, set_int_##FUNCTION_SCOPE_NAME##attrib, int);\
+REGISTER_LUA_OVERLOAD_FUNCTION(##set_int_##FUNCTION_SCOPE_NAME##attrib, set_int_##FUNCTION_SCOPE_NAME##attrib, set_int_##FUNCTION_SCOPE_NAME##attrib_ptnum);\
+/**/\
+/**/\
+/* get & set attribute for string */\
+/* get */\
+DEFINE_GET_ATTRIB_ID_FUNCTION(GEOMETRY_SCOPE_TYPE,get_string_##FUNCTION_SCOPE_NAME##attrib_ptnum, std::string);\
+DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, get_string_##FUNCTION_SCOPE_NAME##attrib, std::string);\
+REGISTER_LUA_OVERLOAD_FUNCTION(##get_string_##FUNCTION_SCOPE_NAME##attrib, get_string_##FUNCTION_SCOPE_NAME##attrib, get_string_##FUNCTION_SCOPE_NAME##attrib_ptnum);\
+/* set */\
+DEFINE_SET_ARRITB_PTNUM_FUNCTION(GEOMETRY_SCOPE_TYPE, set_string_##FUNCTION_SCOPE_NAME##attrib_ptnum, std::string); \
+DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, set_string_##FUNCTION_SCOPE_NAME##attrib, std::string);\
+REGISTER_LUA_OVERLOAD_FUNCTION(##set_string_##FUNCTION_SCOPE_NAME##attrib, set_string_##FUNCTION_SCOPE_NAME##attrib, set_string_##FUNCTION_SCOPE_NAME##attrib_ptnum);\
+/**/\
+/**/\
+/* get & set attribute for float */\
+/* get */\
+DEFINE_GET_ATTRIB_ID_FUNCTION(GEOMETRY_SCOPE_TYPE, get_float_##FUNCTION_SCOPE_NAME##attrib_ptnum, float); \
+DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, get_float_##FUNCTION_SCOPE_NAME##attrib, float);\
+REGISTER_LUA_OVERLOAD_FUNCTION(##get_float_##FUNCTION_SCOPE_NAME##attrib, get_float_##FUNCTION_SCOPE_NAME##attrib, get_float_##FUNCTION_SCOPE_NAME##attrib_ptnum);\
+/* set */\
+DEFINE_SET_ARRITB_PTNUM_FUNCTION(GEOMETRY_SCOPE_TYPE, set_float_##FUNCTION_SCOPE_NAME##attrib_ptnum, float); \
+DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, set_float_##FUNCTION_SCOPE_NAME##attrib, float);\
+REGISTER_LUA_OVERLOAD_FUNCTION(##set_float_##FUNCTION_SCOPE_NAME##attrib, set_float_##FUNCTION_SCOPE_NAME##attrib, set_float_##FUNCTION_SCOPE_NAME##attrib_ptnum);\
+/**/\
+/**/\
+/* get & set attribute for table */\
+/* get */\
+DEFINE_GET_ATTRIB_ID_FUNCTION(GEOMETRY_SCOPE_TYPE, get_table_##FUNCTION_SCOPE_NAME##attrib_ptnum, sol::lua_table); \
+DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, get_table_##FUNCTION_SCOPE_NAME##attrib, sol::lua_table);\
+REGISTER_LUA_OVERLOAD_FUNCTION(##get_table_##FUNCTION_SCOPE_NAME##attrib, get_table_##FUNCTION_SCOPE_NAME##attrib, get_table_##FUNCTION_SCOPE_NAME##attrib_ptnum);\
+/* set */\
+DEFINE_SET_ARRITB_PTNUM_FUNCTION(GEOMETRY_SCOPE_TYPE, set_table_##FUNCTION_SCOPE_NAME##attrib_ptnum, sol::lua_table); \
+DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, set_table_##FUNCTION_SCOPE_NAME##attrib, sol::lua_table);\
+REGISTER_LUA_OVERLOAD_FUNCTION(##set_table_##FUNCTION_SCOPE_NAME##attrib, set_table_##FUNCTION_SCOPE_NAME##attrib, set_table_##FUNCTION_SCOPE_NAME##attrib_ptnum);
 
 
 namespace Cartesian
@@ -321,6 +380,29 @@ namespace Cartesian
 				values.push_back(val.y);
 				values.push_back(val.z);
 				values.push_back(val.w);
+			}
+			return sol::as_table(values);
+		}
+	};
+
+
+
+	template <>
+	class GetAttribValues<PRE_TYPE::Vertex_descriptor, sol::lua_table>
+	{
+	public:
+		// Return lua table
+		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName) {
+			std::vector <sol::lua_table> values;
+			PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, sol::lua_table> attribMap;
+			bool found;
+			boost::tie(attribMap, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, sol::lua_table>(attribName);
+			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, sol::lua_table);
+			if (found) {
+				for (PRE_TYPE::Vertex_descriptor vd : mesh.vertices()) {
+					// attribMap[vd] is sol::lua_table
+					values.push_back(attribMap[vd]); // add a table to a table, lua:{ {},{},{}... }
+				}
 			}
 			return sol::as_table(values);
 		}
