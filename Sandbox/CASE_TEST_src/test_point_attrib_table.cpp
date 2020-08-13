@@ -27,7 +27,7 @@ printAttribs()
 print("------------ add table attribute:foo ---------------------")
 add_table_pointattrib(m,"foo",{1,2,3,4})
 printAttribs()
-set_table_pointattrib(m, "foo", 0 , {1,2,3} ) --- change vertex id table value
+set_table_pointattrib(m, "foo", 0 , {1,2,3,"even string!"} ) --- change vertex id table value
 
 for k = 1,npoints(m) do 
 	print("current look up the vertex id data: ", k-1)
@@ -37,14 +37,17 @@ for k = 1,npoints(m) do
 	end
 end
 
-print("------------------all float vertex tables --------------------")
-local all_vertex_tables = get_table_float_pointattribvalues(m,"foo")
-for k=1,#all_vertex_tables do
-	print(all_vertex_tables[k])
+
+print("------------------all not flat tables --------------------")
+local get_vertex_tables = get_table_pointattribvalues(m,"foo")
+print(get_vertex_tables)
+for k,v in ipairs(get_vertex_tables) do
+	io.write(k,":")
+	for i,val in ipairs(v) do
+		io.write(val," ")
+	end
+	io.write("\n")
 end
-
-
-
 )");
 	}
 	catch (...) {
