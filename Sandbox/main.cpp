@@ -3,6 +3,8 @@
 #include "CartesianLog.h"
 #include "test_point_attib.h"
 #include "test_point_attrib_table.h"
+#include "test_point_add_set_get.h"
+#include "test_point_vec2_vec3_vec4.h"
 void testVector(sol::state * lua){
 
 
@@ -199,7 +201,7 @@ int main(int argc , char **argv)
     // create state
     //auto *lua = new sol::state;
     auto *lua = new sol::state;
-    lua->open_libraries(sol::lib::base,sol::lib::jit,sol::lib::ffi,sol::lib::package,sol::lib::coroutine);
+    lua->open_libraries(sol::lib::base,sol::lib::jit,sol::lib::ffi,sol::lib::package,sol::lib::coroutine,sol::lib::io);
 
     Cartesian::Log::initialize();
     CARTESIAN_CORE_WARN("Starting version = {0}.{1}",0,1);
@@ -209,6 +211,7 @@ int main(int argc , char **argv)
     CARTESIAN_CORE_INFO("running script");
 
     // TEST
+    
     /*
     CARTESIAN_CORE_INFO("RUNNING POINT ATTRIBUTE FLOAT/INT/STRING GLM TEST");
     TEST_RUN_CASE(TEST_POINT_ATTRIB_FLOAT_STRING_INT, lua);
@@ -218,9 +221,18 @@ int main(int argc , char **argv)
 
     CARTESIAN_CORE_INFO("RUNNING ATTRIBUTE GLM TEST");
 	TEST_RUN_CASE(TEST_POINT_ATTRIB_GLM, lua);
-    */
+   
 
+    CARTESIAN_CORE_INFO("RUNNING TEST_POINT_ATTRIB_TABLE");
     TEST_RUN_CASE(TEST_POINT_ATTRIB_TABLE, lua);
+   
+     */
+    CARTESIAN_CORE_INFO("RUNNING ADD SET GET");
+    TEST_RUN_CASE(TEST_POINT_ADD_SET_GET, lua);
+ 
+
+	CARTESIAN_CORE_INFO("RUNNING vector vector2 vector3");
+	TEST_RUN_CASE(TEST_POINT_VEC2_VEC3_VEC4, lua);
 
 
     std::cin.get();

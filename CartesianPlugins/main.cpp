@@ -11,6 +11,7 @@
 #include "GLM_Bind/BindGLM_MatrixTable.h"
 #include "CGAL_Bind/BindCGAL.h"
 #include "CGAL_Bind/BindCGAL_Point_Functions.h"
+#include "CGAL_Bind/BindCGAL_Face_Functions.h"
 using namespace std;
 
 void newOp(void *lua){
@@ -29,4 +30,5 @@ void newOp(void *lua){
     Cartesian::BindGLM_MatrixTable::bind(luaPtr);
     Cartesian::BindCGAL::bind(luaPtr);
     Cartesian::BindCGAL_Point_Functions::bind(luaPtr);
+    Cartesian::BindCGAL_Face_Functions::bind(luaPtr);
 }
