@@ -28,6 +28,20 @@ void TEST_POINT_VEC2_VEC3_VEC4::TEST(sol::state* lua)
 	set_vector_pointattrib(m, "foo_vector", 0, set(1,1,1) )
 	set_vector4_pointattrib(m, "foo_vector4", 0, set(1,1,1,1) )
 
+	print(get_vector2_pointattrib(m, "foo_vector2", vertex.new(0) ))
+	print(get_vector_pointattrib(m, "foo_vector", 0 ))
+	print(get_vector4_pointattrib(m, "foo_vector4", 0 ))
+
+
+	local vec2_values = get_vector2_pointattribvalues(m,"foo_vector2")
+	for k,v in ipairs(vec2_values) do 
+		for i,t in ipairs(v) do
+			io.write(t," " )
+		end
+		io.write("\n")
+	end
+
+	
 
 	)");
 	}
