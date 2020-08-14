@@ -47,15 +47,15 @@ auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const ATT
 // Register lambda function,get attribute , point number index by int type
 #define DEFINE_GET_ATTRIB_PTNUM_FUNCTION(SCOPE_TYPE,FUNCTION_NAME, ATTRIB_VALUE_TYPE)\
 auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name,const int &ptnum ) {\
-    SCOPE_TYPE vd(ptnum);\
-	PRE_TYPE::Mesh::Property_map<SCOPE_TYPE, ATTRIB_VALUE_TYPE> attribMap; \
-    bool found;\
-    boost::tie(attribMap, found) = mesh.property_map<SCOPE_TYPE, ATTRIB_VALUE_TYPE>(name);\
-    if (found) {\
-        return attribMap[vd];\
-	}\
-	CARTESIAN_CORE_ERROR("Error get attribute:{0},line:{1},funciton:{2}", name, __LINE__, __FUNCTION__);\
-	return ATTRIB_VALUE_TYPE();\
+SCOPE_TYPE vd(ptnum);\
+PRE_TYPE::Mesh::Property_map<SCOPE_TYPE, ATTRIB_VALUE_TYPE> attribMap; \
+bool found;\
+boost::tie(attribMap, found) = mesh.property_map<SCOPE_TYPE, ATTRIB_VALUE_TYPE>(name);\
+if (found) {\
+    return attribMap[vd];\
+}\
+CARTESIAN_CORE_ERROR("Error get attribute:{0},line:{1},funciton:{2}", name, __LINE__, __FUNCTION__);\
+return ATTRIB_VALUE_TYPE();\
 };
 // Register lambda function,get attribute , point number index by int type
 #define DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(SCOPE_TYPE,FUNCTION_NAME, ATTRIB_VALUE_TYPE)\
@@ -114,23 +114,23 @@ auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const SCO
 // gen function : set_int_pointattrib(mesh,"name",0,set_value)
 // gen function : get_int_pointattrib(mesh,"name",0)
 #define DEFINE_ADD_GET_SET_ATTRIB(GEOMETRY_SCOPE_TYPE,FUNCTION_SCOPE_NAME, ATTRIBUTE_DATA_TYPE)\
-	/*Regsiter the add function*/\
-	/**/\
-	/**/\
-	DEFINE_ADD_ATTRIB_FUNCTION(GEOMETRY_SCOPE_TYPE, add_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib, ATTRIBUTE_DATA_TYPE); \
-	REGISTER_LUA_FUNCTION(##add_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib,add_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib)\
-	/**/\
-	/**/\
-	/*get*/\
-	DEFINE_GET_ATTRIB_PTNUM_FUNCTION(GEOMETRY_SCOPE_TYPE,get_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib_ptnum, ATTRIBUTE_DATA_TYPE);\
-	DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, get_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib, ATTRIBUTE_DATA_TYPE);\
-	REGISTER_LUA_OVERLOAD_FUNCTION(##get_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib, get_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib, get_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib_ptnum);\
-	/**/\
-	/**/\
-	/* set */\
-	DEFINE_SET_ARRITB_PTNUM_FUNCTION(GEOMETRY_SCOPE_TYPE, set_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib_ptnum, ATTRIBUTE_DATA_TYPE);\
-	DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, set_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib, ATTRIBUTE_DATA_TYPE);\
-	REGISTER_LUA_OVERLOAD_FUNCTION(##set_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib, set_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib, set_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib_ptnum);
+/*Regsiter the add function*/\
+/**/\
+/**/\
+DEFINE_ADD_ATTRIB_FUNCTION(GEOMETRY_SCOPE_TYPE, add_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib, ATTRIBUTE_DATA_TYPE); \
+REGISTER_LUA_FUNCTION(##add_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib,add_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib)\
+/**/\
+/**/\
+/*get*/\
+DEFINE_GET_ATTRIB_PTNUM_FUNCTION(GEOMETRY_SCOPE_TYPE,get_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib_ptnum, ATTRIBUTE_DATA_TYPE);\
+DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, get_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib, ATTRIBUTE_DATA_TYPE);\
+REGISTER_LUA_OVERLOAD_FUNCTION(##get_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib, get_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib, get_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib_ptnum);\
+/**/\
+/**/\
+/* set */\
+DEFINE_SET_ARRITB_PTNUM_FUNCTION(GEOMETRY_SCOPE_TYPE, set_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib_ptnum, ATTRIBUTE_DATA_TYPE);\
+DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, set_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib, ATTRIBUTE_DATA_TYPE);\
+REGISTER_LUA_OVERLOAD_FUNCTION(##set_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib, set_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib, set_##ATTRIBUTE_DATA_TYPE##_##FUNCTION_SCOPE_NAME##attrib_ptnum);
 
 
 
@@ -145,23 +145,23 @@ auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const SCO
 // gen function : set_table_pointattrib(mesh,"name",0,{1,2,3,4})
 // gen function : get_table_pointattrib(mesh,"name",0)
 #define DEFINE_ADD_GET_SET_TABLE_ATTRIB(GEOMETRY_SCOPE_TYPE,FUNCTION_SCOPE_NAME)\
-	/*Regsiter the add function*/\
-	/**/\
-	/**/\
-	DEFINE_ADD_ATTRIB_FUNCTION(GEOMETRY_SCOPE_TYPE, add_table_##FUNCTION_SCOPE_NAME##attrib, sol::lua_table); \
-	REGISTER_LUA_FUNCTION(##add_table_##FUNCTION_SCOPE_NAME##attrib,add_table_##FUNCTION_SCOPE_NAME##attrib)\
-	/**/\
-	/**/\
-	/*get*/\
-	DEFINE_GET_ATTRIB_PTNUM_FUNCTION(GEOMETRY_SCOPE_TYPE,get_table_##FUNCTION_SCOPE_NAME##attrib_ptnum, sol::lua_table);\
-	DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, get_table_##FUNCTION_SCOPE_NAME##attrib, sol::lua_table);\
-	REGISTER_LUA_OVERLOAD_FUNCTION(##get_table_##FUNCTION_SCOPE_NAME##attrib, get_table_##FUNCTION_SCOPE_NAME##attrib, get_table_##FUNCTION_SCOPE_NAME##attrib_ptnum);\
-	/**/\
-	/**/\
-	/* set */\
-	DEFINE_SET_ARRITB_PTNUM_FUNCTION(GEOMETRY_SCOPE_TYPE, set_table_##FUNCTION_SCOPE_NAME##attrib_ptnum, sol::lua_table);\
-	DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, set_table_##FUNCTION_SCOPE_NAME##attrib, sol::lua_table);\
-	REGISTER_LUA_OVERLOAD_FUNCTION(##set_table_##FUNCTION_SCOPE_NAME##attrib, set_table_##FUNCTION_SCOPE_NAME##attrib, set_table_##FUNCTION_SCOPE_NAME##attrib_ptnum);
+/*Regsiter the add function*/\
+/**/\
+/**/\
+DEFINE_ADD_ATTRIB_FUNCTION(GEOMETRY_SCOPE_TYPE, add_table_##FUNCTION_SCOPE_NAME##attrib, sol::lua_table); \
+REGISTER_LUA_FUNCTION(##add_table_##FUNCTION_SCOPE_NAME##attrib,add_table_##FUNCTION_SCOPE_NAME##attrib)\
+/**/\
+/**/\
+/*get*/\
+DEFINE_GET_ATTRIB_PTNUM_FUNCTION(GEOMETRY_SCOPE_TYPE,get_table_##FUNCTION_SCOPE_NAME##attrib_ptnum, sol::lua_table);\
+DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, get_table_##FUNCTION_SCOPE_NAME##attrib, sol::lua_table);\
+REGISTER_LUA_OVERLOAD_FUNCTION(##get_table_##FUNCTION_SCOPE_NAME##attrib, get_table_##FUNCTION_SCOPE_NAME##attrib, get_table_##FUNCTION_SCOPE_NAME##attrib_ptnum);\
+/**/\
+/**/\
+/* set */\
+DEFINE_SET_ARRITB_PTNUM_FUNCTION(GEOMETRY_SCOPE_TYPE, set_table_##FUNCTION_SCOPE_NAME##attrib_ptnum, sol::lua_table);\
+DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, set_table_##FUNCTION_SCOPE_NAME##attrib, sol::lua_table);\
+REGISTER_LUA_OVERLOAD_FUNCTION(##set_table_##FUNCTION_SCOPE_NAME##attrib, set_table_##FUNCTION_SCOPE_NAME##attrib, set_table_##FUNCTION_SCOPE_NAME##attrib_ptnum);
 
 
 // Gen lua function: add_vector2_pointattrib(mesh,"name",set(0,1))
@@ -281,27 +281,35 @@ namespace Cartesian
 
 
 	// For General vertex glm::vec2 type, return a flat tables,{x1,y1, x1,y1 ...}
-	template <>
-	class GetAttribValues<PRE_TYPE::Vertex_descriptor, glm::vec2> {
+
+	class GetAttribValuesT {
 	public:
 		// Return lua table
-		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName) {
-			std::vector <float> values;
+		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName, sol::this_state this_lua) {
+
+			sol::state_view lua(this_lua);
+			sol::table values = lua.create_table();
+			
+			//return(values);
+			
 			PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, glm::vec2> attribMap;
 			bool found;
 			boost::tie(attribMap, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, glm::vec2>(attribName);
 			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::vec2);
+			
 			if (!found) {
-				return sol::as_table(values);
+				//return sol::as_table(values);
+				return values;
 			}
 
 			for (PRE_TYPE::Vertex_descriptor vd : mesh.vertices()) {
 				auto val = attribMap[vd];
-				values.push_back(val.x);
-				values.push_back(val.y);
+				values.add(GLM_Vec_Helper::vec2_to_table(attribMap[vd]));
 			}
-			return sol::as_table(values);
+			return values;
+			
 		}
+		
 	};
 
 

@@ -147,6 +147,11 @@ namespace Cartesian{
 		auto func3 = GetAttribValues<PRE_TYPE::Vertex_descriptor, std::string>::get;
 		REGISTER_LUA_FUNCTION(get_string_pointattribvalues, func3);
 
+		auto get_vec2_values = GetAttribValuesT::get;
+		REGISTER_LUA_FUNCTION(get_vector2_pointattribvalues, get_vec2_values);
+
+
+
 		auto funcTemp = GetAttribValues<PRE_TYPE::Vertex_descriptor, sol::lua_table>::get;
 		REGISTER_LUA_FUNCTION(get_table_pointattribvalues, funcTemp);
 
