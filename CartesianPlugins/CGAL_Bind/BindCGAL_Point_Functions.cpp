@@ -36,13 +36,43 @@ namespace Cartesian{
 
 		// --------------------------------------------------------------  int attribute operation --------------------------------------------------------------------
 		
+		// Register add_int_pointattrib(mesh, "name", 0 )
+		// Register set_int_pointattrib(mesh, "name", id, 0 )
+		// Register get_int_pointattrib(mesh, "name", id )
 		DEFINE_ADD_GET_SET_ATTRIB(PRE_TYPE::Vertex_descriptor, point, int);
+
+
+
+		// Register add_float_pointattrib(mesh, "name", set(0,0) )
+		// Register set_float_pointattrib(mesh, "name", id, set(0,0) )
+		// Register get_float_pointattrib(mesh, "name", id )
 		DEFINE_ADD_GET_SET_ATTRIB(PRE_TYPE::Vertex_descriptor, point, float);
+
+
+		// Register add_string_pointattrib(mesh, "name", set(0,0) )
+		// Register set_string_pointattrib(mesh, "name", id, set(0,0) )
+		// Register get_string_pointattrib(mesh, "name", id )
 		DEFINE_ADD_GET_SET_ATTRIB(PRE_TYPE::Vertex_descriptor, point, string);
+
+
+		// Register add_vector2_pointattrib(mesh, "name", set(0,0) )
+		// Register set_vector2_pointattrib(mesh, "name", id, set(0,0) )
+		// Register get_vector2_pointattrib(mesh, "name", id )
 		DEFINE_ADD_GET_SET_TABLE_ATTRIB(PRE_TYPE::Vertex_descriptor, point);
 
+		// Register add_vector2_pointattrib(mesh, "name", set(0,0) )
+		// Register set_vector2_pointattrib(mesh, "name", id, set(0,0) )
+		// Register get_vector2_pointattrib(mesh, "name", id )
 		DEFINE_ADD_GET_SET_GLM_VEC2_ATTRIB(PRE_TYPE::Vertex_descriptor, point);
+
+		// Register add_vector3_pointattrib(mesh, "name", set(0,0,0) )
+		// Register set_vector3_pointattrib(mesh, "name", id, set(0,0,0) )
+		// Register get_vector3_pointattrib(mesh, "name", id )
 		DEFINE_ADD_GET_SET_GLM_VEC3_ATTRIB(PRE_TYPE::Vertex_descriptor, point);
+
+		// Register add_vector4_pointattrib(mesh, "name", set(0,0,0,0) )
+		// Register set_vector4_pointattrib(mesh, "name", id, set(0,0,0,0) )
+		// Register get_vector4_pointattrib(mesh, "name", id )
 		DEFINE_ADD_GET_SET_GLM_VEC4_ATTRIB(PRE_TYPE::Vertex_descriptor, point);
 
 		// Also you can use below code
@@ -137,23 +167,30 @@ namespace Cartesian{
 
 
 
-        // Register get tables values
+        // Register get all vertices attribute values of float, return tables values
         auto func = GetAttribValues<PRE_TYPE::Vertex_descriptor, float>::get;
         REGISTER_LUA_FUNCTION(get_float_pointattribvalues, func);
-
+		// Register get all vertices attribute values of int, return tables values
 		auto func2 = GetAttribValues<PRE_TYPE::Vertex_descriptor, int>::get;
 		REGISTER_LUA_FUNCTION(get_int_pointattribvalues, func2);
-
+		// Register get all vertices attribute values of string, return tables values
 		auto func3 = GetAttribValues<PRE_TYPE::Vertex_descriptor, std::string>::get;
 		REGISTER_LUA_FUNCTION(get_string_pointattribvalues, func3);
+		// Register get all vertices attribute values of table, return tables values
+		auto func4 = GetAttribValues<PRE_TYPE::Vertex_descriptor, sol::lua_table>::get;
+		REGISTER_LUA_FUNCTION(get_table_pointattribvalues, func4);
 
-		auto get_vec2_values = GetAttribValuesT::get;
+		// Register get all vertices attribute values of vector2, return tables values
+		auto get_vec2_values = GetAttribValues<PRE_TYPE::Vertex_descriptor, glm::vec2>::get;
 		REGISTER_LUA_FUNCTION(get_vector2_pointattribvalues, get_vec2_values);
+		// Register get all vertices attribute values of vector, return tables values
+		auto get_vec3_values = GetAttribValues<PRE_TYPE::Vertex_descriptor, glm::vec3>::get;
+		REGISTER_LUA_FUNCTION(get_vector_pointattribvalues, get_vec3_values);
+		// Register get all vertices attribute values of vector3, return tables values
+		auto get_vec4_values = GetAttribValues<PRE_TYPE::Vertex_descriptor, glm::vec4>::get;
+		REGISTER_LUA_FUNCTION(get_vector4_pointattribvalues, get_vec4_values);
 
-
-
-		auto funcTemp = GetAttribValues<PRE_TYPE::Vertex_descriptor, sol::lua_table>::get;
-		REGISTER_LUA_FUNCTION(get_table_pointattribvalues, funcTemp);
+		
 
 
     }

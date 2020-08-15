@@ -40,7 +40,7 @@ void TEST_GET_ATTRIB_VALUES::TEST(sol::state* lua)
 	print("ivalues length:", #ivalues)
 	print("svalues length:", #svalues)
 	print("tvalues length:", #tvalues)
-	print("tvalues first table{1,2,3,4,5,EvenString!} length should be five:", #tvalues[1])
+	print("tvalues first table{1,2,3,4,5,EvenString!} length should be 6:", #tvalues[1])
 
 
 	print("------------- add three vector attribute -----------------")
@@ -57,7 +57,7 @@ void TEST_GET_ATTRIB_VALUES::TEST(sol::state* lua)
 	print(get_vector_pointattrib(m, "foo_vector", 0 ))
 	print(get_vector4_pointattrib(m, "foo_vector4", 0 ))
 
-
+	print("-- debug get_vector2_pointattribvalues --")
 	local vec2_values = get_vector2_pointattribvalues(m,"foo_vector2")
 	for k,v in ipairs(vec2_values) do 
 		for i,t in ipairs(v) do
@@ -66,7 +66,23 @@ void TEST_GET_ATTRIB_VALUES::TEST(sol::state* lua)
 		io.write("\n")
 	end
 
-	
+	print("-- debug get_vector_pointattribvalues --")
+	local values = get_vector_pointattribvalues(m,"foo_vector")
+	for k,v in ipairs(values) do 
+		for i,t in ipairs(v) do
+			io.write(t," " )
+		end
+		io.write("\n")
+	end
+
+	print("-- debug get_vector4_pointattribvalues --")
+	local values = get_vector4_pointattribvalues(m,"foo_vector4")
+	for k,v in ipairs(values) do 
+		for i,t in ipairs(v) do
+			io.write(t," " )
+		end
+		io.write("\n")
+	end
 
 	)");
 	}

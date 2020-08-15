@@ -244,29 +244,20 @@ REGISTER_LUA_OVERLOAD_FUNCTION(##set_table_##FUNCTION_SCOPE_NAME##attrib, set_ta
 namespace Cartesian
 {
 	// function like houdini's api return tuple of table
+	
+
+
+	// For General vertex , float/int/string
 	template <typename geoScope, typename T>
 	class GetAttribValues
 	{
 	public:
 		// Return lua table
 		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName){
-			std::vector <float> values;
-			return sol::as_table(values);
-		}
-
-	};
-
-	// For General vertex 
-	template <typename T>
-	class GetAttribValues<PRE_TYPE::Vertex_descriptor,T>
-	{
-	public:
-		// Return lua table
-		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName){
 			std::vector <T> values;
-			PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, T> attribMap;
+			PRE_TYPE::Mesh::Property_map<geoScope, T> attribMap;
 			bool found;
-			boost::tie(attribMap, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, T>(attribName);
+			boost::tie(attribMap, found) = mesh.property_map<geoScope, T>(attribName);
 			CHECK_ATTRIB_FOUNDED_STATUS(found,attribName, T);
 			if (found) {
 				for (PRE_TYPE::Vertex_descriptor vd : mesh.vertices())
@@ -280,9 +271,31 @@ namespace Cartesian
 	};
 
 
-	// For General vertex glm::vec2 type, return a flat tables,{x1,y1, x1,y1 ...}
+	template <typename geoScope>
+	class GetAttribValues<geoScope, sol::lua_table>
+	{
+	public:
+		// Return lua table
+		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName) {
+			std::vector <sol::lua_table> values;
+			PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, sol::lua_table> attribMap;
+			bool found;
+			boost::tie(attribMap, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, sol::lua_table>(attribName);
+			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, sol::lua_table);
+			if (found) {
+				for (PRE_TYPE::Vertex_descriptor vd : mesh.vertices()) {
+					// attribMap[vd] is sol::lua_table
+					values.push_back(attribMap[vd]); // add a table to a table, lua:{ {},{},{}... }
+				}
+			}
+			return sol::as_table(values);
+		}
+	};
 
-	class GetAttribValuesT {
+
+	// For General vertex glm::vec2 type, return a tables,{ {x1,y1}, {x2,y2} ...}
+	template <typename geoScope>
+	class GetAttribValues<geoScope, glm::vec2>{
 	public:
 		// Return lua table
 		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName, sol::this_state this_lua) {
@@ -313,81 +326,71 @@ namespace Cartesian
 	};
 
 
-
-	// For General vertex glm::vec3 type, return flat tables {x1,y1,z1, x1,y1,z1 ...}
-	template <>
-	class GetAttribValues<PRE_TYPE::Vertex_descriptor, glm::vec3>{
+	// For General vertex glm::vec3 type, return a tables,{ {x1,y1,z1}, {x2,y2,z2}.}
+	template <typename geoScope>
+	class GetAttribValues<geoScope, glm::vec3> {
 	public:
 		// Return lua table
-		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName) {
-			std::vector <float> values;
+		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName, sol::this_state this_lua) {
+
+			sol::state_view lua(this_lua);
+			sol::table values = lua.create_table();
+
+			//return(values);
+
 			PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, glm::vec3> attribMap;
 			bool found;
 			boost::tie(attribMap, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, glm::vec3>(attribName);
-			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::vec3);
+			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::vec2);
+
 			if (!found) {
-				return sol::as_table(values);
+				//return sol::as_table(values);
+				return values;
 			}
 
 			for (PRE_TYPE::Vertex_descriptor vd : mesh.vertices()) {
 				auto val = attribMap[vd];
-				values.push_back(val.x);
-				values.push_back(val.y);
-				values.push_back(val.z);
+				values.add(GLM_Vec_Helper::vec3_to_table(attribMap[vd]));
 			}
-			return sol::as_table(values);
+			return values;
+
 		}
+
 	};
 
-
-	// For General vertex glm::vec4 type  return a flat tables,{x1,y1,z1,w1, x1,y1,z1,w1 ...}
-	template <>
-	class GetAttribValues<PRE_TYPE::Vertex_descriptor, glm::vec4>{
+	// For General vertex glm::vec4 type, return a tables,{ {x1,y1,z1,w1}, {x2,y2,z2,w2} ...}
+	template <typename geoScope>
+	class GetAttribValues<geoScope, glm::vec4> {
 	public:
 		// Return lua table
-		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName) {
-			std::vector <float> values;
+		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName, sol::this_state this_lua) {
+
+			sol::state_view lua(this_lua);
+			sol::table values = lua.create_table();
+
+			//return(values);
+
 			PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, glm::vec4> attribMap;
 			bool found;
 			boost::tie(attribMap, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, glm::vec4>(attribName);
 			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::vec4);
+
 			if (!found) {
-				return sol::as_table(values);
+				//return sol::as_table(values);
+				return values;
 			}
 
 			for (PRE_TYPE::Vertex_descriptor vd : mesh.vertices()) {
 				auto val = attribMap[vd];
-				values.push_back(val.x);
-				values.push_back(val.y);
-				values.push_back(val.z);
-				values.push_back(val.w);
+				values.add(GLM_Vec_Helper::vec4_to_table(attribMap[vd]));
 			}
-			return sol::as_table(values);
+			return values;
+
 		}
+
 	};
 
 
-
-	template <>
-	class GetAttribValues<PRE_TYPE::Vertex_descriptor, sol::lua_table>
-	{
-	public:
-		// Return lua table
-		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName) {
-			std::vector <sol::lua_table> values;
-			PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, sol::lua_table> attribMap;
-			bool found;
-			boost::tie(attribMap, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, sol::lua_table>(attribName);
-			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, sol::lua_table);
-			if (found) {
-				for (PRE_TYPE::Vertex_descriptor vd : mesh.vertices()) {
-					// attribMap[vd] is sol::lua_table
-					values.push_back(attribMap[vd]); // add a table to a table, lua:{ {},{},{}... }
-				}
-			}
-			return sol::as_table(values);
-		}
-	};
 
 
 
