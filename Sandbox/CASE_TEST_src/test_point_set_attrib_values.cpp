@@ -3,9 +3,9 @@
 
 void TEST_POINT_SET_ATTRIB_VALUES::TEST(sol::state* lua)
 {
-	try {
-		lua->safe_script(
-			R"(
+    try {
+        lua->safe_script(
+            R"(
 	local m = mesh.new();
 	local pt0 = addpoint(m, {0,0,0} );
 	local pt1 = addpoint(m, {1,0,0} );
@@ -65,9 +65,9 @@ void TEST_POINT_SET_ATTRIB_VALUES::TEST(sol::state* lua)
 	end	
 	io.write("\n\n")
 	)");
-	}
-	catch (...) {
+    }
+    catch (...) {
 
-	}
+    }
 }
 

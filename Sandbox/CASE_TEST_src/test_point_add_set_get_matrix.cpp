@@ -2,9 +2,9 @@
 
 void TEST_ADD_SET_GET_MATRIX::TEST(sol::state* lua)
 {
-	try {
-		lua->safe_script(
-			R"(
+    try {
+        lua->safe_script(
+            R"(
 	local m = mesh.new();
 	local pt0 = addpoint(m, {0,0,0} );
 	local pt1 = addpoint(m, {1,0,0} );
@@ -75,9 +75,9 @@ void TEST_ADD_SET_GET_MATRIX::TEST(sol::state* lua)
 	
 
 	)");
-	}
-	catch (...) {
+    }
+    catch (...) {
 
-	}
+    }
 }
 

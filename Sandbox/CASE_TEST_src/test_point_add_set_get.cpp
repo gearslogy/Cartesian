@@ -2,11 +2,11 @@
 
 #include "test_point_add_set_get.h"
 
-void TEST_POINT_ADD_SET_GET::TEST(sol::state* lua) 
+void TEST_POINT_ADD_SET_GET::TEST(sol::state* lua)
 {
-	try {
-		lua->safe_script(
-			R"(
+    try {
+        lua->safe_script(
+            R"(
 	local m = mesh.new();
 	local pt0 = addpoint(m, {0,0,0} );
 	local pt1 = addpoint(m, {1,0,0} );
@@ -70,9 +70,9 @@ void TEST_POINT_ADD_SET_GET::TEST(sol::state* lua)
 	io.write( "\n") 
 
 	)");
-	}
-	catch (...) {
+    }
+    catch (...) {
 
-	}
+    }
 
 }

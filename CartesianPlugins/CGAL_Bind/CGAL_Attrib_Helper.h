@@ -300,359 +300,359 @@ REGISTER_LUA_OVERLOAD_FUNCTION(##set_table_##FUNCTION_SCOPE_NAME##attrib, set_ta
 
 namespace Cartesian
 {
-	// function like houdini's api return tuple of table
-	template <typename geoScope>
-	class AccessScopeRange {
-	public:
-		static std::vector<geoScope> get(PRE_TYPE::Mesh &mesh){
-			std::vector<geoScope> listIDs;
-			return listIDs;
-		}
-	};
+    // function like houdini's api return tuple of table
+    template <typename geoScope>
+    class AccessScopeRange {
+    public:
+        static std::vector<geoScope> get(PRE_TYPE::Mesh& mesh) {
+            std::vector<geoScope> listIDs;
+            return listIDs;
+        }
+    };
 
-	template<>
-	class AccessScopeRange<PRE_TYPE::Vertex_descriptor> {
-	public:
-		static std::vector<PRE_TYPE::Vertex_descriptor> get(PRE_TYPE::Mesh& mesh)
-		{
-			std::vector<PRE_TYPE::Vertex_descriptor> listIDs;
-			for (PRE_TYPE::Vertex_descriptor& id : mesh.vertices())
-				listIDs.emplace_back(id);
-			return listIDs;
-		}
-	};
-	template<>
-	class AccessScopeRange<PRE_TYPE::Face_descriptor> {
-	public:
-		static std::vector<PRE_TYPE::Face_descriptor> get(PRE_TYPE::Mesh& mesh) {
-			std::vector<PRE_TYPE::Face_descriptor> listIDs;
-			for (PRE_TYPE::Face_descriptor& id : mesh.faces())
-				listIDs.emplace_back(id);
-			return listIDs;
-		}
-	};
+    template<>
+    class AccessScopeRange<PRE_TYPE::Vertex_descriptor> {
+    public:
+        static std::vector<PRE_TYPE::Vertex_descriptor> get(PRE_TYPE::Mesh& mesh)
+        {
+            std::vector<PRE_TYPE::Vertex_descriptor> listIDs;
+            for (PRE_TYPE::Vertex_descriptor& id : mesh.vertices())
+                listIDs.emplace_back(id);
+            return listIDs;
+        }
+    };
+    template<>
+    class AccessScopeRange<PRE_TYPE::Face_descriptor> {
+    public:
+        static std::vector<PRE_TYPE::Face_descriptor> get(PRE_TYPE::Mesh& mesh) {
+            std::vector<PRE_TYPE::Face_descriptor> listIDs;
+            for (PRE_TYPE::Face_descriptor& id : mesh.faces())
+                listIDs.emplace_back(id);
+            return listIDs;
+        }
+    };
 
-	template<>
-	class AccessScopeRange<PRE_TYPE::Edge_descriptor> {
-	public:
-		static std::vector<PRE_TYPE::Edge_descriptor> get(PRE_TYPE::Mesh& mesh) {
-			std::vector<PRE_TYPE::Edge_descriptor> listIDs;
-			for (PRE_TYPE::Edge_descriptor& id : mesh.edges())
-				listIDs.emplace_back(id);
-			return listIDs;
-		}
-	};
+    template<>
+    class AccessScopeRange<PRE_TYPE::Edge_descriptor> {
+    public:
+        static std::vector<PRE_TYPE::Edge_descriptor> get(PRE_TYPE::Mesh& mesh) {
+            std::vector<PRE_TYPE::Edge_descriptor> listIDs;
+            for (PRE_TYPE::Edge_descriptor& id : mesh.edges())
+                listIDs.emplace_back(id);
+            return listIDs;
+        }
+    };
 
-	template<>
-	class AccessScopeRange<PRE_TYPE::Halfedge_descriptor> {
-	public:
-		static std::vector<PRE_TYPE::Halfedge_descriptor> get(PRE_TYPE::Mesh& mesh) {
-			std::vector<PRE_TYPE::Halfedge_descriptor> listIDs;
-			for (PRE_TYPE::Halfedge_descriptor& id : mesh.halfedges())
-				listIDs.emplace_back(id);
-			return listIDs;
-		}
-	};
-
-
-
-	// For General vertex/face/edge/hedge , for this element type:float/int/string
-	template <typename geoScope, typename atribValueType>
-	class GetAttribValues
-	{
-	public:
-		// Return lua table
-		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName){
-			std::vector <atribValueType> values;
-			PRE_TYPE::Mesh::Property_map<geoScope, atribValueType> attribMap;
-			bool found;
-			boost::tie(attribMap, found) = mesh.property_map<geoScope, atribValueType>(attribName);
-			CHECK_ATTRIB_FOUNDED_STATUS(found,attribName, atribValueType);
-			if (!found)
-				return sol::as_table(values);
-			auto range = AccessScopeRange<geoScope>::get(mesh);
-			for (geoScope vd : range) {
-				values.push_back(attribMap[vd]);
-			}
-			
-		
-			return sol::as_table(values);
-		}
-
-	};
-
-	// if element attribute value type is : lua table
-	template <typename geoScope>
-	class GetAttribValues<geoScope, sol::lua_table>
-	{
-	public:
-		// Return lua table
-		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName) {
-			std::vector <sol::lua_table> values;
-			PRE_TYPE::Mesh::Property_map<geoScope, sol::lua_table> attribMap;
-			bool found;
-			boost::tie(attribMap, found) = mesh.property_map<geoScope, sol::lua_table>(attribName);
-			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, sol::lua_table);
-			for (geoScope &vd : AccessScopeRange<geoScope>::get(mesh)) {
-				values.push_back(attribMap[vd]);
-			}
-			return sol::as_table(values);
-		}
-	};
-
-	
-	// For General glm::vec2 type, return a tables,{ {x1,y1}, {x2,y2} ...}
-	template <typename geoScope>
-	class GetAttribValues<geoScope, glm::vec2>{
-	public:
-		// Return lua table
-		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName, sol::this_state this_lua) {
-
-			sol::state_view lua(this_lua);
-			sol::table values = lua.create_table();
-			PRE_TYPE::Mesh::Property_map<geoScope, glm::vec2> attribMap;
-			bool found;
-			boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::vec2>(attribName);
-			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::vec2);
-
-			if (!found) {
-				//return sol::as_table(values);
-				return values;
-			}
-			auto range = AccessScopeRange<geoScope>::get(mesh);
-			for (geoScope &vd : range) {
-				auto val = attribMap[vd];
-				values.add(GLM_Vec_Helper::vec2_to_table(attribMap[vd]));
-			}
-			return values;
-		}
-		
-	};
+    template<>
+    class AccessScopeRange<PRE_TYPE::Halfedge_descriptor> {
+    public:
+        static std::vector<PRE_TYPE::Halfedge_descriptor> get(PRE_TYPE::Mesh& mesh) {
+            std::vector<PRE_TYPE::Halfedge_descriptor> listIDs;
+            for (PRE_TYPE::Halfedge_descriptor& id : mesh.halfedges())
+                listIDs.emplace_back(id);
+            return listIDs;
+        }
+    };
 
 
-	// For General glm::vec3 type, return a tables,{ {x1,y1,z1}, {x2,y2,z2}.}
-	template <typename geoScope>
-	class GetAttribValues<geoScope, glm::vec3> {
-	public:
-		// Return lua table
-		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName, sol::this_state this_lua) {
 
-			sol::state_view lua(this_lua);
-			sol::table values = lua.create_table();
-
-			PRE_TYPE::Mesh::Property_map<geoScope, glm::vec3> attribMap;
-			bool found;
-			boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::vec3>(attribName);
-			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::vec3);
-
-			if (!found) {
-				//return sol::as_table(values);
-				return values;
-			}
-
-			for (geoScope &vd : AccessScopeRange<geoScope>::get(mesh)) {
-				auto val = attribMap[vd];
-				values.add(GLM_Vec_Helper::vec3_to_table(attribMap[vd]));
-			}
-			return values;
-
-		}
-
-	};
-
-	// For General glm::vec4 type, return a tables,{ {x1,y1,z1,w1}, {x2,y2,z2,w2} ...}
-	template <typename geoScope>
-	class GetAttribValues<geoScope, glm::vec4> {
-	public:
-		// Return lua table
-		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName, sol::this_state this_lua) {
-
-			sol::state_view lua(this_lua);
-			sol::table values = lua.create_table();
-
-			PRE_TYPE::Mesh::Property_map<geoScope, glm::vec4> attribMap;
-			bool found;
-			boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::vec4>(attribName);
-			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::vec4);
-
-			if (!found) {
-				//return sol::as_table(values);
-				return values;
-			}
-
-			for (geoScope &vd : AccessScopeRange<geoScope>::get(mesh)) {
-				auto val = attribMap[vd];
-				values.add(GLM_Vec_Helper::vec4_to_table(attribMap[vd]));
-			}
-			return values;
-
-		}
-
-	};
+    // For General vertex/face/edge/hedge , for this element type:float/int/string
+    template <typename geoScope, typename atribValueType>
+    class GetAttribValues
+    {
+    public:
+        // Return lua table
+        static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName) {
+            std::vector <atribValueType> values;
+            PRE_TYPE::Mesh::Property_map<geoScope, atribValueType> attribMap;
+            bool found;
+            boost::tie(attribMap, found) = mesh.property_map<geoScope, atribValueType>(attribName);
+            CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, atribValueType);
+            if (!found)
+                return sol::as_table(values);
+            auto range = AccessScopeRange<geoScope>::get(mesh);
+            for (geoScope vd : range) {
+                values.push_back(attribMap[vd]);
+            }
 
 
-	// For General glm::mat2 type, return a tables,{ {col1.x,col1.y,col2.x,col2.y}, {...} ...}
-	template <typename geoScope>
-	class GetAttribValues<geoScope, glm::mat2> {
-	public:
-		// Return lua table
-		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName, sol::this_state this_lua) {
+            return sol::as_table(values);
+        }
 
-			sol::state_view lua(this_lua);
-			sol::table values = lua.create_table();
+    };
 
-			PRE_TYPE::Mesh::Property_map<geoScope, glm::mat2> attribMap;
-			bool found;
-			boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::mat2>(attribName);
-			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::mat2);
-
-			if (!found) {
-				return values;
-			}
-
-			for (geoScope vd : AccessScopeRange<geoScope>::get(mesh)) {
-				auto val = attribMap[vd];
-				values.add(GLM_Matrix_Helper::mat2_to_table(attribMap[vd]));
-			}
-			return values;
-		}
-
-	};
-
-	// For General glm::mat3 type, return a tables,{ {9 elements}, {...} ...}
-	template <typename geoScope>
-	class GetAttribValues<geoScope, glm::mat3> {
-	public:
-		// Return lua table
-		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName, sol::this_state this_lua) {
-
-			sol::state_view lua(this_lua);
-			sol::table values = lua.create_table();
-			PRE_TYPE::Mesh::Property_map<geoScope, glm::mat3> attribMap;
-			bool found;
-			boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::mat3>(attribName);
-			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::mat3);
-
-			if (!found) {
-				return values;
-			}
-
-			for (geoScope vd : AccessScopeRange<geoScope>::get(mesh)) {
-				auto val = attribMap[vd];
-				values.add(GLM_Matrix_Helper::mat3_to_table(attribMap[vd]));
-			}
-			return values;
-		}
-
-	};
-
-	// For General glm::mat4 type, return a tables,{ {16 elements}, {...} ...}
-	template <typename geoScope>
-	class GetAttribValues<geoScope, glm::mat4> {
-	public:
-		// Return lua table
-		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName, sol::this_state this_lua) {
-
-			sol::state_view lua(this_lua);
-			sol::table values = lua.create_table();
-			PRE_TYPE::Mesh::Property_map<geoScope, glm::mat4> attribMap;
-			bool found;
-			boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::mat4>(attribName);
-			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::mat4);
-			if (!found) {
-				return values;
-			}
-
-			for (geoScope vd : AccessScopeRange<geoScope>::get(mesh)) {
-				auto val = attribMap[vd];
-				values.add(GLM_Matrix_Helper::mat4_to_table(attribMap[vd]));
-			}
-			return values;
-		}
-
-	};
-	
+    // if element attribute value type is : lua table
+    template <typename geoScope>
+    class GetAttribValues<geoScope, sol::lua_table>
+    {
+    public:
+        // Return lua table
+        static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName) {
+            std::vector <sol::lua_table> values;
+            PRE_TYPE::Mesh::Property_map<geoScope, sol::lua_table> attribMap;
+            bool found;
+            boost::tie(attribMap, found) = mesh.property_map<geoScope, sol::lua_table>(attribName);
+            CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, sol::lua_table);
+            for (geoScope& vd : AccessScopeRange<geoScope>::get(mesh)) {
+                values.push_back(attribMap[vd]);
+            }
+            return sol::as_table(values);
+        }
+    };
 
 
-	// --------------------------------- SetAttributesInterface--------------------------------------------------------
-	// For General vertex/face/edge/hedge , for this element type:float/int/string
-	template <typename geoScope, typename atribValueType>
-	class SetAttribValues
-	{
-	public:
-		// Return lua table
-		static void set(PRE_TYPE::Mesh& mesh, const std::string& attribName, const sol::lua_table& values) {
+    // For General glm::vec2 type, return a tables,{ {x1,y1}, {x2,y2} ...}
+    template <typename geoScope>
+    class GetAttribValues<geoScope, glm::vec2> {
+    public:
+        // Return lua table
+        static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName, sol::this_state this_lua) {
 
-			PRE_TYPE::Mesh::Property_map<geoScope, atribValueType> attribMap;
-			bool found;
-			boost::tie(attribMap, found) = mesh.property_map<geoScope, atribValueType>(attribName);
-			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, atribValueType);
+            sol::state_view lua(this_lua);
+            sol::table values = lua.create_table();
+            PRE_TYPE::Mesh::Property_map<geoScope, glm::vec2> attribMap;
+            bool found;
+            boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::vec2>(attribName);
+            CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::vec2);
 
-			// can not find attribute
-			if (!found)
-				return;
+            if (!found) {
+                //return sol::as_table(values);
+                return values;
+            }
+            auto range = AccessScopeRange<geoScope>::get(mesh);
+            for (geoScope& vd : range) {
+                auto val = attribMap[vd];
+                values.add(GLM_Vec_Helper::vec2_to_table(attribMap[vd]));
+            }
+            return values;
+        }
 
-			// check is lua table?
-			if (!values.valid())
-			{
-				CARTESIAN_CORE_ERROR("Error set values for not exist attribute: {0}", attribName);
-				return;
-			}
-			int luaIndex = 1;
-			auto range = AccessScopeRange<geoScope>::get(mesh);
-			//check size == range
-			if (values.size() != range.size()) {
-				CARTESIAN_CORE_ERROR("Error set values for attribute: {0}, length must {1}", attribName, range.size());
-				return;
-			}
+    };
 
 
-			for (geoScope vd : range) {
-				attribMap[vd] = values.get<atribValueType>(luaIndex);
-				luaIndex++;
-			}
+    // For General glm::vec3 type, return a tables,{ {x1,y1,z1}, {x2,y2,z2}.}
+    template <typename geoScope>
+    class GetAttribValues<geoScope, glm::vec3> {
+    public:
+        // Return lua table
+        static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName, sol::this_state this_lua) {
 
-		} // end of set function
-	};
+            sol::state_view lua(this_lua);
+            sol::table values = lua.create_table();
 
-	template <typename geoScope>
-	class SetAttribValues<geoScope, sol::lua_table>
-	{
-	public:
-		// Return lua table
-		static void set(PRE_TYPE::Mesh& mesh, const std::string& attribName, const sol::lua_table& values) {
+            PRE_TYPE::Mesh::Property_map<geoScope, glm::vec3> attribMap;
+            bool found;
+            boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::vec3>(attribName);
+            CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::vec3);
 
-			PRE_TYPE::Mesh::Property_map<geoScope, sol::lua_table> attribMap;
-			bool found;
-			boost::tie(attribMap, found) = mesh.property_map<geoScope, sol::lua_table>(attribName);
-			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, sol::lua_table);
+            if (!found) {
+                //return sol::as_table(values);
+                return values;
+            }
 
-			// can not find attribute
-			if (!found)
-				return;
+            for (geoScope& vd : AccessScopeRange<geoScope>::get(mesh)) {
+                auto val = attribMap[vd];
+                values.add(GLM_Vec_Helper::vec3_to_table(attribMap[vd]));
+            }
+            return values;
 
-			// check is lua table?
-			if (!values.valid())
-			{
-				CARTESIAN_CORE_ERROR("Error set values for not exist attribute: {0}", attribName);
-				return;
-			}
-			int luaIndex = 1;
-			auto range = AccessScopeRange<geoScope>::get(mesh);
-			//check size == range
-			if (values.size() != range.size()) {
-				CARTESIAN_CORE_ERROR("Error set values for attribute: {0}, length must {1}", attribName, range.size());
-				return;
-			}
+        }
+
+    };
+
+    // For General glm::vec4 type, return a tables,{ {x1,y1,z1,w1}, {x2,y2,z2,w2} ...}
+    template <typename geoScope>
+    class GetAttribValues<geoScope, glm::vec4> {
+    public:
+        // Return lua table
+        static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName, sol::this_state this_lua) {
+
+            sol::state_view lua(this_lua);
+            sol::table values = lua.create_table();
+
+            PRE_TYPE::Mesh::Property_map<geoScope, glm::vec4> attribMap;
+            bool found;
+            boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::vec4>(attribName);
+            CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::vec4);
+
+            if (!found) {
+                //return sol::as_table(values);
+                return values;
+            }
+
+            for (geoScope& vd : AccessScopeRange<geoScope>::get(mesh)) {
+                auto val = attribMap[vd];
+                values.add(GLM_Vec_Helper::vec4_to_table(attribMap[vd]));
+            }
+            return values;
+
+        }
+
+    };
 
 
-			for (geoScope vd : range) {
-				attribMap[vd] = values.get<sol::lua_table>(luaIndex);
-				luaIndex++;
-			}
+    // For General glm::mat2 type, return a tables,{ {col1.x,col1.y,col2.x,col2.y}, {...} ...}
+    template <typename geoScope>
+    class GetAttribValues<geoScope, glm::mat2> {
+    public:
+        // Return lua table
+        static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName, sol::this_state this_lua) {
 
-		} // end of set function
-	};
+            sol::state_view lua(this_lua);
+            sol::table values = lua.create_table();
+
+            PRE_TYPE::Mesh::Property_map<geoScope, glm::mat2> attribMap;
+            bool found;
+            boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::mat2>(attribName);
+            CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::mat2);
+
+            if (!found) {
+                return values;
+            }
+
+            for (geoScope vd : AccessScopeRange<geoScope>::get(mesh)) {
+                auto val = attribMap[vd];
+                values.add(GLM_Matrix_Helper::mat2_to_table(attribMap[vd]));
+            }
+            return values;
+        }
+
+    };
+
+    // For General glm::mat3 type, return a tables,{ {9 elements}, {...} ...}
+    template <typename geoScope>
+    class GetAttribValues<geoScope, glm::mat3> {
+    public:
+        // Return lua table
+        static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName, sol::this_state this_lua) {
+
+            sol::state_view lua(this_lua);
+            sol::table values = lua.create_table();
+            PRE_TYPE::Mesh::Property_map<geoScope, glm::mat3> attribMap;
+            bool found;
+            boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::mat3>(attribName);
+            CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::mat3);
+
+            if (!found) {
+                return values;
+            }
+
+            for (geoScope vd : AccessScopeRange<geoScope>::get(mesh)) {
+                auto val = attribMap[vd];
+                values.add(GLM_Matrix_Helper::mat3_to_table(attribMap[vd]));
+            }
+            return values;
+        }
+
+    };
+
+    // For General glm::mat4 type, return a tables,{ {16 elements}, {...} ...}
+    template <typename geoScope>
+    class GetAttribValues<geoScope, glm::mat4> {
+    public:
+        // Return lua table
+        static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName, sol::this_state this_lua) {
+
+            sol::state_view lua(this_lua);
+            sol::table values = lua.create_table();
+            PRE_TYPE::Mesh::Property_map<geoScope, glm::mat4> attribMap;
+            bool found;
+            boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::mat4>(attribName);
+            CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::mat4);
+            if (!found) {
+                return values;
+            }
+
+            for (geoScope vd : AccessScopeRange<geoScope>::get(mesh)) {
+                auto val = attribMap[vd];
+                values.add(GLM_Matrix_Helper::mat4_to_table(attribMap[vd]));
+            }
+            return values;
+        }
+
+    };
+
+
+
+    // --------------------------------- SetAttributesInterface--------------------------------------------------------
+    // For General vertex/face/edge/hedge , for this element type:float/int/string
+    template <typename geoScope, typename atribValueType>
+    class SetAttribValues
+    {
+    public:
+        // Return lua table
+        static void set(PRE_TYPE::Mesh& mesh, const std::string& attribName, const sol::lua_table& values) {
+
+            PRE_TYPE::Mesh::Property_map<geoScope, atribValueType> attribMap;
+            bool found;
+            boost::tie(attribMap, found) = mesh.property_map<geoScope, atribValueType>(attribName);
+            CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, atribValueType);
+
+            // can not find attribute
+            if (!found)
+                return;
+
+            // check is lua table?
+            if (!values.valid())
+            {
+                CARTESIAN_CORE_ERROR("Error set values for not exist attribute: {0}", attribName);
+                return;
+            }
+            int luaIndex = 1;
+            auto range = AccessScopeRange<geoScope>::get(mesh);
+            //check size == range
+            if (values.size() != range.size()) {
+                CARTESIAN_CORE_ERROR("Error set values for attribute: {0}, length must {1}", attribName, range.size());
+                return;
+            }
+
+
+            for (geoScope vd : range) {
+                attribMap[vd] = values.get<atribValueType>(luaIndex);
+                luaIndex++;
+            }
+
+        } // end of set function
+    };
+
+    template <typename geoScope>
+    class SetAttribValues<geoScope, sol::lua_table>
+    {
+    public:
+        // Return lua table
+        static void set(PRE_TYPE::Mesh& mesh, const std::string& attribName, const sol::lua_table& values) {
+
+            PRE_TYPE::Mesh::Property_map<geoScope, sol::lua_table> attribMap;
+            bool found;
+            boost::tie(attribMap, found) = mesh.property_map<geoScope, sol::lua_table>(attribName);
+            CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, sol::lua_table);
+
+            // can not find attribute
+            if (!found)
+                return;
+
+            // check is lua table?
+            if (!values.valid())
+            {
+                CARTESIAN_CORE_ERROR("Error set values for not exist attribute: {0}", attribName);
+                return;
+            }
+            int luaIndex = 1;
+            auto range = AccessScopeRange<geoScope>::get(mesh);
+            //check size == range
+            if (values.size() != range.size()) {
+                CARTESIAN_CORE_ERROR("Error set values for attribute: {0}, length must {1}", attribName, range.size());
+                return;
+            }
+
+
+            for (geoScope vd : range) {
+                attribMap[vd] = values.get<sol::lua_table>(luaIndex);
+                luaIndex++;
+            }
+
+        } // end of set function
+    };
 
 
 

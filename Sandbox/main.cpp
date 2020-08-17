@@ -8,12 +8,12 @@
 #include "test_point_get_attrib_values.h"
 #include "test_point_add_set_get_matrix.h"
 #include "test_point_set_attrib_values.h"
-void testVector(sol::state * lua){
+void testVector(sol::state* lua) {
 
 
     try {
         lua->safe_script(
-                R"(
+            R"(
 print(sin(2))
 print(cos(2))
 
@@ -59,12 +59,12 @@ print(distance({0,0,1},{0,1,0} ));
 }
 
 
-void testmatrix(sol::state * lua){
+void testmatrix(sol::state* lua) {
 
 
     try {
         lua->safe_script(
-                R"(
+            R"(
 
 print("-----create mat2 mat3 mat4 -------")
 local mat2 = matrix2.new(1)
@@ -149,12 +149,12 @@ print(astable(mat4))
 }
 
 
-void testMatrixTable(sol::state * lua){
+void testMatrixTable(sol::state* lua) {
 
 
     try {
         lua->safe_script(
-                R"(
+            R"(
 print(table_to_matrix2({1,1, 2,2}) )
 print(table_to_matrix3({1,1,1, 2,2,2, 3,3,3}) )
 print(table_to_matrix({1,1,1,1, 2,2,2,2, 3,3,3,3, 4,4,4,4}) )
@@ -199,56 +199,56 @@ print(vec2)
 
 
 
-int main(int argc , char **argv)
+int main(int argc, char** argv)
 {
     // create state
     //auto *lua = new sol::state;
-    auto *lua = new sol::state;
-    lua->open_libraries(sol::lib::base,sol::lib::jit,sol::lib::ffi,sol::lib::package,sol::lib::coroutine,sol::lib::io);
+    auto* lua = new sol::state;
+    lua->open_libraries(sol::lib::base, sol::lib::jit, sol::lib::ffi, sol::lib::package, sol::lib::coroutine, sol::lib::io);
 
     Cartesian::Log::initialize();
-    CARTESIAN_CORE_WARN("Starting version = {0}.{1}",0,1);
+    CARTESIAN_CORE_WARN("Starting version = {0}.{1}", 0, 1);
 
     auto functions = Cartesian::PluginLoader::loadPlugins();
-    Cartesian::PluginLoader::dispatch(functions,lua);
+    Cartesian::PluginLoader::dispatch(functions, lua);
     CARTESIAN_CORE_INFO("running script");
 
     // TEST
-    
+
     /*
     CARTESIAN_CORE_INFO("RUNNING POINT ATTRIBUTE FLOAT/INT/STRING GLM TEST");
     TEST_RUN_CASE(TEST_POINT_ATTRIB_FLOAT_STRING_INT, lua);
 
-	CARTESIAN_CORE_INFO("RUNNING ATTRIBUTE VALUES TEST");
+    CARTESIAN_CORE_INFO("RUNNING ATTRIBUTE VALUES TEST");
     TEST_RUN_CASE(TEST_POINT_ATTRIB_VALUES, lua);
 
     CARTESIAN_CORE_INFO("RUNNING ATTRIBUTE GLM TEST");
-	TEST_RUN_CASE(TEST_POINT_ATTRIB_GLM, lua);
-   
+    TEST_RUN_CASE(TEST_POINT_ATTRIB_GLM, lua);
+
 
     CARTESIAN_CORE_INFO("RUNNING TEST_POINT_ATTRIB_TABLE");
     TEST_RUN_CASE(TEST_POINT_ATTRIB_TABLE, lua);
-   
-  
+
+
     CARTESIAN_CORE_INFO("RUNNING ADD SET GET");
     TEST_RUN_CASE(TEST_POINT_ADD_SET_GET, lua);
- 
 
-	CARTESIAN_CORE_INFO("RUNNING vector vector2 vector3");
-	TEST_RUN_CASE(TEST_POINT_VEC2_VEC3_VEC4, lua);
+
+    CARTESIAN_CORE_INFO("RUNNING vector vector2 vector3");
+    TEST_RUN_CASE(TEST_POINT_VEC2_VEC3_VEC4, lua);
     */
 
-    
-	//CARTESIAN_CORE_INFO("RUNNING get_*_pointattribvalues ");
-	//TEST_RUN_CASE(TEST_GET_ATTRIB_VALUES, lua);
-    
 
-    
-	//CARTESIAN_CORE_INFO("RUNNING ADD GET SET FOR MATRIX  ");
+    //CARTESIAN_CORE_INFO("RUNNING get_*_pointattribvalues ");
+    //TEST_RUN_CASE(TEST_GET_ATTRIB_VALUES, lua);
+
+
+
+    //CARTESIAN_CORE_INFO("RUNNING ADD GET SET FOR MATRIX  ");
     //TEST_RUN_CASE(TEST_ADD_SET_GET_MATRIX, lua);
-    
-	CARTESIAN_CORE_INFO("RUNNING SET ATTRIB VALUES");
-	TEST_RUN_CASE(TEST_POINT_SET_ATTRIB_VALUES, lua);
+
+    CARTESIAN_CORE_INFO("RUNNING SET ATTRIB VALUES");
+    TEST_RUN_CASE(TEST_POINT_SET_ATTRIB_VALUES, lua);
 
 
 
