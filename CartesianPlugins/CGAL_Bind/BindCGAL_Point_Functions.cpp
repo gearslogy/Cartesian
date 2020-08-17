@@ -76,8 +76,24 @@ namespace Cartesian{
 		DEFINE_ADD_GET_SET_GLM_VEC4_ATTRIB(PRE_TYPE::Vertex_descriptor, point);
 
 
+		//GEN lua function:add_matrix2_pointattrib( mesh,"name",ident2() )
+		//GEN lua function:set_matrix2_pointattrib( mesh,"name",0 )
+		//GEN lua function:get_matrix2_pointattrib( mesh,"name",0 , newmatrix2)
+		DEFINE_ADD_GET_SET_GLM_MAT2_ATTRIB(PRE_TYPE::Vertex_descriptor, point);
 
 
+
+
+		//GEN lua function:add_matrix3_pointattrib( mesh,"name",ident3() )
+		//GEN lua function:set_matrix3_pointattrib( mesh,"name",0 )
+		//GEN lua function:get_matrix3_pointattrib( mesh,"name",0 , newmatrix3)
+		DEFINE_ADD_GET_SET_GLM_MAT3_ATTRIB(PRE_TYPE::Vertex_descriptor, point);
+
+
+		//GEN lua function:add_matrix_pointattrib( mesh,"name",ident() )
+		//GEN lua function:set_matrix_pointattrib( mesh,"name",0 )
+		//GEN lua function:get_matrix_pointattrib( mesh,"name",0 , newmatrix)
+		DEFINE_ADD_GET_SET_GLM_MAT4_ATTRIB(PRE_TYPE::Vertex_descriptor, point);
 
 
 		// Also you can use below code
@@ -170,7 +186,7 @@ namespace Cartesian{
 	
 
 
-
+		// ------------------------------ Get point values ---------------------------------------------------------------
 
         // Register get all vertices attribute values of float, return tables values
         auto func = GetAttribValues<PRE_TYPE::Vertex_descriptor, float >::get;
@@ -196,7 +212,33 @@ namespace Cartesian{
 		REGISTER_LUA_FUNCTION(get_vector4_pointattribvalues, get_vec4_values);
 
 		
+		// Register get all vertices attribute values of matrix2, return tables values{{mat2},{mat2} ,{.} ..}
+		auto get_mat2_values = GetAttribValues<PRE_TYPE::Vertex_descriptor, glm::mat2>::get;
+		REGISTER_LUA_FUNCTION(get_matrix2_pointattribvalues, get_mat2_values);
+		
+		// Register get all vertices attribute values of matrix3, return tables values{{mat2},{mat2} ,{.} ..}
+		auto get_mat3_values = GetAttribValues<PRE_TYPE::Vertex_descriptor, glm::mat3>::get;
+		REGISTER_LUA_FUNCTION(get_matrix3_pointattribvalues, get_mat3_values);
 
+		// Register get all vertices attribute values of matrix, return tables values{{mat2},{mat2} ,{.} ..}
+		auto get_mat4_values = GetAttribValues<PRE_TYPE::Vertex_descriptor, glm::mat4>::get;
+		REGISTER_LUA_FUNCTION(get_matrix_pointattribvalues, get_mat4_values);
+
+
+
+		// ------------------------------ set point values ---------------------------------------------------------------
+		// Register set all vertices attribute values of float
+		auto set_float = SetAttribValues<PRE_TYPE::Vertex_descriptor, float >::set;
+		REGISTER_LUA_FUNCTION(set_float_pointattribvalues, set_float);
+		// Register set all vertices attribute values of int
+		auto set_int = SetAttribValues<PRE_TYPE::Vertex_descriptor, int >::set;
+		REGISTER_LUA_FUNCTION(set_int_pointattribvalues, set_int);
+		// Register set all vertices attribute values of string
+		auto set_string = SetAttribValues<PRE_TYPE::Vertex_descriptor, std::string>::set;
+		REGISTER_LUA_FUNCTION(set_string_pointattribvalues, set_string);
+		// Register set all vertices attribute values of table
+		auto set_luatable = SetAttribValues<PRE_TYPE::Vertex_descriptor, sol::lua_table>::set;
+		REGISTER_LUA_FUNCTION(set_table_pointattribvalues, set_luatable);
 
     }
 

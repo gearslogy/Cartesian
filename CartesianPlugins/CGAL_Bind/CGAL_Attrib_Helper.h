@@ -241,7 +241,59 @@ REGISTER_LUA_OVERLOAD_FUNCTION(##set_table_##FUNCTION_SCOPE_NAME##attrib, set_ta
 	REGISTER_LUA_OVERLOAD_FUNCTION(set_vector4_##FUNCTION_SCOPE_NAME##attrib, set_vector4_##FUNCTION_SCOPE_NAME##attrib, set_vector4_##FUNCTION_SCOPE_NAME##attrib_ptnum);
 
 
+// if you write DEFINE_ADD_GET_SET_GLM_MAT2_ATTRIB(PRE_TYPE::Vertex_descriptor, point);
+//		GEN lua function:add_matrix2_pointattrib( mesh,"name",ident2() )
+//      GEN lua function:set_matrix2_pointattrib( mesh,"name",0 )
+//      GEN lua function:get_matrix2_pointattrib( mesh,"name",0 , newmatrix2)
+#define DEFINE_ADD_GET_SET_GLM_MAT2_ATTRIB(GEOMETRY_SCOPE_TYPE, FUNCTION_SCOPE_NAME)\
+	/*add matrix2*/\
+	DEFINE_ADD_ATTRIB_FUNCTION(GEOMETRY_SCOPE_TYPE, add_matrix2_##FUNCTION_SCOPE_NAME##attrib, glm::mat2);\
+	REGISTER_LUA_FUNCTION(add_matrix2_##FUNCTION_SCOPE_NAME##attrib, add_matrix2_##FUNCTION_SCOPE_NAME##attrib);\
+	/*get matrix2*/\
+	DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, get_matrix2_##FUNCTION_SCOPE_NAME##attrib, glm::mat2);\
+	DEFINE_GET_ATTRIB_PTNUM_FUNCTION(GEOMETRY_SCOPE_TYPE, get_matrix2_##FUNCTION_SCOPE_NAME##attrib_ptnum, glm::mat2);\
+	REGISTER_LUA_OVERLOAD_FUNCTION(get_matrix2_##FUNCTION_SCOPE_NAME##attrib, get_matrix2_##FUNCTION_SCOPE_NAME##attrib, get_matrix2_##FUNCTION_SCOPE_NAME##attrib_ptnum);\
+	/*get matrix2*/\
+	DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, set_matrix2_##FUNCTION_SCOPE_NAME##attrib, glm::mat2);\
+	DEFINE_SET_ARRITB_PTNUM_FUNCTION(GEOMETRY_SCOPE_TYPE, set_matrix2_##FUNCTION_SCOPE_NAME##attrib_ptnum, glm::mat2);\
+	REGISTER_LUA_OVERLOAD_FUNCTION(set_matrix2_##FUNCTION_SCOPE_NAME##attrib, set_matrix2_##FUNCTION_SCOPE_NAME##attrib, set_matrix2_##FUNCTION_SCOPE_NAME##attrib_ptnum);
 
+
+
+// if you write DEFINE_ADD_GET_SET_GLM_MAT3_ATTRIB(PRE_TYPE::Vertex_descriptor, point);
+//		GEN lua function:add_matrix_pointattrib(mesh,"name",ident3())
+//      GEN lua function:set_matrix_pointattrib( mesh,"name",0 )
+//      GEN lua function:get_matrix_pointattrib( mesh,"name",0 ,newmatrix3)
+#define DEFINE_ADD_GET_SET_GLM_MAT3_ATTRIB(GEOMETRY_SCOPE_TYPE, FUNCTION_SCOPE_NAME)\
+	/*add matrix3*/\
+	DEFINE_ADD_ATTRIB_FUNCTION(GEOMETRY_SCOPE_TYPE, add_matrix3_##FUNCTION_SCOPE_NAME##attrib, glm::mat3);\
+	REGISTER_LUA_FUNCTION(add_matrix3_##FUNCTION_SCOPE_NAME##attrib, add_matrix3_##FUNCTION_SCOPE_NAME##attrib);\
+	/*get matrix3*/\
+	DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, get_matrix3_##FUNCTION_SCOPE_NAME##attrib, glm::mat3);\
+	DEFINE_GET_ATTRIB_PTNUM_FUNCTION(GEOMETRY_SCOPE_TYPE, get_matrix3_##FUNCTION_SCOPE_NAME##attrib_ptnum, glm::mat3);\
+	REGISTER_LUA_OVERLOAD_FUNCTION(get_matrix3_##FUNCTION_SCOPE_NAME##attrib, get_matrix3_##FUNCTION_SCOPE_NAME##attrib, get_matrix3_##FUNCTION_SCOPE_NAME##attrib_ptnum);\
+	/*get matrix3*/\
+	DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, set_matrix3_##FUNCTION_SCOPE_NAME##attrib, glm::mat3);\
+	DEFINE_SET_ARRITB_PTNUM_FUNCTION(GEOMETRY_SCOPE_TYPE, set_matrix3_##FUNCTION_SCOPE_NAME##attrib_ptnum, glm::mat3);\
+	REGISTER_LUA_OVERLOAD_FUNCTION(set_matrix3_##FUNCTION_SCOPE_NAME##attrib, set_matrix3_##FUNCTION_SCOPE_NAME##attrib, set_matrix3_##FUNCTION_SCOPE_NAME##attrib_ptnum);
+
+
+// if you write DEFINE_ADD_GET_SET_GLM_MAT4_ATTRIB(PRE_TYPE::Vertex_descriptor, point);
+//		GEN lua function:add_matrix_pointattrib( mesh,"name", ident())
+//      GEN lua function:set_matrix_pointattrib( mesh,"name",0 )
+//      GEN lua function:get_matrix_pointattrib( mesh,"name",0 , newmatrix4 )
+#define DEFINE_ADD_GET_SET_GLM_MAT4_ATTRIB(GEOMETRY_SCOPE_TYPE, FUNCTION_SCOPE_NAME)\
+	/*add matrix*/\
+	DEFINE_ADD_ATTRIB_FUNCTION(GEOMETRY_SCOPE_TYPE, add_matrix_##FUNCTION_SCOPE_NAME##attrib, glm::mat4);\
+	REGISTER_LUA_FUNCTION(add_matrix_##FUNCTION_SCOPE_NAME##attrib, add_matrix_##FUNCTION_SCOPE_NAME##attrib);\
+	/*get matrix*/\
+	DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, get_matrix_##FUNCTION_SCOPE_NAME##attrib, glm::mat4);\
+	DEFINE_GET_ATTRIB_PTNUM_FUNCTION(GEOMETRY_SCOPE_TYPE, get_matrix_##FUNCTION_SCOPE_NAME##attrib_ptnum, glm::mat4);\
+	REGISTER_LUA_OVERLOAD_FUNCTION(get_matrix_##FUNCTION_SCOPE_NAME##attrib, get_matrix_##FUNCTION_SCOPE_NAME##attrib, get_matrix_##FUNCTION_SCOPE_NAME##attrib_ptnum);\
+	/*get matrix*/\
+	DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(GEOMETRY_SCOPE_TYPE, set_matrix_##FUNCTION_SCOPE_NAME##attrib, glm::mat4);\
+	DEFINE_SET_ARRITB_PTNUM_FUNCTION(GEOMETRY_SCOPE_TYPE, set_matrix_##FUNCTION_SCOPE_NAME##attrib_ptnum, glm::mat4);\
+	REGISTER_LUA_OVERLOAD_FUNCTION(set_matrix_##FUNCTION_SCOPE_NAME##attrib, set_matrix_##FUNCTION_SCOPE_NAME##attrib, set_matrix_##FUNCTION_SCOPE_NAME##attrib_ptnum);
 
 
 
@@ -279,6 +331,29 @@ namespace Cartesian
 			return listIDs;
 		}
 	};
+
+	template<>
+	class AccessScopeRange<PRE_TYPE::Edge_descriptor> {
+	public:
+		static std::vector<PRE_TYPE::Edge_descriptor> get(PRE_TYPE::Mesh& mesh) {
+			std::vector<PRE_TYPE::Edge_descriptor> listIDs;
+			for (PRE_TYPE::Edge_descriptor& id : mesh.edges())
+				listIDs.emplace_back(id);
+			return listIDs;
+		}
+	};
+
+	template<>
+	class AccessScopeRange<PRE_TYPE::Halfedge_descriptor> {
+	public:
+		static std::vector<PRE_TYPE::Halfedge_descriptor> get(PRE_TYPE::Mesh& mesh) {
+			std::vector<PRE_TYPE::Halfedge_descriptor> listIDs;
+			for (PRE_TYPE::Halfedge_descriptor& id : mesh.halfedges())
+				listIDs.emplace_back(id);
+			return listIDs;
+		}
+	};
+
 
 
 	// For General vertex/face/edge/hedge , for this element type:float/int/string
@@ -395,8 +470,6 @@ namespace Cartesian
 			sol::state_view lua(this_lua);
 			sol::table values = lua.create_table();
 
-			//return(values);
-
 			PRE_TYPE::Mesh::Property_map<geoScope, glm::vec4> attribMap;
 			bool found;
 			boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::vec4>(attribName);
@@ -427,7 +500,12 @@ namespace Cartesian
 
 			sol::state_view lua(this_lua);
 			sol::table values = lua.create_table();
-			READY_FIND_ATTRIBUTE(geoScope, attribName, glm::mat2);
+
+			PRE_TYPE::Mesh::Property_map<geoScope, glm::mat2> attribMap;
+			bool found;
+			boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::mat2>(attribName);
+			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::mat2);
+
 			if (!found) {
 				return values;
 			}
@@ -440,6 +518,152 @@ namespace Cartesian
 		}
 
 	};
+
+	// For General glm::mat3 type, return a tables,{ {9 elements}, {...} ...}
+	template <typename geoScope>
+	class GetAttribValues<geoScope, glm::mat3> {
+	public:
+		// Return lua table
+		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName, sol::this_state this_lua) {
+
+			sol::state_view lua(this_lua);
+			sol::table values = lua.create_table();
+			PRE_TYPE::Mesh::Property_map<geoScope, glm::mat3> attribMap;
+			bool found;
+			boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::mat3>(attribName);
+			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::mat3);
+
+			if (!found) {
+				return values;
+			}
+
+			for (geoScope vd : AccessScopeRange<geoScope>::get(mesh)) {
+				auto val = attribMap[vd];
+				values.add(GLM_Matrix_Helper::mat3_to_table(attribMap[vd]));
+			}
+			return values;
+		}
+
+	};
+
+	// For General glm::mat4 type, return a tables,{ {16 elements}, {...} ...}
+	template <typename geoScope>
+	class GetAttribValues<geoScope, glm::mat4> {
+	public:
+		// Return lua table
+		static auto get(PRE_TYPE::Mesh& mesh, const std::string& attribName, sol::this_state this_lua) {
+
+			sol::state_view lua(this_lua);
+			sol::table values = lua.create_table();
+			PRE_TYPE::Mesh::Property_map<geoScope, glm::mat4> attribMap;
+			bool found;
+			boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::mat4>(attribName);
+			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::mat4);
+			if (!found) {
+				return values;
+			}
+
+			for (geoScope vd : AccessScopeRange<geoScope>::get(mesh)) {
+				auto val = attribMap[vd];
+				values.add(GLM_Matrix_Helper::mat4_to_table(attribMap[vd]));
+			}
+			return values;
+		}
+
+	};
+	
+
+
+	// --------------------------------- SetAttributesInterface--------------------------------------------------------
+	// For General vertex/face/edge/hedge , for this element type:float/int/string
+	template <typename geoScope, typename atribValueType>
+	class SetAttribValues
+	{
+	public:
+		// Return lua table
+		static void set(PRE_TYPE::Mesh& mesh, const std::string& attribName, const sol::lua_table& values) {
+
+			PRE_TYPE::Mesh::Property_map<geoScope, atribValueType> attribMap;
+			bool found;
+			boost::tie(attribMap, found) = mesh.property_map<geoScope, atribValueType>(attribName);
+			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, atribValueType);
+
+			// can not find attribute
+			if (!found)
+				return;
+
+			// check is lua table?
+			if (!values.valid())
+			{
+				CARTESIAN_CORE_ERROR("Error set values for not exist attribute: {0}", attribName);
+				return;
+			}
+			int luaIndex = 1;
+			auto range = AccessScopeRange<geoScope>::get(mesh);
+			//check size == range
+			if (values.size() != range.size()) {
+				CARTESIAN_CORE_ERROR("Error set values for attribute: {0}, length must {1}", attribName, range.size());
+				return;
+			}
+
+
+			for (geoScope vd : range) {
+				attribMap[vd] = values.get<atribValueType>(luaIndex);
+				luaIndex++;
+			}
+
+		} // end of set function
+	};
+
+	template <typename geoScope>
+	class SetAttribValues<geoScope, sol::lua_table>
+	{
+	public:
+		// Return lua table
+		static void set(PRE_TYPE::Mesh& mesh, const std::string& attribName, const sol::lua_table& values) {
+
+			PRE_TYPE::Mesh::Property_map<geoScope, sol::lua_table> attribMap;
+			bool found;
+			boost::tie(attribMap, found) = mesh.property_map<geoScope, sol::lua_table>(attribName);
+			CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, sol::lua_table);
+
+			// can not find attribute
+			if (!found)
+				return;
+
+			// check is lua table?
+			if (!values.valid())
+			{
+				CARTESIAN_CORE_ERROR("Error set values for not exist attribute: {0}", attribName);
+				return;
+			}
+			int luaIndex = 1;
+			auto range = AccessScopeRange<geoScope>::get(mesh);
+			//check size == range
+			if (values.size() != range.size()) {
+				CARTESIAN_CORE_ERROR("Error set values for attribute: {0}, length must {1}", attribName, range.size());
+				return;
+			}
+
+
+			for (geoScope vd : range) {
+				attribMap[vd] = values.get<sol::lua_table>(luaIndex);
+				luaIndex++;
+			}
+
+		} // end of set function
+	};
+
+
+
+
+
+
+
+
+
+
+
 
 
 
