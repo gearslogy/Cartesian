@@ -6,6 +6,7 @@
 #include "test_point_add_set_get.h"
 #include "test_point_vec2_vec3_vec4.h"
 #include "test_point_get_attrib_values.h"
+#include "test_point_add_set_get_matrix.h"
 void testVector(sol::state * lua){
 
 
@@ -236,8 +237,15 @@ int main(int argc , char **argv)
 	TEST_RUN_CASE(TEST_POINT_VEC2_VEC3_VEC4, lua);
     */
 
+    
 	CARTESIAN_CORE_INFO("RUNNING get_*_pointattribvalues ");
 	TEST_RUN_CASE(TEST_GET_ATTRIB_VALUES, lua);
+    
+
+    /*
+	CARTESIAN_CORE_INFO("RUNNING ADD GET SET FOR MATRIX  ");
+    TEST_RUN_CASE(TEST_ADD_SET_GET_MATRIX, lua);
+    */
 
 
     std::cin.get();

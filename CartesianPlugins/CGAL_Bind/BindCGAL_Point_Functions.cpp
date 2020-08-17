@@ -75,6 +75,11 @@ namespace Cartesian{
 		// Register get_vector4_pointattrib(mesh, "name", id )
 		DEFINE_ADD_GET_SET_GLM_VEC4_ATTRIB(PRE_TYPE::Vertex_descriptor, point);
 
+
+
+
+
+
 		// Also you can use below code
 		/*
 		// add attribute
@@ -168,10 +173,10 @@ namespace Cartesian{
 
 
         // Register get all vertices attribute values of float, return tables values
-        auto func = GetAttribValues<PRE_TYPE::Vertex_descriptor, float>::get;
+        auto func = GetAttribValues<PRE_TYPE::Vertex_descriptor, float >::get;
         REGISTER_LUA_FUNCTION(get_float_pointattribvalues, func);
 		// Register get all vertices attribute values of int, return tables values
-		auto func2 = GetAttribValues<PRE_TYPE::Vertex_descriptor, int>::get;
+		auto func2 = GetAttribValues<PRE_TYPE::Vertex_descriptor, int >::get;
 		REGISTER_LUA_FUNCTION(get_int_pointattribvalues, func2);
 		// Register get all vertices attribute values of string, return tables values
 		auto func3 = GetAttribValues<PRE_TYPE::Vertex_descriptor, std::string>::get;
