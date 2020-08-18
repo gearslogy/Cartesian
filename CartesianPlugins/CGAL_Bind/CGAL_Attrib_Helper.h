@@ -595,14 +595,14 @@ namespace Cartesian
             // check is lua table?
             if (!values.valid())
             {
-                CARTESIAN_CORE_ERROR("Error set values for not exist attribute: {0}", attribName);
+                CARTESIAN_CORE_ERROR("error, lua table invalid: {0}", attribName);
                 return;
             }
             int luaIndex = 1;
             auto range = AccessScopeRange<geoScope>::get(mesh);
             //check size == range
             if (values.size() != range.size()) {
-                CARTESIAN_CORE_ERROR("Error set values for attribute: {0}, length must {1}", attribName, range.size());
+                CARTESIAN_CORE_ERROR("error set values for attribute: {0}, length must {1}", attribName, range.size());
                 return;
             }
 
@@ -615,6 +615,7 @@ namespace Cartesian
         } // end of set function
     };
 
+    // set values for lua table attributes
     template <typename geoScope>
     class SetAttribValues<geoScope, sol::lua_table>
     {
@@ -634,14 +635,14 @@ namespace Cartesian
             // check is lua table?
             if (!values.valid())
             {
-                CARTESIAN_CORE_ERROR("Error set values for not exist attribute: {0}", attribName);
+                CARTESIAN_CORE_ERROR("error, lua table invalid: {0}", attribName);
                 return;
             }
             int luaIndex = 1;
             auto range = AccessScopeRange<geoScope>::get(mesh);
             //check size == range
             if (values.size() != range.size()) {
-                CARTESIAN_CORE_ERROR("Error set values for attribute: {0}, length must {1}", attribName, range.size());
+                CARTESIAN_CORE_ERROR("error set values for attribute: {0}, length must {1}", attribName, range.size());
                 return;
             }
 
@@ -654,14 +655,290 @@ namespace Cartesian
         } // end of set function
     };
 
+    // set values for glm::vec2 attributes
+    template <typename geoScope>
+    class SetAttribValues<geoScope, glm::vec2>
+    {
+    public:
+        // Return lua table
+        static void set(PRE_TYPE::Mesh& mesh, const std::string& attribName, const sol::lua_table& values) {
+
+            PRE_TYPE::Mesh::Property_map<geoScope, glm::vec2> attribMap;
+            bool found;
+            boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::vec2>(attribName);
+            CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, sol::vec2);
+
+            // can not find attribute
+            if (!found)
+                return;
+
+            // check is lua table?
+            if (!values.valid())
+            {
+                CARTESIAN_CORE_ERROR("error, set values failed, lua table invalid: {0}", attribName);
+                return;
+            }
+            int luaIndex = 1;
+            auto range = AccessScopeRange<geoScope>::get(mesh);
+            //check size == range
+            if (values.size() != range.size()) {
+                CARTESIAN_CORE_ERROR("error set values for attribute: {0}, length must {1}", attribName, range.size());
+                return;
+            }
+
+            // { {1,2}, {1,2} , {1,2} }  if values = this table 
+            for (geoScope vd : range) {
+                auto element = values.get<sol::lua_table>(luaIndex);
+                if (element.size() != 2) // vector2 also has two element
+                {
+                    CARTESIAN_CORE_ERROR("set values failed for attrib:{0}, every child table expect to 2 element, error at child table index : {1}", attribName, luaIndex);
+                    return;
+                }
+                attribMap[vd] = GLM_Vec_Helper::table_to_vec2(element);
+                luaIndex++;
+            }
+
+        } // end of set function
+    };
+
+
+    // set values for glm::vec3 attributes
+    template <typename geoScope>
+    class SetAttribValues<geoScope, glm::vec3>
+    {
+    public:
+        // Return lua table
+        static void set(PRE_TYPE::Mesh& mesh, const std::string& attribName, const sol::lua_table& values) {
+
+            PRE_TYPE::Mesh::Property_map<geoScope, glm::vec3> attribMap;
+            bool found;
+            boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::vec3>(attribName);
+            CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, sol::vec3);
+
+            // can not find attribute
+            if (!found)
+                return;
+
+            // check is lua table?
+            if (!values.valid())
+            {
+                CARTESIAN_CORE_ERROR("error, set values failed, lua table invalid: {0}", attribName);
+                return;
+            }
+            int luaIndex = 1;
+            auto range = AccessScopeRange<geoScope>::get(mesh);
+            //check size == range
+            if (values.size() != range.size()) {
+                CARTESIAN_CORE_ERROR("error set values for attribute: {0}, length must {1}", attribName, range.size());
+                return;
+            }
+
+            // { {1,2,3}, {1,2,3} , {1,2,3} }  if values = this table 
+            for (geoScope vd : range) {
+                auto element = values.get<sol::lua_table>(luaIndex);
+                if (element.size() != 3) // vector2 also has two element
+                {
+                    CARTESIAN_CORE_ERROR("set values failed for attrib:{0}, every child table expect to 3 element, error at child table index : {1}", attribName, luaIndex);
+                    return;
+                }
+                attribMap[vd] = GLM_Vec_Helper::table_to_vec3(element);
+                luaIndex++;
+            }
+
+        } // end of set function
+    };
 
 
 
+    // set values for glm::vec4 attributes
+    template <typename geoScope>
+    class SetAttribValues<geoScope, glm::vec4>
+    {
+    public:
+        // Return lua table
+        static void set(PRE_TYPE::Mesh& mesh, const std::string& attribName, const sol::lua_table& values) {
+
+            PRE_TYPE::Mesh::Property_map<geoScope, glm::vec4> attribMap;
+            bool found;
+            boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::vec4>(attribName);
+            CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, sol::vec4);
+
+            // can not find attribute
+            if (!found)
+                return;
+
+            // check is lua table?
+            if (!values.valid())
+            {
+                CARTESIAN_CORE_ERROR("error, set values failed, lua table invalid: {0}", attribName);
+                return;
+            }
+            int luaIndex = 1;
+            auto range = AccessScopeRange<geoScope>::get(mesh);
+            //check size == range
+            if (values.size() != range.size()) {
+                CARTESIAN_CORE_ERROR("error set values for attribute: {0}, length must {1}", attribName, range.size());
+                return;
+            }
+
+            // { {1,2}, {1,2} , {1,2} }  if values = this table 
+            for (geoScope vd : range) {
+                auto element = values.get<sol::lua_table>(luaIndex);
+                if (element.size() != 4) // vector2 also has two element
+                {
+                    CARTESIAN_CORE_ERROR("set values failed for attrib:{0}, every child table expect to 4 element, error at child table index : {1}", attribName, luaIndex);
+                    return;
+                }
+                attribMap[vd] = GLM_Vec_Helper::table_to_vec4(element);
+                luaIndex++;
+            }
+
+        } // end of set function
+    };
+
+    // set values for glm::mat2 attributes
+    // set_matrix_pointattribvalues(mesh , {  {mat1 with 16 elements}  ,{mat1 with 16 elements},{mat1 with 16 elements}....  })
+    template <typename geoScope>
+    class SetAttribValues<geoScope, glm::mat2>
+    {
+    public:
+        // Return lua table
+        static void set(PRE_TYPE::Mesh& mesh, const std::string& attribName, const sol::lua_table& values) {
+
+            PRE_TYPE::Mesh::Property_map<geoScope, glm::mat2> attribMap;
+            bool found;
+            boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::mat2>(attribName);
+            CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::mat2);
+
+            // can not find attribute
+            if (!found)
+                return;
+
+            // check is lua table?
+            if (!values.valid())
+            {
+                CARTESIAN_CORE_ERROR("error, set matrix2 values failed, lua table invalid: {0}", attribName);
+                return;
+            }
+            int luaIndex = 1;
+            auto range = AccessScopeRange<geoScope>::get(mesh);
+            //check size == range
+            if (values.size() != range.size()) {
+                CARTESIAN_CORE_ERROR("error set matrix2 values for attribute: {0}, length must {1}", attribName, range.size());
+                return;
+            }
+
+            // { {1,2}, {1,2} , {1,2} }  if values = this table 
+            for (geoScope vd : range) {
+                auto element = values.get<sol::lua_table>(luaIndex);
+                if (element.size() != 4) // vector2 also has two element
+                {
+                    CARTESIAN_CORE_ERROR("set matrix2 values failed for attrib:{0}, every child table expect to 4 element, error at child table index : {1}", attribName, luaIndex);
+                    return;
+                }
+                attribMap[vd] = GLM_Matrix_Helper::table_to_mat2(element);
+                luaIndex++;
+            }
+
+        } // end of set function
+    };
 
 
+    // set values for glm::mat3 attributes 
+    //                              (mesh,  {       id=0 matrix3                id=1 matrix3           id=2 matrix3       ....})
+    // set_matrix3_pointattribvalues(mesh , {  {mat1 with 9 elements}  ,{mat1 with 9 elements},{mat1 with 9 elements}....  })
+    template <typename geoScope>
+    class SetAttribValues<geoScope, glm::mat3>
+    {
+    public:
+        // Return lua table
+        static void set(PRE_TYPE::Mesh& mesh, const std::string& attribName, const sol::lua_table& values) {
+
+            PRE_TYPE::Mesh::Property_map<geoScope, glm::mat3> attribMap;
+            bool found;
+            boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::mat3>(attribName);
+            CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::mat3);
+
+            // can not find attribute
+            if (!found)
+                return;
+
+            // check is lua table?
+            if (!values.valid())
+            {
+                CARTESIAN_CORE_ERROR("error, set matrix3 values failed, lua table invalid: {0}", attribName);
+                return;
+            }
+            int luaIndex = 1;
+            auto range = AccessScopeRange<geoScope>::get(mesh);
+            //check size == range
+            if (values.size() != range.size()) {
+                CARTESIAN_CORE_ERROR("error set matrix3 values for attribute: {0}, length must {1}", attribName, range.size());
+                return;
+            }
+
+            // { {1,2}, {1,2} , {1,2} }  if values = this table 
+            for (geoScope vd : range) {
+                auto element = values.get<sol::lua_table>(luaIndex);
+                if (element.size() != 9) // vector2 also has two element
+                {
+                    CARTESIAN_CORE_ERROR("set matrix3 values failed for attrib:{0}, every child table expect to 9 element, error at child table index : {1}", attribName, luaIndex);
+                    return;
+                }
+                attribMap[vd] = GLM_Matrix_Helper::table_to_mat3(element);
+                luaIndex++;
+            }
+
+        } // end of set function
+    };
+
+    // set values for glm::mat4 attributes 
+    //                             (mesh,  {       id=0 matrix                id=1 matrix           id=2 matrix       ....})
+    // set_matrix_pointattribvalues(mesh , {  {mat1 with 16 elements}  ,{mat1 with 16 elements},{mat1 with 16 elements}....  })
+    template <typename geoScope>
+    class SetAttribValues<geoScope, glm::mat4>
+    {
+    public:
+        // Return lua table
+        static void set(PRE_TYPE::Mesh& mesh, const std::string& attribName, const sol::lua_table& values) {
+
+            PRE_TYPE::Mesh::Property_map<geoScope, glm::mat4> attribMap;
+            bool found;
+            boost::tie(attribMap, found) = mesh.property_map<geoScope, glm::mat4>(attribName);
+            CHECK_ATTRIB_FOUNDED_STATUS(found, attribName, glm::mat4);
+
+            // can not find attribute
+            if (!found)
+                return;
+
+            // check is lua table?
+            if (!values.valid())
+            {
+                CARTESIAN_CORE_ERROR("error, set matrix values failed, lua table invalid: {0}", attribName);
+                return;
+            }
+            int luaIndex = 1;
+            auto range = AccessScopeRange<geoScope>::get(mesh);
+            //check size == range
+            if (values.size() != range.size()) {
+                CARTESIAN_CORE_ERROR("error set matrix values for attribute: {0}, length must {1}", attribName, range.size());
+                return;
+            }
 
 
+            for (geoScope vd : range) {
+                auto element = values.get<sol::lua_table>(luaIndex);
+                if (element.size() != 16) // vector2 also has two element
+                {
+                    CARTESIAN_CORE_ERROR("set matrix values failed for attrib:{0}, every child table expect to 16 element, error at child table index : {1}", attribName, luaIndex);
+                    return;
+                }
+                attribMap[vd] = GLM_Matrix_Helper::table_to_mat4(element);
+                luaIndex++;
+            }
 
+        } // end of set function
+    };
 
 
 

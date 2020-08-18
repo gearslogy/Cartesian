@@ -96,118 +96,43 @@ namespace Cartesian {
         DEFINE_ADD_GET_SET_GLM_MAT4_ATTRIB(PRE_TYPE::Vertex_descriptor, point);
 
 
-        // Also you can use below code
-        /*
-        // add attribute
-       //DEFINE_ADD_ATTRIB_FUNCTION(PRE_TYPE::Vertex_descriptor, add_int_pointattrib, int);
-       //REGISTER_LUA_FUNCTION("add_int_pointattrib", add_int_pointattrib);
-
-        // get attribute
-        DEFINE_GET_ATTRIB_ID_FUNCTION(PRE_TYPE::Vertex_descriptor,get_int_pointattrib_ptnum, int);
-        DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(PRE_TYPE::Vertex_descriptor,get_int_pointattrib,int);
-        REGISTER_LUA_OVERLOAD_FUNCTION("get_int_pointattrib", get_int_pointattrib, get_int_pointattrib_ptnum);
-
-        // set attribute
-        DEFINE_SET_ARRITB_PTNUM_FUNCTION(PRE_TYPE::Vertex_descriptor,set_int_pointattrib_ptnum, int);
-        DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(PRE_TYPE::Vertex_descriptor,set_int_pointattrib, int);
-        REGISTER_LUA_OVERLOAD_FUNCTION("set_int_pointattrib", set_int_pointattrib, set_int_pointattrib_ptnum);
-
-        // --------------------------------------------------------------  int attribute operation --------------------------------------------------------------------
-
-
-
-        // --------------------------------------------------------------  string attribute operation --------------------------------------------------------------------
-         // add attribute
-        DEFINE_ADD_ATTRIB_FUNCTION(PRE_TYPE::Vertex_descriptor,add_string_pointattrib, std::string);
-        REGISTER_LUA_FUNCTION("add_string_pointattrib", add_string_pointattrib);
-
-        // get attribute
-        DEFINE_GET_ATTRIB_ID_FUNCTION(PRE_TYPE::Vertex_descriptor, get_string_pointattrib_ptnum, std::string);
-        DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(PRE_TYPE::Vertex_descriptor, get_string_pointattrib, std::string);
-        REGISTER_LUA_OVERLOAD_FUNCTION( "get_string_pointattrib", get_string_pointattrib, get_string_pointattrib_ptnum);
-
-        // set attribute
-        DEFINE_SET_ARRITB_PTNUM_FUNCTION(PRE_TYPE::Vertex_descriptor, set_string_pointattrib_ptnum, std::string);
-        DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(PRE_TYPE::Vertex_descriptor, set_string_pointattrib, std::string);
-        REGISTER_LUA_OVERLOAD_FUNCTION( "set_string_pointattrib", set_string_pointattrib, set_string_pointattrib_ptnum);
-
-        // --------------------------------------------------------------  string attribute operation --------------------------------------------------------------------
-
-
-
-
-        // --------------------------------------------------------------  float attribute operation --------------------------------------------------------------------
-        // add attribute
-        DEFINE_ADD_ATTRIB_FUNCTION(PRE_TYPE::Vertex_descriptor, add_float_pointattrib, float);
-        REGISTER_LUA_FUNCTION("add_float_pointattrib", add_float_pointattrib);
-
-        // get attribute
-        DEFINE_GET_ATTRIB_ID_FUNCTION(PRE_TYPE::Vertex_descriptor, get_float_pointattrib_ptnum, float);
-        DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(PRE_TYPE::Vertex_descriptor, get_float_pointattrib, float);
-        REGISTER_LUA_OVERLOAD_FUNCTION("get_float_pointattrib", get_float_pointattrib,get_float_pointattrib_ptnum);
-
-        // set attribute
-        DEFINE_SET_ARRITB_PTNUM_FUNCTION(PRE_TYPE::Vertex_descriptor, set_float_pointattrib_ptnum, float);
-        DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(PRE_TYPE::Vertex_descriptor, set_float_pointattrib, float);
-        REGISTER_LUA_OVERLOAD_FUNCTION("set_float_pointattrib", set_float_pointattrib, set_float_pointattrib_ptnum);
-        // --------------------------------------------------------------  float attribute operation --------------------------------------------------------------------
-
-
-         // -------------------------------------------------------------- lua table attribute operation --------------------------------------------------------------------
-        // add attribute
-        DEFINE_ADD_ATTRIB_FUNCTION(PRE_TYPE::Vertex_descriptor, add_table_pointattrib, sol::lua_table);
-        REGISTER_LUA_FUNCTION(add_table_pointattrib, add_table_pointattrib);
-
-        // get attribute
-        DEFINE_GET_ATTRIB_ID_FUNCTION(PRE_TYPE::Vertex_descriptor, get_table_pointattrib_ptnum, sol::lua_table);
-        DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(PRE_TYPE::Vertex_descriptor, get_table_pointattrib, sol::lua_table);
-        REGISTER_LUA_OVERLOAD_FUNCTION(get_table_pointattrib, get_table_pointattrib, get_table_pointattrib_ptnum);
-
-        // set attribute
-        DEFINE_SET_ARRITB_PTNUM_FUNCTION(PRE_TYPE::Vertex_descriptor, set_table_pointattrib_ptnum, sol::lua_table);
-        DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(PRE_TYPE::Vertex_descriptor, set_table_pointattrib, sol::lua_table);
-        REGISTER_LUA_OVERLOAD_FUNCTION(set_table_pointattrib, set_table_pointattrib, set_table_pointattrib_ptnum);
-        // -------------------------------------------------------------- lua table attribute operation --------------------------------------------------------------------
-        */
-
-
-        //// Register can add/set/get vector vector3 vector4 attribute
-        ///*add vector2*/
-        //DEFINE_ADD_ATTRIB_FUNCTION(PRE_TYPE::Vertex_descriptor, add_vector2_pointattrib, glm::vec2);
-        //REGISTER_LUA_FUNCTION(add_vector2_pointattrib, add_vector2_pointattrib);
-        ///*get vector2*/
-        //DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(PRE_TYPE::Vertex_descriptor, get_vector2_pointattrib,glm::vec2);
-        //DEFINE_GET_ATTRIB_ID_FUNCTION(PRE_TYPE::Vertex_descriptor, get_vector2_pointattrib_ptnum, glm::vec2);
-        //REGISTER_LUA_FUNCTION(get_vector2_pointattrib, get_vector2_pointattrib, get_vector2_pointattrib_ptnum);
-        ///*get vector2*/
-        //DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(PRE_TYPE::Vertex_descriptor, set_vector2_pointattrib, glm::vec2);
-        //DEFINE_SET_ARRITB_DESCRIPTOR_FUNCTION(PRE_TYPE::Vertex_descriptor, set_vector2_pointattrib_ptnum, glm::vec2);
-        //REGISTER_LUA_FUNCTION(set_vector2_pointattrib, set_vector2_pointattrib, set_vector2_pointattrib_ptnum);
-
-
-
         // ------------------------------ Get point values ---------------------------------------------------------------
 
         // Register get all vertices attribute values of float, return tables values
-        auto func = GetAttribValues<PRE_TYPE::Vertex_descriptor, float >::get;
-        REGISTER_LUA_FUNCTION(get_float_pointattribvalues, func);
+        auto get_float_values = GetAttribValues<PRE_TYPE::Vertex_descriptor, float >::get;
+        REGISTER_LUA_FUNCTION(get_float_pointattribvalues, get_float_values);
+
+
         // Register get all vertices attribute values of int, return tables values
-        auto func2 = GetAttribValues<PRE_TYPE::Vertex_descriptor, int >::get;
-        REGISTER_LUA_FUNCTION(get_int_pointattribvalues, func2);
+        auto get_int_values = GetAttribValues<PRE_TYPE::Vertex_descriptor, int >::get;
+        REGISTER_LUA_FUNCTION(get_int_pointattribvalues, get_int_values);
+
+
         // Register get all vertices attribute values of string, return tables values
-        auto func3 = GetAttribValues<PRE_TYPE::Vertex_descriptor, std::string>::get;
-        REGISTER_LUA_FUNCTION(get_string_pointattribvalues, func3);
+        auto get_string_values = GetAttribValues<PRE_TYPE::Vertex_descriptor, std::string>::get;
+        REGISTER_LUA_FUNCTION(get_string_pointattribvalues, get_string_values);
+
+
         // Register get all vertices attribute values of table, return tables values
-        auto func4 = GetAttribValues<PRE_TYPE::Vertex_descriptor, sol::lua_table>::get;
-        REGISTER_LUA_FUNCTION(get_table_pointattribvalues, func4);
+        auto get_table_values = GetAttribValues<PRE_TYPE::Vertex_descriptor, sol::lua_table>::get;
+        REGISTER_LUA_FUNCTION(get_table_pointattribvalues, get_table_values);
+
 
         // Register get all vertices attribute values of vector2, return tables values
+        // set_vector2_pointattribvalues(m,"foo_vec2", { {1,2},{1,2},{1,2} })	
         auto get_vec2_values = GetAttribValues<PRE_TYPE::Vertex_descriptor, glm::vec2>::get;
         REGISTER_LUA_FUNCTION(get_vector2_pointattribvalues, get_vec2_values);
+
+
         // Register get all vertices attribute values of vector, return tables values
+        // set_vector_pointattribvalues(m,"foo_vec3", { {1,2,3},{3,4,5},{6,7,8} })	
         auto get_vec3_values = GetAttribValues<PRE_TYPE::Vertex_descriptor, glm::vec3>::get;
         REGISTER_LUA_FUNCTION(get_vector_pointattribvalues, get_vec3_values);
+
+
         // Register get all vertices attribute values of vector3, return tables values
+        // for 3 points
+        // set_vector4_pointattribvalues(m,"foo_vec4", { {1,2,3,4},{1,2,3,4},{1,2,3,4} })	
         auto get_vec4_values = GetAttribValues<PRE_TYPE::Vertex_descriptor, glm::vec4>::get;
         REGISTER_LUA_FUNCTION(get_vector4_pointattribvalues, get_vec4_values);
 
@@ -228,17 +153,57 @@ namespace Cartesian {
 
         // ------------------------------ set point values ---------------------------------------------------------------
         // Register set all vertices attribute values of float
-        auto set_float = SetAttribValues<PRE_TYPE::Vertex_descriptor, float >::set;
-        REGISTER_LUA_FUNCTION(set_float_pointattribvalues, set_float);
+        auto set_float_values = SetAttribValues<PRE_TYPE::Vertex_descriptor, float >::set;
+        REGISTER_LUA_FUNCTION(set_float_pointattribvalues, set_float_values);
         // Register set all vertices attribute values of int
-        auto set_int = SetAttribValues<PRE_TYPE::Vertex_descriptor, int >::set;
-        REGISTER_LUA_FUNCTION(set_int_pointattribvalues, set_int);
+        auto set_int_values = SetAttribValues<PRE_TYPE::Vertex_descriptor, int >::set;
+        REGISTER_LUA_FUNCTION(set_int_pointattribvalues, set_int_values);
         // Register set all vertices attribute values of string
-        auto set_string = SetAttribValues<PRE_TYPE::Vertex_descriptor, std::string>::set;
-        REGISTER_LUA_FUNCTION(set_string_pointattribvalues, set_string);
+        auto set_string_values = SetAttribValues<PRE_TYPE::Vertex_descriptor, std::string>::set;
+        REGISTER_LUA_FUNCTION(set_string_pointattribvalues, set_string_values);
         // Register set all vertices attribute values of table
-        auto set_luatable = SetAttribValues<PRE_TYPE::Vertex_descriptor, sol::lua_table>::set;
-        REGISTER_LUA_FUNCTION(set_table_pointattribvalues, set_luatable);
+        auto set_luatable_values = SetAttribValues<PRE_TYPE::Vertex_descriptor, sol::lua_table>::set;
+        REGISTER_LUA_FUNCTION(set_table_pointattribvalues, set_luatable_values);
+        // Register set all vertices attribute values of vec2
+        auto set_vec2_values = SetAttribValues<PRE_TYPE::Vertex_descriptor, glm::vec2 >::set;
+        REGISTER_LUA_FUNCTION(set_vector2_pointattribvalues, set_vec2_values);
+        // Register set all vertices attribute values of vec3
+        auto set_vec3_values = SetAttribValues<PRE_TYPE::Vertex_descriptor, glm::vec3 >::set;
+        REGISTER_LUA_FUNCTION(set_vector_pointattribvalues, set_vec3_values);
+
+        // Register set all vertices attribute values of vec4
+        auto set_vec4_values = SetAttribValues<PRE_TYPE::Vertex_descriptor, glm::vec4 >::set;
+        REGISTER_LUA_FUNCTION(set_vector4_pointattribvalues, set_vec4_values);
+
+
+        // Register set all vertices attribute values of mat2
+        // for 3 points
+        //    local mat2_pt0 = astable(ident2() * 100)
+        //    local mat2_pt1 = astable(ident2() * 50)
+        //    local mat2_pt2 = astable(ident2() * 10)
+        //    set_matrix2_pointattribvalues(m, "foo_matrix2", { mat2_pt0, mat2_pt1, mat2_pt2 })
+        auto set_mat2_values = SetAttribValues<PRE_TYPE::Vertex_descriptor, glm::mat2 >::set;
+        REGISTER_LUA_FUNCTION(set_matrix2_pointattribvalues, set_mat2_values);
+
+        // Register set all vertices attribute values of mat3
+        // for 3 points
+        //    local mat3_pt0 = astable(ident3() * 100)
+        //    local mat3_pt1 = astable(ident3() * 50)
+        //    local mat3_pt2 = astable(ident3() * 10)
+        //    set_matrix3_pointattribvalues(m, "foo_matrix3", { mat3_pt0, mat3_pt1, mat3_pt2 })
+        auto set_mat3_values = SetAttribValues<PRE_TYPE::Vertex_descriptor, glm::mat3 >::set;
+        REGISTER_LUA_FUNCTION(set_matrix3_pointattribvalues, set_mat3_values);
+
+
+        // Register set all vertices attribute values of mat4
+        // for 3 points
+        //    local mat4_pt0 = astable(ident() * 100)
+        //    local mat4_pt1 = astable(ident() * 50)
+        //    local mat4_pt2 = astable(ident() * 10)
+        //    set_matrix4_pointattribvalues(m, "foo_matrix", { mat4_pt0, mat4_pt1, mat4_pt2 })
+
+        auto set_mat4_values = SetAttribValues<PRE_TYPE::Vertex_descriptor, glm::mat4 >::set;
+        REGISTER_LUA_FUNCTION(set_matrix4_pointattribvalues, set_mat4_values);
 
     }
 
