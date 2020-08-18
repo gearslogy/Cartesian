@@ -8,6 +8,7 @@
 #include "test_point_get_attrib_values.h"
 #include "test_point_add_set_get_matrix.h"
 #include "test_point_set_attrib_values.h"
+#include "test_prim_add_set_get.h"
 void testVector(sol::state* lua) {
 
 
@@ -247,10 +248,11 @@ int main(int argc, char** argv)
     //CARTESIAN_CORE_INFO("RUNNING ADD GET SET FOR MATRIX  ");
     //TEST_RUN_CASE(TEST_ADD_SET_GET_MATRIX, lua);
 
-    CARTESIAN_CORE_INFO("RUNNING SET ATTRIB VALUES");
-    TEST_RUN_CASE(TEST_POINT_SET_ATTRIB_VALUES, lua);
+    //CARTESIAN_CORE_INFO("RUNNING SET ATTRIB VALUES");
+    //TEST_RUN_CASE(TEST_POINT_SET_ATTRIB_VALUES, lua);
 
-
+    CARTESIAN_CORE_INFO("RUNNING PRIM ADD GET SET ");
+    TEST_RUN_CASE(TEST_RPIM_ADD_SET_GET, lua);
 
     std::cin.get();
 
