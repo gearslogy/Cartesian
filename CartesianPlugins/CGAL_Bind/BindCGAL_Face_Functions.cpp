@@ -7,14 +7,14 @@ namespace Cartesian {
 	{
         using std::string;
 		auto npts = [](const PRE_TYPE::Mesh& m) {return m.num_faces(); };
-		REGISTER_LUA_FUNCTION("nprims", npts);
+		REGISTER_LUA_FUNCTION(nprims, npts);
 
 		// ---------------------- Get all prim attribute names --------------------------------------
 		auto getFaceAttribNames = [](const PRE_TYPE::Mesh& mesh) {
 			std::vector<std::string> props = mesh.properties<PRE_TYPE::Face_descriptor>();
 			return sol::as_table(props);
 		};
-		REGISTER_LUA_FUNCTION("primattribnames", getFaceAttribNames);
+		REGISTER_LUA_FUNCTION(primattribnames, getFaceAttribNames);
 
 
 		// ---------------------- Check a prim attribute is exist --------------------------------------
@@ -25,7 +25,7 @@ namespace Cartesian {
 			}
 			return false;
 		};
-		REGISTER_LUA_FUNCTION("hasprimattrib", hasPrimAttrib);
+		REGISTER_LUA_FUNCTION(hasprimattrib, hasPrimAttrib);
 
 
 
@@ -198,7 +198,7 @@ namespace Cartesian {
         //    set_matrix4_primattribvalues(m, "foo_matrix", { mat4_pt0, mat4_pt1, mat4_pt2 })
 
         auto set_mat4_values = SetAttribValues<PRE_TYPE::Face_descriptor, glm::mat4 >::set;
-        REGISTER_LUA_FUNCTION(set_matrix4_primattribvalues, set_mat4_values);
+        REGISTER_LUA_FUNCTION(set_matrix_primattribvalues, set_mat4_values);
 
 
 
