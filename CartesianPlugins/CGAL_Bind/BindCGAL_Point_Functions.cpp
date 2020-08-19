@@ -205,6 +205,126 @@ namespace Cartesian {
         auto set_mat4_values = SetAttribValues<PRE_TYPE::Vertex_descriptor, glm::mat4 >::set;
         REGISTER_LUA_FUNCTION(set_matrix4_pointattribvalues, set_mat4_values);
 
+
+
+        // -------------------- get position function --------------------------------
+        auto getP = [](PRE_TYPE::Mesh& mesh, const PRE_TYPE::Vertex_descriptor& id) {
+            if (id.idx() >= mesh.number_of_vertices())
+            {
+                CARTESIAN_CORE_ERROR("query point ptnum >= npoints");
+                return glm::vec3(0, 0, 0);
+            }
+            auto temp = mesh.point(id);
+            return glm::vec3(temp.x(), temp.y(), temp.z());
+        };
+        auto getP_ptnum = [](PRE_TYPE::Mesh& mesh, const int& id) {
+            if (id >= mesh.number_of_vertices())
+            {
+                CARTESIAN_CORE_ERROR("query point ptnum >= npoints");
+                return glm::vec3(0, 0, 0);
+            }
+            auto temp = mesh.point(PRE_TYPE::Vertex_descriptor(id) );
+            return glm::vec3(temp.x(), temp.y(), temp.z());
+        };
+        REGISTER_LUA_OVERLOAD_FUNCTION(getpos, getP, getP_ptnum);
+
+
+        // -------------------- change position function --------------------------------
+        auto setP = [](PRE_TYPE::Mesh& mesh, const PRE_TYPE::Vertex_descriptor& id, const glm::vec3& p) ->void{
+            if (id.idx() >= mesh.number_of_vertices())
+            {
+                CARTESIAN_CORE_ERROR("query point ptnum >= npoints");
+                return;
+            }
+            mesh.point(id) = PRE_TYPE::K::Point_3(p.x, p.y, p.z);
+        };
+        auto setP_table = [](PRE_TYPE::Mesh& mesh, const PRE_TYPE::Vertex_descriptor& id, const sol::lua_table& p) ->void {
+            if (id.idx() >= mesh.number_of_vertices())
+            {
+                CARTESIAN_CORE_ERROR("query point ptnum >= npoints");
+                return;
+            }
+            if (p.size() != 3) {
+                CARTESIAN_CORE_ERROR("new position table length not equal 3");
+                return;
+            }
+            float x = p.get<float>(1);
+            float y = p.get<float>(2);
+            float z = p.get<float>(3);
+            mesh.point(id) = PRE_TYPE::K::Point_3(x, y, z);
+        };
+
+        auto setP_ptnum = [](PRE_TYPE::Mesh& mesh, const int& id, const glm::vec3& p) ->void{
+            if (id >= mesh.number_of_vertices())
+            {
+                CARTESIAN_CORE_ERROR("query point ptnum >= npoints");
+                return;
+            }
+            mesh.point(PRE_TYPE::Vertex_descriptor(id) ) = PRE_TYPE::K::Point_3(p.x, p.y, p.z);
+        };
+        auto setP_ptnum_table = [](PRE_TYPE::Mesh& mesh, const int& id, const sol::lua_table & p) ->void{
+            if (id >= mesh.number_of_vertices())
+            {
+                CARTESIAN_CORE_ERROR("query point ptnum >= npoints");
+                return;
+            }
+            if (p.size() != 3) {
+                CARTESIAN_CORE_ERROR("new position table length not equal 3");
+                return;
+            }
+            float x = p.get<float>(1);
+            float y = p.get<float>(2);
+            float z = p.get<float>(3);
+            mesh.point(PRE_TYPE::Vertex_descriptor(id)) = PRE_TYPE::K::Point_3(x,y,z);
+        };
+        REGISTER_LUA_OVERLOAD_FUNCTION(setpos, setP_ptnum, setP_ptnum_table, setP, setP_table);
+
+        
+        // ------------------------ Set position from tables ----------------------------- 
+        // function : setposvalues(mesh, {{},{},{} .... })
+
+        auto setposvalues = [](PRE_TYPE::Mesh& mesh, const sol::lua_table& posvals)
+        {
+            if (!posvals.valid()) {
+                CARTESIAN_CORE_ERROR("input table error");
+                return;
+            }
+            if (mesh.num_vertices() != posvals.size()) {
+                CARTESIAN_CORE_ERROR("set position from tables length:{0} do not match point count:{1}", mesh.num_vertices(), posvals.size());
+                return;
+            }
+            int luaIndex = 1;
+            for (int i = 0; i < mesh.number_of_vertices(); i++) {
+                auto pos = posvals.get<sol::lua_table>(luaIndex);
+                if (pos.size() != 3) {
+                    CARTESIAN_CORE_ERROR("set position values failed, every child table expect to 3 element, error at child table index : {0}", luaIndex);
+                    return;
+                }
+                mesh.point(PRE_TYPE::Vertex_descriptor(i)) = PRE_TYPE::K::Point_3(pos.get<float>(1), pos.get<float>(2), pos.get<float>(3));
+                luaIndex++;
+            }
+        };
+        REGISTER_LUA_FUNCTION(setposvalues, setposvalues);
+
+        // ------------------------ Get Position ,return table {{},{},{} .... } ----------------------
+        // function : getposvalues(mesh)
+        auto getposvalues = [](PRE_TYPE::Mesh & mesh, sol::this_state this_lua) {
+            sol::state_view lua(this_lua);
+            sol::table values = lua.create_table();
+
+            PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, PRE_TYPE::K::Point_3> location = mesh.points();
+            for (PRE_TYPE::Vertex_descriptor vd : mesh.vertices()) {
+                std::vector<float> pos;
+                auto cgalPos = location[vd];
+                pos.emplace_back(cgalPos.x());
+                pos.emplace_back(cgalPos.y());
+                pos.emplace_back(cgalPos.z());
+                values.add(sol::as_table(pos));
+            }
+            return values;
+        };
+        REGISTER_LUA_FUNCTION(getposvalues, getposvalues);
+
     }
 
 

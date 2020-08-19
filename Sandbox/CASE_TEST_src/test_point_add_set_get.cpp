@@ -68,7 +68,22 @@ void TEST_POINT_ADD_SET_GET::TEST(sol::state* lua)
 		io.write("\t") 
 	end
 	io.write( "\n") 
+	
+	print("---------- Position test ---------------------")
+	setpos(m,1,set(4,4,4))
+	print( getpos(m,1) )
 
+	local pos_data = { {1,2,3},{4,5,6},{7,8,9} }
+	print(pos_data)
+	setposvalues(m,  pos_data)
+
+	for i,d in ipairs( getposvalues(m) ) do
+	io.write("ptnum:", i, " pos:")
+	for k,v in ipairs(d) do
+		io.write(v," ")
+	end
+	io.write("\n")
+	end
 	)");
     }
     catch (...) {

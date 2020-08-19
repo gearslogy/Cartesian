@@ -52,16 +52,16 @@ auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const ATT
 // Register lambda function,get attribute , point number index by int type
 #define DEFINE_GET_ATTRIB_PTNUM_FUNCTION(SCOPE_TYPE,FUNCTION_NAME, ATTRIB_VALUE_TYPE)\
 auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name,const int &ptnum ) {\
-SCOPE_TYPE vd(ptnum);\
-PRE_TYPE::Mesh::Property_map<SCOPE_TYPE, ATTRIB_VALUE_TYPE> attribMap; \
-bool found;\
-boost::tie(attribMap, found) = mesh.property_map<SCOPE_TYPE, ATTRIB_VALUE_TYPE>(name);\
-if (found) {\
-    return attribMap[vd];\
-}\
-CARTESIAN_CORE_ERROR("Error get attribute:{0},line:{1},funciton:{2}", name, __LINE__, __FUNCTION__);\
-return ATTRIB_VALUE_TYPE();\
-};
+    SCOPE_TYPE vd(ptnum);\
+    PRE_TYPE::Mesh::Property_map<SCOPE_TYPE, ATTRIB_VALUE_TYPE> attribMap; \
+    bool found;\
+    boost::tie(attribMap, found) = mesh.property_map<SCOPE_TYPE, ATTRIB_VALUE_TYPE>(name);\
+    if (found) {\
+        return attribMap[vd];\
+    }\
+    CARTESIAN_CORE_ERROR("Error get attribute:{0},line:{1},funciton:{2}", name, __LINE__, __FUNCTION__);\
+    return ATTRIB_VALUE_TYPE();\
+    };
 // Register lambda function,get attribute , point number index by int type
 #define DEFINE_GET_ATTRIB_DESCRIPTOR_FUNCTION(SCOPE_TYPE,FUNCTION_NAME, ATTRIB_VALUE_TYPE)\
 auto FUNCTION_NAME = [](PRE_TYPE::Mesh& mesh, const std::string& name, const SCOPE_TYPE& vd) {\
