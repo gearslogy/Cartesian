@@ -8,15 +8,51 @@
 #include "BindKatanaData.h"
 #include "BindKatanaCH.h"
 #include "CartesianPluginLoader.h"
+#include "CartesianLog.h"
+#undef interface
 
 // -----
-static bool __is__init__katana__resources = false;
-static bool __is__cartesin__load__plugins = false;
-static bool __is__opened__jit__lib = false;
+static bool __is_bind_once = false;
+static bool __is_init_cartesian = false;
+
 static auto lua = std::make_shared<sol::state>();
 static std::vector<Cartesian::dllsymbolfunc> dllfuncs;
 
-void MesserOp::cook(Foundry::Katana::GeolibCookInterface &interface) {
+void MesserOp::InitCartesian() {
+    lua->open_libraries(sol::lib::table,
+        sol::lib::base,
+        sol::lib::jit,
+        sol::lib::ffi,
+        sol::lib::package,
+        sol::lib::io,
+        sol::lib::math,
+        sol::lib::os,
+        sol::lib::utf8,
+        sol::lib::coroutine);
+    Cartesian::Log::initialize();
+    CARTESIAN_CORE_INFO("Loading plugins for cartesian");
+    dllfuncs = Cartesian::PluginLoader::loadPlugins();
+    Cartesian::PluginLoader::dispatch(dllfuncs, lua.get());
+    __is_init_cartesian = true;
+}
+
+
+
+void MesserOp::RegisterPerCookFunctionOrVar(Foundry::Katana::GeolibCookInterface& interface)
+{
+
+    // Bind Katana Global Variable , it's should every update when katana cooking
+    Cartesian::BindGlobalVars::bind(interface, lua);
+}
+
+void MesserOp::RegisterOnceFunctionOrVar(Foundry::Katana::GeolibCookInterface& interface) {
+    Cartesian::BindKatanaFunction::bind(interface, lua);
+    Cartesian::BindKatanaCH::bind(interface, lua);
+}
+
+
+
+void MesserOp::cook(Foundry::Katana::GeolibCookInterface & interface) {
 
 
 
@@ -39,7 +75,7 @@ void MesserOp::cook(Foundry::Katana::GeolibCookInterface &interface) {
     FnGeolibServices::FnGeolibCookInterfaceUtils::MatchesCELInfo info;
 
     FnGeolibServices::FnGeolibCookInterfaceUtils::matchesCEL(info,
-                                                             interface,
+        interface,
                                                              celAttr);
 
     // If there's no chance that the CEL expression matches any child
@@ -56,43 +92,19 @@ void MesserOp::cook(Foundry::Katana::GeolibCookInterface &interface) {
     {
         return;
     }
-
-    if(!__is__opened__jit__lib){
-        lua->open_libraries(sol::lib::base,sol::lib::jit,sol::lib::ffi,sol::lib::package,sol::lib::coroutine);
-        __is__opened__jit__lib = true;
+    if (!__is_init_cartesian) {
+        InitCartesian();
     }
-    Foundry::Katana::CreateLocationInfo cinfo;
-    FnGeolibServices::CreateLocation(cinfo,interface,"/root/world/FFFFFFFFFFFF");
 
-    // Bind Katana Global Variable , it's should every update when katana cooking
-    Cartesian::BindGlobalVars::bind(interface, lua);
-    Cartesian::BindGlobalFunction::bind(interface,lua);
 
+    RegisterPerCookFunctionOrVar(interface);
 
 
     // Only bind to lua once !
-    if(!__is__init__katana__resources){
-        std::cout << "[KATANA::CARTESIAN]: now register KATANA resources to JIT \n";
-        Cartesian::BindKatanaFunction::bind(interface,lua);
-        Cartesian::BindKatanaCH::bind(interface,lua);
-        __is__init__katana__resources = true;
+    if(!__is_bind_once){
+        RegisterOnceFunctionOrVar(interface);
+        __is_bind_once = true;
     }
-
-    // only bind to lua once !
-    if(!__is__cartesin__load__plugins){
-        std::cout << "[KATANA::CARTESIAN]: now init internal plugins\n";
-        dllfuncs = Cartesian::PluginLoader::loadPlugins();
-        Cartesian::PluginLoader::dispatch(dllfuncs,lua.get());
-        __is__cartesin__load__plugins = true;
-    }
-
-
-
-
-    // Bind Katana interface
-
-
-
 
 
     // Get the Katana-UI scripts

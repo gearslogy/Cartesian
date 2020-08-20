@@ -4,6 +4,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
+
 set(KATANA_ROOT "D:/Program Files/Katana3.6v1")
 list(INSERT CMAKE_MODULE_PATH 0 "${KATANA_ROOT}/plugins/Src/cmake")
 
@@ -20,17 +21,23 @@ endif ()
 if (MSVC)
     # Prevent Boost auto-linking.
     add_definitions(-DBOOST_ALL_NO_LIB)
+    remove_definitions(-Dmin -Dmax -Dinterface)
 endif ()
 
 #add_compile_definitions(__cplusplus=201103L)
 
-file(GLOB SRC
-        src/*.cpp)
+file(GLOB SRCODE
+        src/cpp/*.cpp
+        src/hpp/*.h
+        )
+include_directories(src/hpp)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/KatanaCartesianJIT/bin/Libs)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/KatanaCartesianJIT/bin/Libs)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/KatanaCartesianJIT/bin/Libs)
 
+# GLM
+include_directories(D:/plugin_dev/libs/GLM_include)
 
 # -------------------------- Lua jit -----------------------------------------
 include_directories(D:/plugin_dev/libs/sol2)
@@ -72,7 +79,7 @@ link_directories(${CMAKE_SOURCE_DIR}/CartesianLuajitCore/bin)
 # ----------------------------- MyCore --------------------------------------------
 
 
-add_library(CartesianScript MODULE ${SRC})
+add_library(CartesianScript MODULE ${SRCODE})
 
 
 target_link_libraries(CartesianScript
