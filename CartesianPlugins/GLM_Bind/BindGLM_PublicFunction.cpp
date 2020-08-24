@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 #include "GLM_Matrix_Helper.h"
 #include "GLM_Vec_Helper.h"
 #include "BindGLM_PublicFunction.h"
@@ -46,6 +47,11 @@ namespace Cartesian {
     template <typename T>
     T inverse(const T& mat) {
         return glm::transpose(mat);
+    }
+
+    template <typename T>
+    T lerp(const T & i1, const T & i2, const float &bias) {
+        return i1 * (1.0f - bias) - i2 * bias;
     }
 
 
@@ -265,5 +271,75 @@ namespace Cartesian {
         };
 
         lua->set_function("determinant", sol::overload(mat2det, mat3det, mat4det, matdet_table));
+
+
+        // lerp
+        lua->set_function("lerp", sol::overload(lerp<float>, lerp<double>,
+            lerp<glm::vec2>,
+            lerp<glm::vec3>,
+            lerp<glm::vec4>,
+            lerp<glm::mat2>,
+            lerp<glm::mat3>,
+            lerp<glm::mat4>));
+
+
+
+       // extract rotation translate scale from mat44
+        auto extract_scale = [](const glm::mat4& transformation) {
+            glm::vec3 scale;
+            glm::quat rotation;
+            glm::vec3 translation;
+            glm::vec3 skew;
+            glm::vec4 perspective;
+            glm::decompose(transformation, scale, rotation, translation, skew, perspective);
+            return scale;
+        };
+
+        auto extract_translation = [](const glm::mat4& transformation) {
+            glm::vec3 scale;
+            glm::quat rotation;
+            glm::vec3 translation;
+            glm::vec3 skew;
+            glm::vec4 perspective;
+            glm::decompose(transformation, scale, rotation, translation, skew, perspective);
+            return translation;
+        };
+        auto extract_rotation = [](const glm::mat4 & transformation) {
+            glm::vec3 scale;
+            glm::quat rotation;
+            glm::vec3 translation;
+            glm::vec3 skew;
+            glm::vec4 perspective;
+            glm::decompose(transformation, scale, rotation, translation, skew, perspective);
+            return glm::eulerAngles(rotation); // rotation return the euler rotation
+        };
+
+
+        auto extract_skew = [](const glm::mat4& transformation) {
+            glm::vec3 scale;
+            glm::quat rotation;
+            glm::vec3 translation;
+            glm::vec3 skew;
+            glm::vec4 perspective;
+            glm::decompose(transformation, scale, rotation, translation, skew, perspective);
+            return skew;
+        };
+
+
+        auto extract_perspective = [](const glm::mat4& transformation) {
+            glm::vec3 scale;
+            glm::quat rotation;
+            glm::vec3 translation;
+            glm::vec3 skew;
+            glm::vec4 perspective;
+            glm::decompose(transformation, scale, rotation, translation, skew, perspective);
+            return perspective;
+        };
+        lua->set_function("extract_translation", extract_translation);
+        lua->set_function("extract_rotation", extract_rotation);
+        lua->set_function("extract_scale", extract_scale);
+        lua->set_function("extract_skew", extract_skew);
+        lua->set_function("extract_perspective", extract_perspective);
+
     }
 }
