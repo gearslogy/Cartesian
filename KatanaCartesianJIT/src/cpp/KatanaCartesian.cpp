@@ -72,9 +72,7 @@ void MesserOp::cook(Foundry::Katana::GeolibCookInterface & iface) {
         iface.stopChildTraversal();
         return;
     }
-
-    std::cout << "numinput:" << iface.getNumInputs() << std::endl;
-    Foundry::Katana::GeolibOp::flush();
+    //Foundry::Katana::GeolibOp::flush();
 
 
     

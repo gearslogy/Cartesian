@@ -73,6 +73,10 @@ namespace Cartesian {
         // -------------------------------- createChild() ------------------------------------------------
 
 
+
+
+
+
         // -------------------------------- delete location () ------------------------------------------------
         // delete all children
         lua->set_function("deletechildren", [&iface](){iface.deleteChildren(); });
@@ -103,17 +107,23 @@ namespace Cartesian {
 
 
 
-        // Get Attrib
-        // pointattrib()
+        // copylocation("tochild", "fromSrc", index)
+        auto copyLocation = [&iface](const std::string& childname, const std::string &fromLocation , const int &inputIndex)->void {
+            iface.copyLocationToChild(childname, fromLocation, inputIndex);
+        };
+        lua->set_function("copylocation", copyLocation);
 
 
         // stop eval child location()
         lua->set_function("stop", [&iface](){iface.stopChildTraversal(); });
 
+        
 
-
-
-
+        // delete & delete all attrib
+        auto delattr = [&iface](const std::string& attrName) {iface.deleteAttr(attrName);};
+        auto deleteall = [&iface]() {iface.deleteAttrs(); };
+        lua->set_function("delattrib", delattr);
+        lua->set_function("clearattrib", deleteall);
     }
 
 }
