@@ -7,6 +7,7 @@
 #ifndef BUILDINGCTSLUAJIT_BINDKATANADATA_H
 #define BUILDINGCTSLUAJIT_BINDKATANADATA_H
 #undef interface
+#define SOL_NO_EXCEPTIONS 1
 #include <FnGeolib/op/FnGeolibOp.h>
 #include "sol.hpp"
 
@@ -19,7 +20,7 @@ namespace Cartesian{
 
     class BindKatanaFunction{
     public:
-        static void bind(Foundry::Katana::GeolibCookInterface& interface, const std::shared_ptr<sol::state>& lua);
+        static void bind(Foundry::Katana::GeolibCookInterface& iface, const std::shared_ptr<sol::state>& lua);
 
     };
 
