@@ -224,7 +224,7 @@ namespace Cartesian {
             }
 
             if (!scale.isValid()) {
-                CARTESIAN_CORE_ERROR("can not get transform.scale");
+                CARTESIAN_CORE_ERROR("can not get xform.interactive.scale");
                 return mat;
             }
             auto time = Foundry::Katana::GetCurrentTime(iface);
@@ -245,7 +245,91 @@ namespace Cartesian {
         };
         // get another node xform attrib
         lua->set_function("xform", sol::overload(xform,xform_anotherNode));
-        
+
+
+
+		// apply xform
+		auto apply_xform = [&iface](const glm::mat4 &mat) {
+			FnAttribute::DoubleAttribute trans = iface.getAttr("xform.interactive.translate");
+			FnAttribute::DoubleAttribute rotZ = iface.getAttr("xform.interactive.rotateZ" );
+			FnAttribute::DoubleAttribute rotY = iface.getAttr("xform.interactive.rotateY");
+			FnAttribute::DoubleAttribute rotX = iface.getAttr("xform.interactive.rotateX");
+			FnAttribute::DoubleAttribute scale = iface.getAttr("xform.interactive.scale");
+
+			if (!trans.isValid()) {
+				CARTESIAN_CORE_ERROR("can not get xform.interactive.translate");
+				return mat;
+			}
+			if (!rotZ.isValid()) {
+				CARTESIAN_CORE_ERROR("can not get xform.interactive.rotateZ");
+				return mat;
+			}
+			if (!rotY.isValid()) {
+				CARTESIAN_CORE_ERROR("can not get xform.interactive.rotateY");
+				return mat;
+			}
+			if (!rotX.isValid()) {
+				CARTESIAN_CORE_ERROR("can not get xform.interactive.rotateX");
+				return mat;
+			}
+
+			if (!scale.isValid()) {
+				CARTESIAN_CORE_ERROR("can not get xform.interactive.scale");
+				return mat;
+			}
+
+
+			glm::vec3 dec_scale;
+			glm::quat dec_rotation;
+			glm::vec3 dec_translation;
+			glm::vec3 dec_skew;
+			glm::vec4 dec_perspective;
+			glm::decompose(mat, dec_scale, dec_rotation, dec_translation, dec_skew, dec_perspective);
+			//rotation = glm::conjugate(rotation);
+			glm::vec3 euler_rot = glm::eulerAngles(dec_rotation); // rotation return the euler rotation
+
+
+            double* raw_scale = new double[3];
+            double* raw_trans = new double[3];
+            double* raw_rotz = new double[4];
+            double* raw_roty = new double[4];
+            double* raw_rotx = new double[4];
+
+            // raw set dec_scale
+            raw_scale[0] = dec_scale.x;raw_scale[1] = dec_scale.y; raw_scale[2] = dec_scale.z;
+			// raw set dec_trans
+            raw_trans[0] = dec_translation.x; raw_trans[1] = dec_translation.y; raw_trans[2] = dec_translation.z;
+            // raw set rotx;
+            raw_rotx[0] = euler_rot.x * 180 / glm::pi<double>(); raw_rotx[1] = 1.0; raw_rotx[2] = 0.0; raw_rotx[3] = 0.0;
+            // raw set roty;
+            raw_roty[0] = euler_rot.y * 180 / glm::pi<double>(); raw_roty[1] = 0.0; raw_roty[2] = 1.0; raw_roty[3] = 0.0;
+            // raw set rotz;
+            raw_rotz[0] = euler_rot.z * 180 / glm::pi<double>(); raw_rotz[1] = 0.0; raw_rotz[2] = 0.0; raw_rotz[3] = 1.0;
+
+			FnAttribute::DoubleAttribute newTransAttr(raw_trans, 3,
+				1);
+			FnAttribute::DoubleAttribute newScaleAttr(raw_scale, 3,
+				1);
+			FnAttribute::DoubleAttribute newXRotAttr(raw_rotx, 4,
+				1);
+			FnAttribute::DoubleAttribute newYRotAttr(raw_roty, 4,
+				1);
+			FnAttribute::DoubleAttribute newZRotAttr(raw_rotz, 4,
+				1);
+            iface.setAttr("xform.interactive.translate", newTransAttr, false);
+            iface.setAttr("xform.interactive.scale", newScaleAttr, false);
+            iface.setAttr("xform.interactive.rotateX", newXRotAttr, false);
+            iface.setAttr("xform.interactive.rotateY", newYRotAttr, false);
+            iface.setAttr("xform.interactive.rotateZ", newZRotAttr, false);
+
+            delete []raw_roty; 
+            delete []raw_rotz;
+            delete []raw_rotx; 
+            delete []raw_scale; 
+            delete []raw_trans;
+		};
+		lua->set_function("setxform", apply_xform);
+
     }
 
 }

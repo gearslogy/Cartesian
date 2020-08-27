@@ -118,8 +118,8 @@ void MesserOp::cook(Foundry::Katana::GeolibCookInterface & iface) {
     }
     
     FnAttribute::StringAttribute scriptAttr = iface.getOpArg("script");
-    if (scriptAttr.isValid()) {
-        std::cout << "Get The Script is " << scriptAttr.getValue() << std::endl;
+    if (!scriptAttr.isValid()) {
+        Foundry::Katana::ReportError(iface, " Can not get script");
     }
 
     lua->safe_script(scriptAttr.getValue());

@@ -4,7 +4,7 @@
 
 #ifndef BUILDINGCTSLUAJIT_KATANACARTESIAN_H
 #define BUILDINGCTSLUAJIT_KATANACARTESIAN_H
-#define SOL_NO_EXCEPTIONS 1
+
 #include <cstdlib>
 #include <cmath>
 #include <cassert>

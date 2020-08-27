@@ -70,6 +70,11 @@ if(Boost_FOUND)
 endif()
 # -------------------------- BOOST AND CGAL ---------------------------------------
 
+# ------------------------- Include our CGAL predefined type ---------------------------
+include_directories(${CMAKE_SOURCE_DIR}/CartesianPlugins/CGAL_Bind)
+
+
+
 # ------------------ spdlog ------------------------
 include_directories(D:/plugin_dev/libs/spdlog-1.7.0/include)
 

@@ -7,7 +7,7 @@
 #ifndef BUILDINGCTSLUAJIT_BINDKATANADATA_H
 #define BUILDINGCTSLUAJIT_BINDKATANADATA_H
 #undef interface
-#define SOL_NO_EXCEPTIONS 1
+//#define SOL_NO_EXCEPTIONS 1
 #include <FnGeolib/op/FnGeolibOp.h>
 #include "sol.hpp"
 
