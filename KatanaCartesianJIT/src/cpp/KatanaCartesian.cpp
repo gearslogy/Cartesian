@@ -2,8 +2,8 @@
 // Created by admin on 2020/8/3.
 //
 //#define SOL_EXCEPTIONS_SAFE_PROPAGATION 1
-#define SOL_NO_EXCEPTIONS 1
-#define SOL_ALL_SAFETIES_ON 0
+//#define SOL_NO_EXCEPTIONS 1
+//#define SOL_ALL_SAFETIES_ON 0
 #undef interface
 #include "KatanaCartesian.h"
 #include "sol.hpp"
