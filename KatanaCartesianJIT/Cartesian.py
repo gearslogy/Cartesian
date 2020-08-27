@@ -1,114 +1,150 @@
-#!/usr/bin/env python
-# encoding: utf-8
 
-from Katana import Nodes3DAPI
-from Katana import FnAttribute
-from Katana import NodegraphAPI, GeoAPI, PyScenegraphAttr, FnAttribute
+def registerMesser():
+   
+    
 
-ScenegraphAttr = PyScenegraphAttr
-import logging
+    """
+    Registers a new Messer node type using the nb utility class.
+    """
+    import sys
+    print sys.path
+    from Katana import Nodes3DAPI,NodegraphAPI
+    from Katana import FnAttribute
+    import NodegraphAPI.Constants.ApplyWhenOptions as ApplyWhenOptions
+    import NodegraphAPI.Constants.ApplyWhereOptions as ApplyWhereOptions
+    import NodegraphAPI.Constants.ExecutionModeOptions as ExecutionModeOptions
+    from Katana import FnGeolibServices
 
-log = logging.getLogger('Nodes3DAPI.Merge')
+
+    def _DoInputRequests(interface, inputBehavior, inputPorts, graphState):
+        interface.setExplicitInputRequestsEnabled(True)
+        if inputBehavior == 'only valid':
+            state = interface.SKIP
+        else:
+            state = interface.NO_OP
+        for inputPort in inputPorts:
+            interface.addInputRequest(inputPort.getName(), graphState, invalidInputBehavior = state)
+
+    def buildMesserOpChain(node, interface):
+        """
+        Defines the callback function used to define the Ops chain for the
+        node type being registered.
+
+        @type node: C{Nodes3DAPI.nb.Messer}
+        @type interface: C{Nodes3DAPI.nb.BuildChainInterface}
+        @param node: The node for which to define the Ops chain
+        @param interface: The interface providing the functions needed to set
+            up the Ops chain for the given node.
+        """
+        # Get the current frame time
+        # Set the minimum number of input ports
+        interface.setMinRequiredInputs(1)
 
 
-_ExtraHints = {
-    'Merge': {
-        'widget': 'multiInputPortNode'},
-    'Merge.showAdvancedOptions': {
-        'widget': 'boolean',
-        'help': '\n        Enables advanced options useful for special cases in which the merged\n        hierarchies partially overlap.\n        '},
-    'Merge.advanced': {
-        'conditionalVisOp': 'equalTo',
-        'conditionalVisPath': '../showAdvancedOptions',
-        'conditionalVisValue': 'Yes'},
-    'Merge.advanced.sumBounds': {
-        'widget': 'boolean',
-        'help': '\n        When enabled, <b>bound</b> attributes are queried for each relevant\n        input location and the unioned results are used.\n        '},
-    'Merge.advanced.preserveWorldSpaceXform': {
-        'widget': 'boolean',
-        'help': '\n        When enabled, all inherited <b>xform</b> attributes (preceded by an origin\n        statement) are applied at each\n        location whose source input differs from that of its parent. This is only\n        necessary in exceptional situations where there are conflicting transformations\n        on overlapping locations of the merge inputs.\n        '},
-    'Merge.advanced.preserveInheritedAttributes': {
-        'widget': 'attributeNameArray',
-        'help': "\n        A list of attribute names for which inheritance should be preserved when\n        choosing between inputs of the merge. Whenever a child location's source\n        input differs from that of its parent, these attributes will be queried\n        globally and applied locally the child location.\n        "},
-    'Merge.advanced.preferredInputAttributes': {
-        'widget': 'interwovenArrayGroup',
-        'childHints': {
-            'name': {
-                'widget': 'attributeName'},
-            'index': {
-                'int': 'True'}},
-        'help': '\n        Lists of attribute names and indices of inputs for which the preferred value\n        of an attribute should be read.\n        '},
-    'Merge.advanced.preferRightmostInputWithAttribute': {
-        'help': 'By default, if a location is present in more than one of the\n        input scenes, then attribute values are taken from the leftmost input\n        which has the location. This parameter allows attributes as well as\n        child locations of a location with an attribute of the given name to be\n        taken from the <i>rightmost</i> input which has the location.'},
-    'Merge.advanced.mergeGroupAttributes': {
-        'widget': 'attributeNameArray',
-        'help': 'If the locations of multiple input scenes contain any group\n        attributes named in this parameter, their child attributes will be\n        merged instead of overwritten (unless otherwise stated by\n        <b>preferRightmostInputWithAttribute</b> or\n        <b>preferredInputAttributes</b>.'}}
 
-_Parameter_XML = "\n<group_parameter>\n \n <string_parameter name='showAdvancedOptions' value='No'/>\n <group_parameter name='advanced'>\n   <string_parameter name='sumBounds' value='No'/>\n   <string_parameter name='preserveWorldSpaceXform' value='No'/>\n   <stringarray_parameter name='preserveInheritedAttributes' length='0'/>\n   \n   <group_parameter name='preferredInputAttributes'>\n    <stringarray_parameter name='name' length='0'/>\n    <numberarray_parameter name='index' length='0'/>\n    \n   </group_parameter>\n   \n   <string_parameter name='preferRightmostInputWithAttribute'/>\n   <stringarray_parameter name='mergeGroupAttributes' length='0'/>\n </group_parameter>\n\n</group_parameter>\n"
-class MergeNode3D(Node3D.Node3D):
-
-    def __init__(self):
-            Node3D.Node3D.__init__(self)
-            self.addOutputPort('out')
-            self.getParameters().parseXML(_Parameter_XML)
-
-    def getEmptyScene(self, port, frameTime):
-        """Build a geometry producer which creates an almost-empty scenegraph.
-           This contains the empty paths /root/world and /root/materials.
-           This is called when we don't have any inputs."""
-        rootAttrs = [
-            ('name', ScenegraphAttr.Attr('StringAttr', [
-                'root'], 1)),
-            ('type', ScenegraphAttr.Attr('StringAttr', [
-                'group'], 1))]
-        worldAttrs = [
-            ('name', ScenegraphAttr.Attr('StringAttr', [
-                'world'], 1)),
-            ('type', ScenegraphAttr.Attr('StringAttr', [
-                'group'], 1))]
-        materialsAttrs = [
-            ('name', ScenegraphAttr.Attr('StringAttr', [
-                'materials'], 1)),
-            ('type', ScenegraphAttr.Attr('StringAttr', [
-                'group'], 1))]
-        rootObject = GeoAPI.CFilters.GeometryProducer(producerType='StaticGeometryProducer',
-                                                      description=(rootAttrs, []), historyName=self.getName(),
-                                                      variableName=self.getVariableName(port, frameTime))
-        rootObject.addChild(worldAttrs)
-        rootObject.addChild(materialsAttrs)
-        return rootObject
-
-    def _getOpChain(self, interface):
         graphState = interface.getGraphState()
         frameTime = graphState.getTime()
-        interface.setExplicitInputRequestsEnabled(True)
-        inputBehavior = interface.SKIP
+
         argsGb = FnAttribute.GroupBuilder()
+        argsGb.set('system', graphState.getOpSystemArgs())
 
+  
+        argsGb.set('inputIndex', FnAttribute.FloatAttribute(1))
+        # Parse the CEL parameter
+        celParam = node.getParameter('CEL')
+        if celParam:
+            argsGb.set('CEL', celParam.getValue(frameTime))
 
-        numValidInputs = 0
-        for port in self.getInputPorts():
-            interface.addInputRequest(port.getName(), graphState, invalidInputBehavior=inputBehavior)
-            if port.getNumConnectedPorts():
-                numValidInputs += 1
-                continue
+        userParam = node.getParameter('user')
+        if userParam:
+            userAttr = NodegraphAPI.BuildAttrFromGroupParameter(userParam, graphState)
+            if userAttr is not None:
+                argsGb.set('user', userAttr)
+
+        # Parse the script parameter
+        scriptParam = node.getParameter('script')
+        if scriptParam:
+            argsGb.set('script', scriptParam.getValue(frameTime))
+        
+        # xform
+        transformParam = node.getParameter('transform')
+        if transformParam:
+            transformAttr = NodegraphAPI.BuildAttrFromGroupParameter(transformParam, graphState)
+            if transformAttr is not None:
+                argsGb.set('transform', transformAttr)
+
+       
+
         opArgs = argsGb.build()
-        if numValidInputs > 1 or opArgs.getNumberOfChildren() > 0:
-            interface.appendOp('CartesianScript', opArgs)
-        return None
-
-    def addParameterHints(self, attrName, inputDict):
-        inputDict.update(_ExtraHints.get(attrName, {}))
-        if attrName.startswith('Merge.advanced.preferredInputAttributes.name.'):
-            inputDict['widget'] = 'attributeName'
-            inputDict['label'] = 'name'
-        elif attrName.startswith('Merge.advanced.preferredInputAttributes.index.'):
-            inputDict['int'] = 'True'
-            inputDict['label'] = 'index'
-        elif attrName.startswith('Merge.advanced.preserveInheritedAttributes.'):
-            inputDict['widget'] = 'attributeName'
+        if opArgs is not None:
+            argsGb.deepUpdate(opArgs)
+        
 
 
 
-NodegraphAPI.RegisterPythonNodeType('CartesianScript', MergeNode3D)
-NodegraphAPI.AddNodeFlavor('CartesianScript', '3d')
+        opType = 'CartesianScript'
+        #executionMode = node.getParameter('executionMode').getValue(frameTime)
+        #if executionMode == ExecutionModeOptions.Immediate:
+            #gb = FnAttribute.GroupBuilder()
+            #gb.set('system', graphState.getOpSystemArgs())
+            #if opArgs is not None:
+            #    gb.deepUpdate(opArgs)
+            #opArgs = gb.build()
+            #asb = FnGeolibServices.OpArgsBuilders.AttributeSet()
+            #asb.setCEL(FnAttribute.StringAttribute(node.getParameter('CEL').getValue(frameTime)))
+            #asb.addSubOp(opType, opArgs)
+            #interface.appendOp('AttributeSet', asb.build())
+            #_DoInputRequests(interface, node.getParameter('inputBehavior').getValue(frameTime), node.getInputPorts(), graphState)
+        # Add the explicit input request for our input port with the modified graph state
+        # Add a variable to the local graph state
+        #interface.setExplicitInputRequestsEnabled(True)
+        #interface.addInputRequest('i0', graphState)
+        #interface.addInputRequest('i1', graphState)
+      
+
+         # Add the Messer Op to the Ops chain
+        interface.appendOp('CartesianScript', argsGb.build())
+
+
+
+    # Create a nb to register the new type
+    nb = Nodes3DAPI.NodeTypeBuilder('CartesianScript')
+    
+
+    print dir(nb)
+    # Add an input port
+    nb.setInputPortNames(('i0','i1',))
+    nb.setOutputPortNames(('out',))
+
+    # Build the node's parameters
+    gb = FnAttribute.GroupBuilder()
+    gb.set('CEL', FnAttribute.StringAttribute(''))
+    gb.set('script', FnAttribute.StringAttribute('print(Time)'))
+    gb.set('executionMode', FnAttribute.StringAttribute('immediate'))
+    gb.set('inputBehavior', FnAttribute.StringAttribute('by index'))
+    nb.addTransformParameters(gb)
+    nb.addMakeInteractiveParameter(gb)
+    nb.addTimingParameters(gb)
+    #gb.set('transform.rotate', FnAttribute.DoubleAttribute([0,0,0]))
+    #gb.set('transform.scale', FnAttribute.DoubleAttribute([0,0,0]))
+    # Set the parameters template
+    nb.setParametersTemplateAttr(gb.build())
+    # Set parameter hints
+    nb.setHintsForParameter('CartesianScript', {'widget':'opScriptNode'})
+    nb.setHintsForParameter('CEL', {'widget':'cel'})
+    nb.setHintsForParameter('script', {'widget':'scriptEditor',
+                                                    'highlighter': 'Lua',
+                                                    'supportsNonmodalExternalEditing': 'True',
+                                                    'resistLabelResize': 'True',
+                                                    'externalEditorSuffix': '.lua',
+                                                    'mono': 'True'})
+    nb.setHintsForParameter('executionMode', {'widget':'popup','options': [ ExecutionModeOptions.Immediate,ExecutionModeOptions.Deferred] })
+    nb.setHintsForParameter('inputBehavior', {'widget':'popup','options': [ 'by index','only valid'] })
+    # Set the callback responsible to build the Ops chain
+    nb.setBuildOpChainFnc(buildMesserOpChain)
+    # Build the new node type
+    nb.build()
+
+# Register the node
+registerMesser()
+
