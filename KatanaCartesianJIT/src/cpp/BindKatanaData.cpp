@@ -17,6 +17,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/euler_angles.hpp>
 #include <cassert>
 namespace Cartesian {
 
@@ -135,7 +136,11 @@ namespace Cartesian {
 
             
             glm::mat4 mat(1.0f);
-
+            glm::mat4 smat(1.0f);
+            glm::mat4 rxmat(1.0f);
+            glm::mat4 rymat(1.0f);
+            glm::mat4 rzmat(1.0f);
+            glm::mat4 tmat(1.0f);
             FnAttribute::GroupAttribute transformation = iface.getOpArg("transform");
             if (!transformation.isValid()) {
                 CARTESIAN_CORE_ERROR("can not get group attribute: transform");
@@ -177,19 +182,24 @@ namespace Cartesian {
             assert(x_scale.isValid()); assert(y_scale.isValid()); assert(z_scale.isValid());
             glm::vec3 scale(x_scale.getValue(), y_scale.getValue(), z_scale.getValue());
 
-
-            mat = glm::scale(mat, scale);
-            mat = glm::rotate(mat, glm::radians(x_rot.getValue() ), glm::vec3(1, 0, 0)); // rot x
-            mat = glm::rotate(mat, glm::radians(y_rot.getValue() ), glm::vec3(0, 1, 0)); // rot y
-            mat = glm::rotate(mat, glm::radians(z_rot.getValue() ), glm::vec3(0, 0, 1)); // rot z
-            mat = glm::translate(mat, translate);
-
+            smat = glm::scale(smat, scale);
+            rxmat = glm::rotate(rxmat, glm::radians(x_rot.getValue() ), glm::vec3(1, 0, 0)); // rot x
+            rymat = glm::rotate(rymat, glm::radians(y_rot.getValue() ), glm::vec3(0, 1, 0)); // rot y
+            rzmat = glm::rotate(rzmat, glm::radians(z_rot.getValue() ), glm::vec3(0, 0, 1)); // rot z
+            //glm::mat4 transform = glm::eulerAngleYXZ( y_rot.getValue(), x_rot.getValue(), z_rot.getValue());
+            tmat = glm::translate(tmat, translate);
+            mat = tmat * smat * rzmat* rymat * rxmat;
             return mat;
         };
         // get another node location xform attrib
         auto xform_anotherNode = [&iface](const std::string &location, const int &index) {
             glm::mat4 mat(1.0f);
 
+            glm::mat4 smat(1.0f);
+            glm::mat4 rxmat(1.0f);
+            glm::mat4 rymat(1.0f);
+            glm::mat4 rzmat(1.0f);
+            glm::mat4 tmat(1.0f);
             FnAttribute::DoubleAttribute trans = iface.getAttr("xform.interactive.translate", location, index);
             FnAttribute::DoubleAttribute rotZ = iface.getAttr("xform.interactive.rotateZ", location, index);
             FnAttribute::DoubleAttribute rotY = iface.getAttr("xform.interactive.rotateY", location, index);
@@ -224,12 +234,13 @@ namespace Cartesian {
             auto sample_rotX = rotX.getNearestSample(time);
             auto sample_scale = scale.getNearestSample(time);
 
-            mat = glm::scale(mat, glm::vec3(sample_scale[0], sample_scale[1], sample_scale[2]));
-            mat = glm::rotate(mat, glm::radians(float(sample_rotX[0])), glm::vec3(1, 0, 0)); // rot x
-            mat = glm::rotate(mat, glm::radians(float(sample_rotY[1])), glm::vec3(0, 1, 0)); // rot y
-            mat = glm::rotate(mat, glm::radians(float(sample_rotZ[2])), glm::vec3(0, 0, 1)); // rot z
-            mat = glm::translate(mat, glm::vec3(sample_trans[0], sample_trans[1], sample_trans[2]));
+            smat = glm::scale(smat, glm::vec3(sample_scale[0], sample_scale[1], sample_scale[2]));
+            rxmat = glm::rotate(rxmat, glm::radians(float(sample_rotX[0])), glm::vec3(1, 0, 0)); // rot x
+            rymat = glm::rotate(rymat, glm::radians(float(sample_rotY[0])), glm::vec3(0, 1, 0)); // rot y
+            rzmat = glm::rotate(rzmat, glm::radians(float(sample_rotZ[0])), glm::vec3(0, 0, 1)); // rot z
+            tmat = glm::translate(tmat, glm::vec3(sample_trans[0], sample_trans[1], sample_trans[2]));
 
+            mat = tmat * smat * rzmat * rymat * rxmat;
             return mat;
         };
         // get another node xform attrib

@@ -311,6 +311,7 @@ namespace Cartesian {
             glm::vec3 skew;
             glm::vec4 perspective;
             glm::decompose(transformation, scale, rotation, translation, skew, perspective);
+            rotation = glm::conjugate(rotation);
             return glm::eulerAngles(rotation); // rotation return the euler rotation
         };
 
