@@ -1,9 +1,13 @@
 #include "BindKatanaData.h"
 #include "CartesianLog.h"
-
-
+#include "ExchangeCGALGeo.h"
+#if defined _WIN32 || defined __CYGWIN__
 #undef interface
 #undef GetCurrentTime
+#endif //  __MSVC__
+
+
+
 #include <FnAttribute/FnAttribute.h>
 #include <FnAttribute/FnGroupBuilder.h>
 
@@ -31,17 +35,17 @@ namespace Cartesian {
         auto setTypeFunc = [&iface](const std::string& set)->void {iface.setAttr("type", FnAttribute::StringAttribute(set)); };
         lua->set_function("settype", setTypeFunc);
 
-      
+
         // return op type
-        lua->set_function("getoptype", [&iface](){return iface.getOpType(); } );
-       
-        lua->set_function("getinputname", [&iface](){return iface.getInputName(); });
-        lua->set_function("getinputlocationpath", [&iface](){return iface.getInputLocationPath(); });
-        lua->set_function("getouputlocationpath", [&iface](){return iface.getOutputLocationPath(); });
+        lua->set_function("getoptype", [&iface]() {return iface.getOpType(); });
+
+        lua->set_function("getinputname", [&iface]() {return iface.getInputName(); });
+        lua->set_function("getinputlocationpath", [&iface]() {return iface.getInputLocationPath(); });
+        lua->set_function("getouputlocationpath", [&iface]() {return iface.getOutputLocationPath(); });
         // what num node has 
-        
-        lua->set_function("ninputs", [&iface]() {return iface.getNumInputs(); } );
-        
+
+        lua->set_function("ninputs", [&iface]() {return iface.getNumInputs(); });
+
 
         auto getTypeFunc1 = [&iface]() {
             FnAttribute::StringAttribute att = iface.getAttr("type");
@@ -85,27 +89,27 @@ namespace Cartesian {
 
         // -------------------------------- delete location () ------------------------------------------------
         // delete all children
-        lua->set_function("deletechildren", [&iface](){iface.deleteChildren(); });
+        lua->set_function("deletechildren", [&iface]() {iface.deleteChildren(); });
         // delete one child
-        lua->set_function("deletechild", [&iface](const std::string& name){iface.deleteChild(name); });
-        lua->set_function("deleteself", [&iface](const std::string& name){iface.deleteSelf(); });
+        lua->set_function("deletechild", [&iface](const std::string& name) {iface.deleteChild(name); });
+        lua->set_function("deleteself", [&iface](const std::string& name) {iface.deleteSelf(); });
         // -------------------------------- delete location () ------------------------------------------------
-        
+
         auto prefetch = [&iface](const std::string& input, const int& index) {
             iface.prefetch(input, index);
         };
         lua->set_function("prefetch", prefetch);
 
 
-        auto rename = [&iface](const std::string &str, const std::string &dst) {
+        auto rename = [&iface](const std::string& str, const std::string& dst) {
             //Foundry::Katana::FnGeolibCookInterfaceUtils::cookDaps(iface);
             iface.prefetch();
-            Foundry::Katana::RenameChild(iface, str,dst ); 
+            Foundry::Katana::RenameChild(iface, str, dst);
         };
         lua->set_function("renamechild", rename);
 
         // createLocation("/obj/render/")
-        auto createLocationFunc = [&iface](const std::string& locpath)->void{
+        auto createLocationFunc = [&iface](const std::string& locpath)->void {
             Foundry::Katana::CreateLocationInfo info;
             Foundry::Katana::CreateLocation(info, iface, locpath);
         };
@@ -114,19 +118,19 @@ namespace Cartesian {
 
 
         // copylocation("tochild", "fromSrc", index)
-        auto copyLocation = [&iface](const std::string& childname, const std::string &fromLocation , const int &inputIndex)->void {
+        auto copyLocation = [&iface](const std::string& childname, const std::string& fromLocation, const int& inputIndex)->void {
             iface.copyLocationToChild(childname, fromLocation, inputIndex);
         };
         lua->set_function("copylocation", copyLocation);
 
 
         // stop eval child location()
-        lua->set_function("stop", [&iface](){iface.stopChildTraversal(); });
+        lua->set_function("stop", [&iface]() {iface.stopChildTraversal(); });
 
-        
+
 
         // delete & delete all attrib
-        auto delattr = [&iface](const std::string& attrName) {iface.deleteAttr(attrName);};
+        auto delattr = [&iface](const std::string& attrName) {iface.deleteAttr(attrName); };
         auto deleteall = [&iface]() {iface.deleteAttrs(); };
         lua->set_function("delattrib", delattr);
         lua->set_function("clearattrib", deleteall);
@@ -134,7 +138,7 @@ namespace Cartesian {
         // get current node xform attrib, return matrix attrib, SRT 
         auto xform = [&iface]() {
 
-            
+
             glm::mat4 mat(1.0f);
             glm::mat4 smat(1.0f);
             glm::mat4 rxmat(1.0f);
@@ -183,16 +187,16 @@ namespace Cartesian {
             glm::vec3 scale(x_scale.getValue(), y_scale.getValue(), z_scale.getValue());
 
             smat = glm::scale(smat, scale);
-            rxmat = glm::rotate(rxmat, glm::radians(x_rot.getValue() ), glm::vec3(1, 0, 0)); // rot x
-            rymat = glm::rotate(rymat, glm::radians(y_rot.getValue() ), glm::vec3(0, 1, 0)); // rot y
-            rzmat = glm::rotate(rzmat, glm::radians(z_rot.getValue() ), glm::vec3(0, 0, 1)); // rot z
+            rxmat = glm::rotate(rxmat, glm::radians(x_rot.getValue()), glm::vec3(1, 0, 0)); // rot x
+            rymat = glm::rotate(rymat, glm::radians(y_rot.getValue()), glm::vec3(0, 1, 0)); // rot y
+            rzmat = glm::rotate(rzmat, glm::radians(z_rot.getValue()), glm::vec3(0, 0, 1)); // rot z
             //glm::mat4 transform = glm::eulerAngleYXZ( y_rot.getValue(), x_rot.getValue(), z_rot.getValue());
             tmat = glm::translate(tmat, translate);
-            mat = tmat * smat * rzmat* rymat * rxmat;
+            mat = tmat * smat * rzmat * rymat * rxmat;
             return mat;
         };
         // get another node location xform attrib
-        auto xform_anotherNode = [&iface](const std::string &location, const int &index) {
+        auto xform_anotherNode = [&iface](const std::string& location, const int& index) {
             glm::mat4 mat(1.0f);
 
             glm::mat4 smat(1.0f);
@@ -244,49 +248,48 @@ namespace Cartesian {
             return mat;
         };
         // get another node xform attrib
-        lua->set_function("xform", sol::overload(xform,xform_anotherNode));
+        lua->set_function("xform", sol::overload(xform, xform_anotherNode));
 
 
 
-		// apply xform
-		auto apply_xform = [&iface](const glm::mat4 &mat) {
-			FnAttribute::DoubleAttribute trans = iface.getAttr("xform.interactive.translate");
-			FnAttribute::DoubleAttribute rotZ = iface.getAttr("xform.interactive.rotateZ" );
-			FnAttribute::DoubleAttribute rotY = iface.getAttr("xform.interactive.rotateY");
-			FnAttribute::DoubleAttribute rotX = iface.getAttr("xform.interactive.rotateX");
-			FnAttribute::DoubleAttribute scale = iface.getAttr("xform.interactive.scale");
+        // apply xform
+        auto apply_xform = [&iface](const glm::mat4& mat) {
+            FnAttribute::DoubleAttribute trans = iface.getAttr("xform.interactive.translate");
+            FnAttribute::DoubleAttribute rotZ = iface.getAttr("xform.interactive.rotateZ");
+            FnAttribute::DoubleAttribute rotY = iface.getAttr("xform.interactive.rotateY");
+            FnAttribute::DoubleAttribute rotX = iface.getAttr("xform.interactive.rotateX");
+            FnAttribute::DoubleAttribute scale = iface.getAttr("xform.interactive.scale");
 
-			if (!trans.isValid()) {
-				CARTESIAN_CORE_ERROR("can not get xform.interactive.translate");
-				return mat;
-			}
-			if (!rotZ.isValid()) {
-				CARTESIAN_CORE_ERROR("can not get xform.interactive.rotateZ");
-				return mat;
-			}
-			if (!rotY.isValid()) {
-				CARTESIAN_CORE_ERROR("can not get xform.interactive.rotateY");
-				return mat;
-			}
-			if (!rotX.isValid()) {
-				CARTESIAN_CORE_ERROR("can not get xform.interactive.rotateX");
-				return mat;
-			}
+            if (!trans.isValid()) {
+                CARTESIAN_CORE_ERROR("can not get xform.interactive.translate");
+            }
+            if (!rotZ.isValid()) {
+                CARTESIAN_CORE_ERROR("can not get xform.interactive.rotateZ");
+                return ;
+            }
+            if (!rotY.isValid()) {
+                CARTESIAN_CORE_ERROR("can not get xform.interactive.rotateY");
+                return ;
+            }
+            if (!rotX.isValid()) {
+                CARTESIAN_CORE_ERROR("can not get xform.interactive.rotateX");
+                return ;
+            }
 
-			if (!scale.isValid()) {
-				CARTESIAN_CORE_ERROR("can not get xform.interactive.scale");
-				return mat;
-			}
+            if (!scale.isValid()) {
+                CARTESIAN_CORE_ERROR("can not get xform.interactive.scale");
+                return ;
+            }
 
 
-			glm::vec3 dec_scale;
-			glm::quat dec_rotation;
-			glm::vec3 dec_translation;
-			glm::vec3 dec_skew;
-			glm::vec4 dec_perspective;
-			glm::decompose(mat, dec_scale, dec_rotation, dec_translation, dec_skew, dec_perspective);
-			//rotation = glm::conjugate(rotation);
-			glm::vec3 euler_rot = glm::eulerAngles(dec_rotation); // rotation return the euler rotation
+            glm::vec3 dec_scale;
+            glm::quat dec_rotation;
+            glm::vec3 dec_translation;
+            glm::vec3 dec_skew;
+            glm::vec4 dec_perspective;
+            glm::decompose(mat, dec_scale, dec_rotation, dec_translation, dec_skew, dec_perspective);
+            //rotation = glm::conjugate(rotation);
+            glm::vec3 euler_rot = glm::eulerAngles(dec_rotation); // rotation return the euler rotation
 
 
             double* raw_scale = new double[3];
@@ -296,8 +299,8 @@ namespace Cartesian {
             double* raw_rotx = new double[4];
 
             // raw set dec_scale
-            raw_scale[0] = dec_scale.x;raw_scale[1] = dec_scale.y; raw_scale[2] = dec_scale.z;
-			// raw set dec_trans
+            raw_scale[0] = dec_scale.x; raw_scale[1] = dec_scale.y; raw_scale[2] = dec_scale.z;
+            // raw set dec_trans
             raw_trans[0] = dec_translation.x; raw_trans[1] = dec_translation.y; raw_trans[2] = dec_translation.z;
             // raw set rotx;
             raw_rotx[0] = euler_rot.x * 180 / glm::pi<double>(); raw_rotx[1] = 1.0; raw_rotx[2] = 0.0; raw_rotx[3] = 0.0;
@@ -306,29 +309,39 @@ namespace Cartesian {
             // raw set rotz;
             raw_rotz[0] = euler_rot.z * 180 / glm::pi<double>(); raw_rotz[1] = 0.0; raw_rotz[2] = 0.0; raw_rotz[3] = 1.0;
 
-			FnAttribute::DoubleAttribute newTransAttr(raw_trans, 3,
-				1);
-			FnAttribute::DoubleAttribute newScaleAttr(raw_scale, 3,
-				1);
-			FnAttribute::DoubleAttribute newXRotAttr(raw_rotx, 4,
-				1);
-			FnAttribute::DoubleAttribute newYRotAttr(raw_roty, 4,
-				1);
-			FnAttribute::DoubleAttribute newZRotAttr(raw_rotz, 4,
-				1);
+            FnAttribute::DoubleAttribute newTransAttr(raw_trans, 3,
+                1);
+            FnAttribute::DoubleAttribute newScaleAttr(raw_scale, 3,
+                1);
+            FnAttribute::DoubleAttribute newXRotAttr(raw_rotx, 4,
+                1);
+            FnAttribute::DoubleAttribute newYRotAttr(raw_roty, 4,
+                1);
+            FnAttribute::DoubleAttribute newZRotAttr(raw_rotz, 4,
+                1);
             iface.setAttr("xform.interactive.translate", newTransAttr, false);
             iface.setAttr("xform.interactive.scale", newScaleAttr, false);
             iface.setAttr("xform.interactive.rotateX", newXRotAttr, false);
             iface.setAttr("xform.interactive.rotateY", newYRotAttr, false);
             iface.setAttr("xform.interactive.rotateZ", newZRotAttr, false);
 
-            delete []raw_roty; 
-            delete []raw_rotz;
-            delete []raw_rotx; 
-            delete []raw_scale; 
-            delete []raw_trans;
-		};
-		lua->set_function("setxform", apply_xform);
+            delete[]raw_roty;
+            delete[]raw_rotz;
+            delete[]raw_rotx;
+            delete[]raw_scale;
+            delete[]raw_trans;
+        };
+        lua->set_function("setxform", apply_xform);
+
+
+
+        // Geometry exchange
+        auto geoself = [&iface]() {
+            PRE_TYPE::Mesh mesh;
+            BuildSurfaceMeshFromKatana(mesh, iface);
+            return mesh;
+        };
+        lua->set_function("geoself", geoself);
 
     }
 

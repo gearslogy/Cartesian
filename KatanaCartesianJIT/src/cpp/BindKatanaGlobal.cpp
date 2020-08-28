@@ -19,6 +19,10 @@ namespace Cartesian {
         std::string inputLocPath = interface.getInputLocationPath();
         lua->set("locationPath", inputLocPath);
 
+        auto getvarable = [&interface](const std::string& varname) {
+            return Foundry::Katana::GetGraphStateVariable(interface, varname);
+        };
+        lua->set_function("getgraphvariable",getvarable);
     }
 
 }

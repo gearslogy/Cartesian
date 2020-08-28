@@ -9,7 +9,11 @@
 #include <cmath>
 #include <cassert>
 
+#if defined _WIN32 || defined __CYGWIN__
 #undef interface
+#undef GetCurrentTime
+#endif //  __MSVC__
+
 #include <FnAttribute/FnAttribute.h>
 #include <FnAttribute/FnGroupBuilder.h>
 #include <FnGeolib/op/FnGeolibOp.h>
@@ -18,7 +22,7 @@
 #include <pystring/pystring.h>
 #include <FnGeolibServices/FnGeolibCookInterfaceUtilsService.h>
 #include "sol.hpp"
-#undef interface
+
 class MesserOp : public Foundry::Katana::GeolibOp
 {
 public:
