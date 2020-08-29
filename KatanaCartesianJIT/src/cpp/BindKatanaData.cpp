@@ -343,6 +343,11 @@ namespace Cartesian {
         };
         lua->set_function("geoself", geoself);
 
+
+        auto meshend = [&iface](PRE_TYPE::Mesh &mesh) {
+            SurfaceMeshToKatana(mesh, iface);
+        };
+        lua->set_function("attachmesh", meshend);
     }
 
 }

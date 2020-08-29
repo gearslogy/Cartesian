@@ -274,7 +274,7 @@ namespace Cartesian {
 
 
 
-    void SurfaceMeshToKatana(const PRE_TYPE::Mesh& mesh, Foundry::Katana::GeolibCookInterface& iface);
+    void SurfaceMeshToKatana(PRE_TYPE::Mesh& mesh, Foundry::Katana::GeolibCookInterface& iface);
 
 
 

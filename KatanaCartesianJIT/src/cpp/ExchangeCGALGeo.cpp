@@ -223,37 +223,112 @@ namespace Cartesian {
 
     } // end of build surface mesh
 
-    void SurfaceMeshToKatana(const PRE_TYPE::Mesh& mesh, Foundry::Katana::GeolibCookInterface& iface)
+    void SurfaceMeshToKatana( PRE_TYPE::Mesh& mesh, Foundry::Katana::GeolibCookInterface& iface)
     {
+     
+        
+        
+
         const std::string polyStartIndexAttName = "geometry.poly.startIndex";
         const std::string polyPolyVertexIndexAttName = "geometry.poly.vertexList";
         const std::string pointPosAttName = "geometry.point.P";
         const std::string arbitraryAttName = "geometry.arbitrary";
 
-        int numVertices = mesh.num_vertices();
+        
 
 
-        // ------------------ construct geometry.point.P attribute -----------------------------
-        PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, PRE_TYPE::K::Point_3> location = mesh.points();
-        int index = 0;
-        auto* rawPosdate = new float[numVertices * 3];
-        for (PRE_TYPE::Vertex_descriptor vd : mesh.vertices()) {
-            auto cgalPos = location[vd];
-            rawPosdate[index * 3 + 0] = cgalPos.x();
-            rawPosdate[index * 3 + 1] = cgalPos.y();
-            rawPosdate[index * 3 + 2] = cgalPos.z();
-            index++;
-        }
-        FnAttribute::FloatAttribute attr(rawPosdate, numVertices * 3, 3);
-        iface.setAttr(pointPosAttName, attr, false);
-        delete []rawPosdate;
 
         // ------------------ construct geometry.poly.startIndex attribute -----------------------------
         // this actually is likely primpoints()
+        std::vector <int> startIndexData; 
+        std::vector <int> vertexListData;
+        startIndexData.push_back(0); // katana require the first data is 0
+        /*
+        for (PRE_TYPE::face_iterator faceIter = mesh.faces_begin(); faceIter != mesh.faces_end(); faceIter++) {
+            // in this case we list around this face's faces
+            PRE_TYPE::Face_descriptor faceid = *faceIter;  // get iter face id
+            if (!faceid.is_valid()) {
+                std::cout << "in-valid face:" << faceid << std::endl;
+                continue;
+            }
+            CGAL::Vertex_around_face_circulator<PRE_TYPE::Mesh> vRoundBegin(mesh.halfedge(faceid), mesh), vRoundEnd(vRoundBegin);
+            int verticesNum = 0;
+            while (1) {
+                PRE_TYPE::Vertex_descriptor vd = *vRoundBegin;  // per face vertex
+                if (!vd.is_valid() || mesh.is_removed(vd)) {
+                    std::cout << "in-valid vert:" << vd << std::endl;
+                    break;
+                }
+                vertexListData.emplace_back(vd.idx()); 
+                verticesNum++;
+                //std::cout << " " << vd.idx();
+                if (++vRoundBegin == vRoundEnd)break;
+            }
+            if (verticesNum != 0) {
+                startIndexData.emplace_back(startIndexData[startIndexData.size() - 1] + verticesNum);
+            }
+           
+        }
+        */
+
+        // remove unused prims
+        for (PRE_TYPE::Face_descriptor& f : mesh.faces()) {
+            for (PRE_TYPE::Vertex_descriptor v : CGAL::vertices_around_face(mesh.halfedge(f), mesh)) {
+                if (!v.is_valid() || mesh.is_removed(v))
+                {
+                    mesh.remove_face(f);
+                    break;
+                }
+            }
+        }
+        if (mesh.has_garbage()) {
+            /*
+            std::cout << "num of remove face: " << mesh.number_of_removed_faces() << std::endl;
+            std::cout << "num of remove vertices: " << mesh.number_of_removed_vertices() << std::endl;
+            std::cout << "num of remove hedges: " << mesh.number_of_removed_halfedges() << std::endl;
+            std::cout << "num of remove hedges: " << mesh.number_of_removed_edges() << std::endl;
+
+            std::cout << "has garbage\n";*/
+            mesh.collect_garbage();
+        }
+
+        // ------------------ construct geometry.poly.startIndex attribute -----------------------------
+        for (PRE_TYPE::Face_descriptor& f : mesh.faces()) {
+            int numedges = mesh.degree(f);
+            startIndexData.emplace_back(startIndexData[startIndexData.size() - 1] + numedges);
+            // face vertices
+            for (PRE_TYPE::Vertex_descriptor v : CGAL::vertices_around_face(mesh.halfedge(f), mesh)) {
+                vertexListData.push_back(v.idx());
+            }
+        }
 
 
+        CARTESIAN_CORE_INFO("set the PolyStartIndexAttr: {0}", polyStartIndexAttName);
+        FnAttribute::IntAttribute startIndexAttr(startIndexData.data(), startIndexData.size(), 1);
+        iface.setAttr(polyStartIndexAttName, startIndexAttr, false);
+
+        CARTESIAN_CORE_INFO("set the PolyVertexIndexAttr: {0}", polyPolyVertexIndexAttName);
+        FnAttribute::IntAttribute vertexListAttr(vertexListData.data(), vertexListData.size(), 1);
+        iface.setAttr(polyPolyVertexIndexAttName, vertexListAttr, false);
+
+        // ------------------ construct geometry.point.P attribute -----------------------------
+        CARTESIAN_CORE_INFO("construct the geometry.point.P attribute");
+        PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, PRE_TYPE::K::Point_3> location = mesh.points();
+        std::vector<float> posdata;
+        for (PRE_TYPE::Vertex_descriptor vd : mesh.vertices()) {
+            if (vd.is_valid()) {
+                auto cgalPos = location[vd];
+                posdata.emplace_back(cgalPos.x());
+                posdata.emplace_back(cgalPos.y());
+                posdata.emplace_back(cgalPos.z());
+            }
+        }
+        FnAttribute::FloatAttribute attr(posdata.data(), posdata.size(), 3);
+        iface.setAttr(pointPosAttName, attr, false);
+ 
 
 
+        int numVertices = posdata.size();
         // point attribute
         for (auto& name : mesh.properties<PRE_TYPE::Vertex_descriptor>())
         {
@@ -266,6 +341,7 @@ namespace Cartesian {
                     rawdata[i] = attribMapInt[PRE_TYPE::Vertex_descriptor(i)];
                 }
                 std::string attribValueName = arbitraryAttName + "." +name + ".value";
+                CARTESIAN_CORE_INFO("set attribute for katana: {0}, type: {1}", attribValueName, "int");
                 FnAttribute::IntAttribute attr(rawdata, numVertices, 1);
                 iface.setAttr(attribValueName, attr, false);
                 delete[]rawdata;
@@ -281,6 +357,7 @@ namespace Cartesian {
                     rawdata[i] = attribMapFloat[PRE_TYPE::Vertex_descriptor(i)];
                 }
                 std::string attribValueName = arbitraryAttName + "." + name + ".value";
+                CARTESIAN_CORE_INFO("set attribute for katana: {0}, type: {1}", attribValueName, "float");
                 FnAttribute::FloatAttribute attr(rawdata, numVertices, 1);
                 iface.setAttr(attribValueName, attr, false);
                 delete[]rawdata;
@@ -288,13 +365,14 @@ namespace Cartesian {
 
             found = false;
             PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, double> attribMapDouble;
-            boost::tie(attribMapDouble, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, int>(name);
+            boost::tie(attribMapDouble, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, double>(name);
             if (found) { // double
                 double* rawdata = new double[numVertices];
                 for (auto i = 0; i < numVertices; i++) {
                     rawdata[i] = attribMapDouble[PRE_TYPE::Vertex_descriptor(i)];
                 }
                 std::string attribValueName = arbitraryAttName + "." + name + ".value";
+                CARTESIAN_CORE_INFO("set attribute for katana: {0}, type: {1}", attribValueName, "double");
                 FnAttribute::DoubleAttribute attr(rawdata, numVertices, 1);
                 iface.setAttr(attribValueName, attr, false);
                 delete[]rawdata;
@@ -309,6 +387,7 @@ namespace Cartesian {
                     rawdata[i] = attribMapString[PRE_TYPE::Vertex_descriptor(i)];
                 }
                 std::string attribValueName = arbitraryAttName + "." + name + ".value";
+                CARTESIAN_CORE_INFO("set attribute for katana: {0}, type: {1}", attribValueName, "string");
                 FnAttribute::StringAttribute attr(rawdata, numVertices, 1);
                 iface.setAttr(attribValueName, attr, false);
                 delete[]rawdata;
@@ -327,6 +406,7 @@ namespace Cartesian {
                     rawdata[i * 3 + 2] = value.z;
                 }
                 std::string attribValueName = arbitraryAttName + "." + name + ".value";
+                CARTESIAN_CORE_INFO("set attribute for katana: {0}, type: {1}", attribValueName, "float vector");
                 FnAttribute::FloatAttribute attr(rawdata, numVertices, 1);
                 iface.setAttr(attribValueName, attr, false);
                 delete[]rawdata;
