@@ -73,7 +73,7 @@ namespace Cartesian {
         sol::usertype<PRE_TYPE::Mesh> mesh = (*lua).new_usertype<PRE_TYPE::Mesh>(
             "mesh"
             );
-
+        mesh["clear"] = &PRE_TYPE::Mesh::clear;
         // todo addprim() need imp in DCC software,and return mesh handle.
 
         // mesh functions
@@ -109,10 +109,28 @@ namespace Cartesian {
         // remove point
         auto remove_point = []( PRE_TYPE::Mesh& mesh, const PRE_TYPE::Vertex_descriptor& vd) {
             mesh.remove_vertex(vd);
+            /*
+            auto halfedge = mesh.halfedge(vd);
+            auto face = mesh.face(halfedge);
+            std::cout <<"remove vert:"<< vd <<"\tremove face:" << face << std::endl;
+            mesh.remove_face(face);*/
         };
 
         auto remove_point_ptnum = []( PRE_TYPE::Mesh& mesh, const int & ptnum) {
-            mesh.remove_vertex(PRE_TYPE::Vertex_descriptor(ptnum));
+            PRE_TYPE::Vertex_descriptor vd(ptnum);
+            //mesh.remove_vertex(vd);
+            CGAL::remove_vertex(vd,mesh);
+            
+            /*
+            auto halfedge = mesh.halfedge(vd);
+            if (halfedge.is_valid()) {
+                auto face = mesh.face(halfedge);
+                if (face.is_valid()) {
+                    std::cout << "remove vert:" << vd << "\tremove face:" << face << std::endl;
+                    mesh.remove_face(face);
+                }
+            }*/
+            
         };
         lua->set_function("removepoint", sol::overload(remove_point, remove_point_ptnum));
 
@@ -146,6 +164,19 @@ namespace Cartesian {
             }
         };
         lua->set_function("remove_unused_points", remove_unused_points);
+
+        auto remove_unused_prims = [](PRE_TYPE::Mesh& mesh) {
+            for (PRE_TYPE::Face_descriptor& f : mesh.faces()) {
+                for (PRE_TYPE::Vertex_descriptor v : CGAL::vertices_around_face(mesh.halfedge(f), mesh)) {
+                    if (!v.is_valid() || mesh.is_removed(v))
+                    {
+                        mesh.remove_face(f);
+                        break;
+                    }
+                }
+            }
+        };
+        lua->set_function("remove_unused_prims", remove_unused_points);
 
 
 
