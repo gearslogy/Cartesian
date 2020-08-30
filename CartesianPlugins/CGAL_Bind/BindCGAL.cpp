@@ -74,6 +74,11 @@ namespace Cartesian {
             "mesh"
             );
         mesh["clear"] = &PRE_TYPE::Mesh::clear;
+        mesh["has_garbage"] = &PRE_TYPE::Mesh::has_garbage;
+        mesh["npoints"] = &PRE_TYPE::Mesh::number_of_vertices;
+        mesh["nprims"] = &PRE_TYPE::Mesh::number_of_faces;
+        mesh["nedges"] = &PRE_TYPE::Mesh::number_of_edges;
+        mesh["nhedges"] = &PRE_TYPE::Mesh::number_of_halfedges;
         // todo addprim() need imp in DCC software,and return mesh handle.
 
         // mesh functions
