@@ -13,9 +13,47 @@
 
 namespace Cartesian {
 
+    int getTupleSize(FnAttribute::Attribute& attrib, const int baseType)  {
+        if (baseType == 1) // int
+        {
+            FnAttribute::IntAttribute rhs = static_cast<FnAttribute::IntAttribute> (attrib);
+            return rhs.getTupleSize();
+        }
+        if (baseType == 2) // float
+        {
+            FnAttribute::FloatAttribute rhs = static_cast<FnAttribute::FloatAttribute> (attrib);
+            return rhs.getTupleSize();
+        }
+        if (baseType == 3) // double
+        {
+            FnAttribute::DoubleAttribute rhs = static_cast<FnAttribute::DoubleAttribute> (attrib);
+            return rhs.getTupleSize();
+        }
+        if (baseType == 4) // string
+        {
+            FnAttribute::StringAttribute rhs = static_cast<FnAttribute::StringAttribute> (attrib);
+            return rhs.getTupleSize();
+        }
 
+        return -1;
+    }
 
-    void BuildSurfaceMeshFromKatana(PRE_TYPE::Mesh& meshToBuild, Foundry::Katana::GeolibCookInterface& iface)
+    std::string getBaseTypeAsString(const int baseType) {
+        if (baseType == 1) // int
+            return "int";
+        if (baseType == 2) // float
+            return "float";
+        if (baseType == 3) // double
+            return "double";
+        if (baseType == 4) // string
+            return "string";
+        return "ERROR BASE TYPE";
+    }
+
+    void BuildSurfaceMeshFromKatana(PRE_TYPE::Mesh& meshToBuild, 
+        Foundry::Katana::GeolibCookInterface& iface,
+        const std::string& location, 
+        const int& index)
     {
 
         const std::string polyStartIndexAttName = "geometry.poly.startIndex";
@@ -27,7 +65,12 @@ namespace Cartesian {
         auto time = Foundry::Katana::GetCurrentTime(iface);
 
         // how many num of per face;
-        FnAttribute::IntAttribute faceVerticesNumArrayAttrib = iface.getAttr(polyStartIndexAttName);
+        FnAttribute::IntAttribute faceVerticesNumArrayAttrib;
+        if (index == -1) 
+            faceVerticesNumArrayAttrib = iface.getAttr(polyStartIndexAttName);
+        else 
+            faceVerticesNumArrayAttrib = iface.getAttr(polyStartIndexAttName,location,index);
+
         if (!faceVerticesNumArrayAttrib.isValid()) {
             CARTESIAN_CORE_ERROR("Can not find attribute: {0}", polyStartIndexAttName);
             return;
@@ -36,7 +79,12 @@ namespace Cartesian {
 
 
         // this will construct vertexlist order of the geo;
-        FnAttribute::IntAttribute indicesArrayAttrib = iface.getAttr(polyPolyVertexIndexAttName);
+        FnAttribute::IntAttribute indicesArrayAttrib;
+        if(index == -1)
+            indicesArrayAttrib = iface.getAttr(polyPolyVertexIndexAttName);
+        else
+            indicesArrayAttrib = iface.getAttr(polyPolyVertexIndexAttName,location,index);
+
         if (!indicesArrayAttrib.isValid()) {
             CARTESIAN_CORE_ERROR("Can not find attribute: {0}", polyPolyVertexIndexAttName);
             return;
@@ -45,30 +93,39 @@ namespace Cartesian {
 
 
         // how many points of this geometry
-        FnAttribute::FloatAttribute positionArrayAttrib = iface.getAttr(pointPosAttName);
+        FnAttribute::FloatAttribute positionArrayAttrib;
+        if(index == -1)
+            positionArrayAttrib = iface.getAttr(pointPosAttName);
+        else
+        {
+            positionArrayAttrib = iface.getAttr(pointPosAttName, location, index);
+        }
+
         if (!positionArrayAttrib.isValid()) {
             CARTESIAN_CORE_ERROR("Can not find attribute: {0}", pointPosAttName);
             return;
         }
 
         std::vector<AttribMap> katanaAttribMaps;
-        FnAttribute::GroupAttribute arbitraryAttrib = iface.getAttr(arbitraryAttName);
-        int numOfArbitraryAttribs = 0;   // count of arbitrary attribute;
+        FnAttribute::GroupAttribute arbitraryAttrib;
+        if (index == -1)
+            arbitraryAttrib = iface.getAttr(arbitraryAttName);
+        else
+            arbitraryAttrib = iface.getAttr(arbitraryAttName, location, index);
+
+        int numOfArbitraryAttribs = arbitraryAttrib.getNumberOfChildren();   // count of arbitrary attribute;
         if (arbitraryAttrib.isValid()) {
-            numOfArbitraryAttribs = arbitraryAttrib.getNumberOfChildren();
             for (int i = 0; i < numOfArbitraryAttribs; i++) {
+
+                // get current ATTRIB_NAME of geometry.arbitrary.ATTRIB_NAME 
                 std::string attribName = arbitraryAttrib.getChildName(i);
 
-                FnAttribute::GroupAttribute attrib = arbitraryAttrib.getChildByIndex(i);  // emp: geometry.arbitrary.Cd
-                /* Katana API
-                #define kFnKatAttributeTypeNull 0
-                #define kFnKatAttributeTypeInt 1
-                #define kFnKatAttributeTypeFloat 2
-                #define kFnKatAttributeTypeDouble 3
-                #define kFnKatAttributeTypeString 4
-                #define kFnKatAttributeTypeGroup 5
-                #define kFnKatAttributeTypeError -1
-                */
+                // just pass the Texture attribute, because the "geometry.arbitrary.st" same as Texture attribute;
+                if (attribName == "Texture") continue; 
+
+
+                FnAttribute::GroupAttribute attrib = arbitraryAttrib.getChildByIndex(i);  // emp: geometry.arbitrary.Cd/st/other*
+                
                 FnAttribute::StringAttribute scopeAttrib = attrib.getChildByName("scope"); // geometry.arbitrary.Cd.scope
                 if (!scopeAttrib.isValid()) {
                     std::string erroratt = arbitraryAttName + attribName + ".scope";
@@ -79,42 +136,41 @@ namespace Cartesian {
 
                 FnAttribute::Attribute valueAttrib = attrib.getChildByName("value"); // geometry.arbitrary.Cd.value
                 if (!valueAttrib.isValid()) {
-                    std::string erroratt = arbitraryAttName + attribName + ".value";
-                    CARTESIAN_CORE_ERROR("can not find the value attribute :{0}", erroratt);
+                    std::string erroratt = arbitraryAttName +"." +attribName + ".value";
+                    CARTESIAN_CORE_WARN("can not find the value attribute: {0}, may be texture or uv attribute, cartesian will try to as uv method", erroratt);
+                }
+                else {
+                    int valueType = valueAttrib.getType();
+                    int tupleSize =getTupleSize(valueAttrib, valueType);
+                    CARTESIAN_CORE_INFO("gen attribute map: {0}, type: {1}, tuple size: {2}, scope: {3}", attribName, "int", tupleSize, scope);
+                    MAKE_ATTRIB_MAP(attribName, scope, valueType, valueAttrib, tupleSize);
+                    katanaAttribMaps.emplace_back(ATTRIB_MAP);
+                }
+           
+
+                // try to parse this: geometry.arbitrary.Cd.st
+                FnAttribute::IntAttribute indexAttrib = attrib.getChildByName("index"); // geometry.arbitrary.st.value  // int 
+                FnAttribute::Attribute indexedValueAttrib = attrib.getChildByName("indexedValue"); // geometry.arbitrary.st.indexedValue
+                if (!indexAttrib.isValid() && !indexedValueAttrib.isValid()) {
                     continue;
                 }
-                int valueType = valueAttrib.getType();
-                if (valueType == 1) { // it's int attribute
-                    FnAttribute::IntAttribute refValueAttrib = static_cast<FnAttribute::IntAttribute> (valueAttrib);
-                    auto tupleSize = refValueAttrib.getTupleSize();
-                    CARTESIAN_CORE_INFO("gen attribute map: {0}, type: {1}, tuple size: {2}, scope: {3}", attribName, "int", tupleSize, scope);
-                    MAKE_ATTRIB_MAP(attribName, scope, 1, valueAttrib, tupleSize);
-                    katanaAttribMaps.emplace_back(ATTRIB_MAP);
-                }
-                if (valueType == 2) { // it's float attribute
-                    FnAttribute::FloatAttribute refValueAttrib = static_cast<FnAttribute::FloatAttribute> (valueAttrib);
-                    auto tupleSize = refValueAttrib.getTupleSize();
-                    CARTESIAN_CORE_INFO("gen attribute map: {0}, type: {1}, tuple size: {2}, scope: {3}", attribName, "float", tupleSize, scope);
-                    MAKE_ATTRIB_MAP(attribName, scope, 2, valueAttrib, tupleSize);
-                    katanaAttribMaps.emplace_back(ATTRIB_MAP);
-                }
-                if (valueType == 3) { // it's double attribute
-                    FnAttribute::DoubleAttribute refValueAttrib = static_cast<FnAttribute::DoubleAttribute> (valueAttrib);
-                    auto tupleSize = refValueAttrib.getTupleSize();
-                    CARTESIAN_CORE_INFO("gen attribute map: {0}, type: {1}, tuple size: {2}, scope: {3}", attribName, "double", tupleSize, scope);
-                    MAKE_ATTRIB_MAP(attribName, scope, 3, valueAttrib, tupleSize);
-                    katanaAttribMaps.emplace_back(ATTRIB_MAP);
-                }
-                if (valueType == 4) { // it's string attribute
-                    FnAttribute::StringAttribute refValueAttrib = static_cast<FnAttribute::StringAttribute> (valueAttrib);
-                    auto tupleSize = refValueAttrib.getTupleSize();
-                    CARTESIAN_CORE_INFO("gen attribute map: {0}, type: {1}, tuple size: {2}, scope: {3}", attribName, "string", tupleSize, scope);
-                    MAKE_ATTRIB_MAP(attribName, scope, 4, valueAttrib, tupleSize);
-                    katanaAttribMaps.emplace_back(ATTRIB_MAP);
+                else {
+                    
+                    // struct for our 
+                    AttribMap indexMap;                                    // create a indexmap
+                    indexMap.name = attribName;
+                    indexMap.isIndexed = true;                             // set this map is index
+                    indexMap.type = indexedValueAttrib.getType();          // check the indexedValue type
+                    indexMap.indexHandle = indexAttrib;                    // set index
+                    indexMap.indexedValueHandle = indexedValueAttrib;      // set indexedValue
+                    indexMap.tupleSize = getTupleSize(indexedValueAttrib, indexMap.type);
+                    indexMap.scope = scope;
+                    katanaAttribMaps.emplace_back(indexMap);
+                    CARTESIAN_CORE_INFO("gen index&indexed value map for attribute: {0}, value type: {1}, tupleSize: {2}, scope: {3}", attribName, getBaseTypeAsString(indexMap.type), indexMap.tupleSize, indexMap.scope);
                 }
             }
         }
-        CARTESIAN_CORE_INFO("success parsing attribute num:{0}", katanaAttribMaps.size());
+        CARTESIAN_CORE_INFO("success parsing attribute num: {0}", katanaAttribMaps.size());
 
 
         auto positionArray = positionArrayAttrib.getNearestSample(time);
@@ -158,21 +214,21 @@ namespace Cartesian {
                 {
                 case 1:  // ----------------------------- int for point ---------------------------------------------------
                 {
-                    AttributeGetSet<PRE_TYPE::Vertex_descriptor>::createAndSet_INT_CGALAttrib(meshToBuild, attribmap, time);
+                    AttributeFromKatanaGetSetToCGAL<PRE_TYPE::Vertex_descriptor>::createAndSet_INT_CGALAttrib(meshToBuild, attribmap, time);
                     break;
                 }
                 case 2: // ----------------------------- float for point ---------------------------------------------------
                 {
-                    AttributeGetSet<PRE_TYPE::Vertex_descriptor>::createAndSet_FLT_CGALAttrib(meshToBuild, attribmap, time);
+                    AttributeFromKatanaGetSetToCGAL<PRE_TYPE::Vertex_descriptor>::createAndSet_FLT_CGALAttrib(meshToBuild, attribmap, time);
                     break;
                 }
                 case 3: // ----------------------------- double for point ---------------------------------------------------
                 {
-                    AttributeGetSet<PRE_TYPE::Vertex_descriptor>::createAndSet_DOUBLE_CGALAttrib(meshToBuild, attribmap, time);
+                    AttributeFromKatanaGetSetToCGAL<PRE_TYPE::Vertex_descriptor>::createAndSet_DOUBLE_CGALAttrib(meshToBuild, attribmap, time);
                     break;
                 }
                 case 4: { // ----------------------------- string for point ---------------------------------------------------
-                    AttributeGetSet<PRE_TYPE::Vertex_descriptor>::createAndSet_STR_CGALAttrib(meshToBuild, attribmap, time);
+                    AttributeFromKatanaGetSetToCGAL<PRE_TYPE::Vertex_descriptor>::createAndSet_STR_CGALAttrib(meshToBuild, attribmap, time);
                     break;
                 }
 
@@ -192,50 +248,38 @@ namespace Cartesian {
                 {
                 case 1:  // ----------------------------- int for face ---------------------------------------------------
                 {
-                    AttributeGetSet<PRE_TYPE::Face_descriptor>::createAndSet_INT_CGALAttrib(meshToBuild, attribmap, time);
+                    AttributeFromKatanaGetSetToCGAL<PRE_TYPE::Face_descriptor>::createAndSet_INT_CGALAttrib(meshToBuild, attribmap, time);
                     break;
                 }
                 case 2: // ----------------------------- float for face ---------------------------------------------------
                 {
-                    AttributeGetSet<PRE_TYPE::Face_descriptor>::createAndSet_FLT_CGALAttrib(meshToBuild, attribmap, time);
+                    AttributeFromKatanaGetSetToCGAL<PRE_TYPE::Face_descriptor>::createAndSet_FLT_CGALAttrib(meshToBuild, attribmap, time);
                     break;
                 }
                 case 3: // ----------------------------- double for face ---------------------------------------------------
                 {
-                    AttributeGetSet<PRE_TYPE::Face_descriptor>::createAndSet_DOUBLE_CGALAttrib(meshToBuild, attribmap, time);
+                    AttributeFromKatanaGetSetToCGAL<PRE_TYPE::Face_descriptor>::createAndSet_DOUBLE_CGALAttrib(meshToBuild, attribmap, time);
                     break;
                 }
                 case 4: { // ----------------------------- string for face ---------------------------------------------------
-                    AttributeGetSet<PRE_TYPE::Face_descriptor>::createAndSet_STR_CGALAttrib(meshToBuild, attribmap, time);
+                    AttributeFromKatanaGetSetToCGAL<PRE_TYPE::Face_descriptor>::createAndSet_STR_CGALAttrib(meshToBuild, attribmap, time);
                     break;
                 }
 
                 default:
                     break;
-
                 }
-
             }
-
         } // end of create attribute;
-
-
-
     } // end of build surface mesh
 
     void SurfaceMeshToKatana(PRE_TYPE::Mesh& mesh, Foundry::Katana::GeolibCookInterface& iface)
     {
 
-
-
-
         const std::string polyStartIndexAttName = "geometry.poly.startIndex";
         const std::string polyPolyVertexIndexAttName = "geometry.poly.vertexList";
         const std::string pointPosAttName = "geometry.point.P";
         const std::string arbitraryAttName = "geometry.arbitrary";
-
-
-
 
 
         // ------------------ construct geometry.poly.startIndex attribute -----------------------------

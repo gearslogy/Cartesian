@@ -341,7 +341,13 @@ namespace Cartesian {
             BuildSurfaceMeshFromKatana(mesh, iface);
             return mesh;
         };
-        lua->set_function("geoself", geoself);
+
+        auto geoself_fromotherinput = [&iface](const std::string &location, const int &inputindex) {
+            PRE_TYPE::Mesh mesh;
+            BuildSurfaceMeshFromKatana(mesh, iface,location, inputindex);
+            return mesh;
+        };
+        lua->set_function("geoself", sol::overload(geoself,geoself_fromotherinput));
 
 
         auto meshend = [&iface](PRE_TYPE::Mesh &mesh) {

@@ -51,25 +51,64 @@ FnAttribute::FloatAttribute attr(RAW_DATA, DATA_SIZE, TUPLESIZE);\
 iface.setAttr(ATTRIB_NAME, attr, false);
 
 
-
-
 namespace Cartesian {
+
+    std::string getBaseTypeAsString(const int baseType);
+    int getTupleSize(FnAttribute::Attribute& attrib, const int baseType) ;
+
+    
+    
 
     struct AttribMap {
         std::string name;                       // attrib name
         std::string scope;                      // face or vertex?
-        unsigned int type;                      // int float string double?
-        FnAttribute::Attribute handle;          // handle for attribute values
+
+        // int float string double? same as katana API
+        /* Katana API
+        #define kFnKatAttributeTypeNull 0
+        #define kFnKatAttributeTypeInt 1
+        #define kFnKatAttributeTypeFloat 2
+        #define kFnKatAttributeTypeDouble 3
+        #define kFnKatAttributeTypeString 4
+        #define kFnKatAttributeTypeGroup 5
+        #define kFnKatAttributeTypeError -1
+        */
+        unsigned int type;         
+
+
+
+        // is value attribute ? or index&&indexedValue attribute?
+        bool isIndexed = false;
+
+        // handle for attribute values only like this attribute: emp:geometry.arbitrary.Cd.value
+        FnAttribute::Attribute handle;         
+
+
+
+        // index &  indexedValue handle on for contained .index && .indexedValue -> like this: st/Texture attributes
+        FnAttribute::Attribute indexHandle;
+        FnAttribute::Attribute indexedValueHandle;
+
 
         // but i find tupleSize useless. just check attribute's value.size()/3 == npts that's vector!
         // recording it only for respecting.
         unsigned int tupleSize;                 // 1-> float, 3 -> vector, 4 -> vector4
+
     };
 
 
-
-
-    void BuildSurfaceMeshFromKatana(PRE_TYPE::Mesh& meshToBuild, Foundry::Katana::GeolibCookInterface& iface);
+    /**
+         * @brief build a cgal mesh from katana
+         * @param meshToBuild cgal mesh
+         * @param iface katana interface
+         * @param location location of input index
+         * @param index input index
+         * @return
+    */
+    void BuildSurfaceMeshFromKatana(PRE_TYPE::Mesh& meshToBuild, 
+        Foundry::Katana::GeolibCookInterface& iface, 
+        const std::string &location = " ", 
+        const int &index = -1);
 
 
 
@@ -117,7 +156,7 @@ namespace Cartesian {
     * This class transfer katana attributes to cgal mesh
     */
     template <typename GEO_SCOPE >
-    class AttributeGetSet {
+    class AttributeFromKatanaGetSetToCGAL {
 
     public:
         // for int attribute
@@ -125,6 +164,28 @@ namespace Cartesian {
             auto meshnpts = GetCGALScopeNum<GEO_SCOPE>::getNum(mesh);
             FnAttribute::IntAttribute refValueAttrib = static_cast<FnAttribute::IntAttribute> (attribmap.handle);
             auto data = refValueAttrib.getNearestSample(time);
+
+            if (data.size() / 2 == meshnpts)                    // if true, that's a vector attribute 
+            {
+                CARTESIAN_CORE_INFO("create int attribute , create as vector2, name: {0} on {1}", attribmap.name, attribmap.scope);
+                CREATE_CGAL_ATTRIB(mesh, attribmap.name, GEO_SCOPE, glm::vec2, glm::vec2(0));
+                if (!created) CARTESIAN_CORE_ERROR("error create attribute:{0}", attribmap.name);
+
+                // find and modifier it
+                FIND_CGAL_ATTRIBUTE(mesh, attribmap.name, GEO_SCOPE, glm::vec2);
+                if (found) {
+                    for (auto i = 0; i < data.size() / 2; i++) {
+                        auto x = data[i * 2 + 0];
+                        auto y = data[i * 2 + 1];
+                        CGAL_FOUND_ATTRIB_MAP[GEO_SCOPE(i)] = glm::vec2(x, y);
+                    }
+                }
+                else {
+                    CARTESIAN_CORE_ERROR("cgal can not find attribute: {0} for set value", attribmap.name);
+                }
+            }
+
+
             if (data.size() / 3 == meshnpts)                    // if true, that's a vector attribute 
             {
                 CARTESIAN_CORE_INFO("create int attribute , create as vector, name: {0} on {1}", attribmap.name, attribmap.scope);
@@ -193,7 +254,23 @@ namespace Cartesian {
             auto meshnpts = GetCGALScopeNum<GEO_SCOPE>::getNum(mesh);
             FnAttribute::FloatAttribute refValueAttrib = static_cast<FnAttribute::FloatAttribute> (attribmap.handle);
             auto data = refValueAttrib.getNearestSample(time);                    // first we check the data length is equal 3 time than our cgal mesh points. if true, that's a vector attribute 
-
+            if (data.size() / 2 == meshnpts) {
+                CARTESIAN_CORE_INFO("create float attribute , create as vector2, name: {0} on {1}", attribmap.name, attribmap.scope);
+                CREATE_CGAL_ATTRIB(mesh, attribmap.name, GEO_SCOPE, glm::vec2, glm::vec2(0));
+                if (!created) CARTESIAN_CORE_ERROR("error create attribute:{0}", attribmap.name);
+                // find and modifier it
+                FIND_CGAL_ATTRIBUTE(mesh, attribmap.name, GEO_SCOPE, glm::vec2);
+                if (found) {
+                    for (auto i = 0; i < data.size() / 2; i++) {
+                        auto x = data[i * 2 + 0];
+                        auto y = data[i * 2 + 1];
+                        CGAL_FOUND_ATTRIB_MAP[GEO_SCOPE(i)] = glm::vec2(x, y);
+                    }
+                }
+                else {
+                    CARTESIAN_CORE_ERROR("cgal can not find attribute: {0} for set value", attribmap.name);
+                }
+            }
             if (data.size() / 3 == meshnpts) {
                 CARTESIAN_CORE_INFO("create float attribute , create as vector, name: {0} on {1}", attribmap.name, attribmap.scope);
                 CREATE_CGAL_ATTRIB(mesh, attribmap.name, GEO_SCOPE, glm::vec3, glm::vec3(0));
@@ -212,7 +289,6 @@ namespace Cartesian {
                     CARTESIAN_CORE_ERROR("cgal can not find attribute: {0} for set value", attribmap.name);
                 }
             }
-
             if (data.size() / 4 == meshnpts) {
                 CARTESIAN_CORE_INFO("create float attribute , create as vector4, name: {0} on {1}", attribmap.name, attribmap.scope);
                 CREATE_CGAL_ATTRIB(mesh, attribmap.name, GEO_SCOPE, glm::vec4, glm::vec4(0));
@@ -232,7 +308,6 @@ namespace Cartesian {
                     CARTESIAN_CORE_ERROR("cgal can not find attribute: {0} for set value", attribmap.name);
                 }
             }
-
             if (data.size() == meshnpts) {// not vector, not vector2,not matrix
                 CARTESIAN_CORE_INFO("create float attribute , create as float, name: {0} on {1}", attribmap.name, attribmap.scope);
                 CREATE_CGAL_ATTRIB(mesh, attribmap.name, GEO_SCOPE, float, 0);
@@ -257,7 +332,23 @@ namespace Cartesian {
             auto meshnpts = GetCGALScopeNum<GEO_SCOPE>::getNum(mesh);
             FnAttribute::DoubleAttribute refValueAttrib = static_cast<FnAttribute::DoubleAttribute> (attribmap.handle);
             auto data = refValueAttrib.getNearestSample(time);
-
+            if (data.size() / 2 == meshnpts) {                    // first we check the data length is equal 3 time than our cgal mesh points. if true, that's a vector attribute 
+                CARTESIAN_CORE_INFO("create double attribute , create as vector2, name: {0} on {1}", attribmap.name, attribmap.scope);
+                CREATE_CGAL_ATTRIB(mesh, attribmap.name, GEO_SCOPE, glm::vec2, glm::vec2(0));
+                if (!created) CARTESIAN_CORE_ERROR("error create attribute:{0}", attribmap.name);
+                // find and modifier it
+                FIND_CGAL_ATTRIBUTE(mesh, attribmap.name, GEO_SCOPE, glm::vec2);
+                if (found) {
+                    for (auto i = 0; i < data.size() /2; i++) {
+                        auto x = data[i * 2 + 0];
+                        auto y = data[i * 2 + 1];
+                        CGAL_FOUND_ATTRIB_MAP[GEO_SCOPE(i)] = glm::vec2(x, y);
+                    }
+                }
+                else {
+                    CARTESIAN_CORE_ERROR("cgal can not find attribute: {0} for set value", attribmap.name);
+                }
+            }
             if (data.size() / 3 == meshnpts) {                    // first we check the data length is equal 3 time than our cgal mesh points. if true, that's a vector attribute 
                 CARTESIAN_CORE_INFO("create double attribute , create as vector, name: {0} on {1}", attribmap.name, attribmap.scope);
                 CREATE_CGAL_ATTRIB(mesh, attribmap.name, GEO_SCOPE, glm::vec3, glm::vec3(0));
@@ -276,7 +367,6 @@ namespace Cartesian {
                     CARTESIAN_CORE_ERROR("cgal can not find attribute: {0} for set value", attribmap.name);
                 }
             }
-
             if (data.size() / 4 == meshnpts) {
                 CARTESIAN_CORE_INFO("create double attribute , create as vector4, name: {0} on {1}", attribmap.name, attribmap.scope);
                 CREATE_CGAL_ATTRIB(mesh, attribmap.name, GEO_SCOPE, glm::vec4, glm::vec4(0));
@@ -296,8 +386,6 @@ namespace Cartesian {
                     CARTESIAN_CORE_ERROR("cgal can not find attribute: {0} for set value", attribmap.name);
                 }
             }
-
-
             if (data.size() == meshnpts) { // not vector, not vector2,not matrix
                 CARTESIAN_CORE_INFO("create double attribute , create as double, name: {0} on {1}", attribmap.name, attribmap.scope);
                 CREATE_CGAL_ATTRIB(mesh, attribmap.name, GEO_SCOPE, double, 0.0);
@@ -315,7 +403,6 @@ namespace Cartesian {
             }
 
         } // end of create and set double attrib
-
 
         static void createAndSet_STR_CGALAttrib(PRE_TYPE::Mesh& mesh, const AttribMap& attribmap, const float& time) {
             auto meshnpts = GetCGALScopeNum<GEO_SCOPE>::getNum(mesh);
@@ -343,6 +430,7 @@ namespace Cartesian {
 
         }// end of create and set std::string attrib
 
+        // uv attribute also for per face, so we save the indexed attribut for face
 
 
     };
