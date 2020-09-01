@@ -1,6 +1,8 @@
 #pragma once
 
 
+
+
 #if defined _WIN32 || defined __CYGWIN__
 #undef interface
 #undef GetCurrentTime
@@ -11,6 +13,11 @@
 #include "BindCGAL_DefineType.h"
 #include <vector>
 #include "CartesianLog.h"
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 
 #define MAKE_ATTRIB_MAP(ATTRIB_NAME,ATTRIB_SCOPE,ATTRIB_TYPE,ATTRIB_HANDLE,ATTRIB_TUPLESIZE)\
 AttribMap ATTRIB_MAP;\
@@ -51,13 +58,17 @@ FnAttribute::FloatAttribute attr(RAW_DATA, DATA_SIZE, TUPLESIZE);\
 iface.setAttr(ATTRIB_NAME, attr, false);
 
 
+
+
 namespace Cartesian {
 
     std::string getBaseTypeAsString(const int baseType);
-    int getTupleSize(FnAttribute::Attribute& attrib, const int baseType) ;
+    int getTupleSize(FnAttribute::Attribute& attrib, const int baseType);
 
-    
-    
+
+
+
+
 
     struct AttribMap {
         std::string name;                       // attrib name
@@ -73,7 +84,7 @@ namespace Cartesian {
         #define kFnKatAttributeTypeGroup 5
         #define kFnKatAttributeTypeError -1
         */
-        unsigned int type;         
+        unsigned int type;
 
 
 
@@ -81,7 +92,7 @@ namespace Cartesian {
         bool isIndexed = false;
 
         // handle for attribute values only like this attribute: emp:geometry.arbitrary.Cd.value
-        FnAttribute::Attribute handle;         
+        FnAttribute::Attribute handle;
 
 
 
@@ -96,6 +107,124 @@ namespace Cartesian {
 
     };
 
+    template <typename T>
+    struct IndexedValueType {
+        IndexedValueType() {
+
+        }
+        IndexedValueType(const  T& rhs) :value(rhs) {}
+        T value;
+
+    };
+
+
+    template <typename KATANA_ATTRIB_TYPE, typename CGAL_ATTRIB_DATA_TYPE>
+    class IndexedValueHelper {
+    public:
+
+        // this attribute repr point vertex number
+        using VertexNumAttrib = PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, int>;
+
+        static void createAndSet_simpleCGALIndexedValue(PRE_TYPE::Mesh& mesh, const VertexNumAttrib& vertexnumAttrib, AttribMap& attribmap, const float time) {
+            CARTESIAN_CORE_INFO("map the katana geometry.arbitrary.{0}.indexedvalue", attribmap.name);
+            // Get katana indexedValue
+            KATANA_ATTRIB_TYPE indexValueAttr = static_cast<KATANA_ATTRIB_TYPE> (attribmap.indexedValueHandle);
+            auto sampleData = indexValueAttr.getNearestSample(time);
+            CREATE_CGAL_ATTRIB(mesh, attribmap.name, PRE_TYPE::Vertex_descriptor, CGAL_ATTRIB_DATA_TYPE, CGAL_ATTRIB_DATA_TYPE());
+            if (!created) CARTESIAN_CORE_ERROR("can not create attribute: {0} for simple data type", attribmap.name);
+            FIND_CGAL_ATTRIBUTE(mesh, attribmap.name, PRE_TYPE::Vertex_descriptor, CGAL_ATTRIB_DATA_TYPE);
+            if (!found) CARTESIAN_CORE_ERROR("can not found attribute: {0} for simple data type", attribmap.name);
+            for (PRE_TYPE::Face_descriptor& f : mesh.faces()) {
+                // face vertices
+                for (PRE_TYPE::Vertex_descriptor v : CGAL::vertices_around_face(mesh.halfedge(f), mesh)) {
+                    int vertnum = vertexnumAttrib[v];  // get current vertex number of current point:v
+                    CGAL_FOUND_ATTRIB_MAP[v].value = sampleData[vertnum];
+                }
+            }
+        }
+
+        static void createAndSet_Vector2CGALIndexedValue(PRE_TYPE::Mesh& mesh, const VertexNumAttrib& vertexnumAttrib, AttribMap& attribmap, const float time) {
+            CARTESIAN_CORE_INFO("map the katana geometry.arbitrary.{0}.indexedvalue", attribmap.name);
+            CREATE_CGAL_ATTRIB(mesh, attribmap.name, PRE_TYPE::Vertex_descriptor, CGAL_ATTRIB_DATA_TYPE, CGAL_ATTRIB_DATA_TYPE());
+            if (!created) CARTESIAN_CORE_ERROR("can not create attribute: {0} for simple data type: {1}", attribmap.name, "vector2");
+            FIND_CGAL_ATTRIBUTE(mesh, attribmap.name, PRE_TYPE::Vertex_descriptor, CGAL_ATTRIB_DATA_TYPE);
+            if (!found) CARTESIAN_CORE_ERROR("can not found attribute: {0} for simple data type: {1}", attribmap.name, "vector2");
+            // Get katana indexedValue
+            KATANA_ATTRIB_TYPE indexValueAttr = static_cast<KATANA_ATTRIB_TYPE> (attribmap.indexedValueHandle);
+            auto sampleData = indexValueAttr.getNearestSample(time);
+
+            for (PRE_TYPE::Face_descriptor& f : mesh.faces()) {
+                // face vertices
+                for (PRE_TYPE::Vertex_descriptor v : CGAL::vertices_around_face(mesh.halfedge(f), mesh)) {
+                    int vertnum = vertexnumAttrib[v];  // get current vertex number of current point:v
+                    float x = sampleData[vertnum * 2 + 0];
+                    float y = sampleData[vertnum * 2 + 1];
+                    CGAL_FOUND_ATTRIB_MAP[v].value.x = x;
+                    CGAL_FOUND_ATTRIB_MAP[v].value.y = y;
+                }
+            }
+
+        }
+        static void createAndSet_VectorCGALIndexedValue(PRE_TYPE::Mesh& mesh, const VertexNumAttrib& vertexnumAttrib, AttribMap& attribmap, const float time) {
+            CARTESIAN_CORE_INFO("map the katana geometry.arbitrary.{0}.indexedvalue", attribmap.name);
+            CREATE_CGAL_ATTRIB(mesh, attribmap.name, PRE_TYPE::Vertex_descriptor, CGAL_ATTRIB_DATA_TYPE, CGAL_ATTRIB_DATA_TYPE());
+            if (!created) CARTESIAN_CORE_ERROR("can not create attribute: {0} for simple data type: {1}", attribmap.name, "vector");
+            FIND_CGAL_ATTRIBUTE(mesh, attribmap.name, PRE_TYPE::Vertex_descriptor, CGAL_ATTRIB_DATA_TYPE);
+            if (!found) CARTESIAN_CORE_ERROR("can not found attribute: {0} for simple data type: {1}", attribmap.name, "vector");
+            // Get katana indexedValue
+            KATANA_ATTRIB_TYPE indexValueAttr = static_cast<KATANA_ATTRIB_TYPE> (attribmap.indexedValueHandle);
+            auto sampleData = indexValueAttr.getNearestSample(time);
+
+            for (PRE_TYPE::Face_descriptor& f : mesh.faces()) {
+                // face vertices
+                for (PRE_TYPE::Vertex_descriptor v : CGAL::vertices_around_face(mesh.halfedge(f), mesh)) {
+                    int vertnum = vertexnumAttrib[v];  // get current vertex number of current point:v
+                    float x = sampleData[vertnum * 3 + 0];
+                    float y = sampleData[vertnum * 3 + 1];
+                    float z = sampleData[vertnum * 3 + 2];
+                    CGAL_FOUND_ATTRIB_MAP[v].value.x = x;
+                    CGAL_FOUND_ATTRIB_MAP[v].value.y = y;
+                    CGAL_FOUND_ATTRIB_MAP[v].value.z = z;
+                }
+            }
+
+        }
+        static void createAndSet_Vector4CGALIndexedValue(PRE_TYPE::Mesh& mesh, const VertexNumAttrib& vertexnumAttrib, AttribMap& attribmap, const float time) {
+            CARTESIAN_CORE_INFO("map the katana geometry.arbitrary.{0}.indexedvalue", attribmap.name);
+            CREATE_CGAL_ATTRIB(mesh, attribmap.name, PRE_TYPE::Vertex_descriptor, CGAL_ATTRIB_DATA_TYPE, CGAL_ATTRIB_DATA_TYPE());
+            if (!created) CARTESIAN_CORE_ERROR("can not create attribute: {0} for simple data type: {1}", attribmap.name, "vector4");
+            FIND_CGAL_ATTRIBUTE(mesh, attribmap.name, PRE_TYPE::Vertex_descriptor, CGAL_ATTRIB_DATA_TYPE);
+            if (!found) CARTESIAN_CORE_ERROR("can not found attribute: {0} for simple data type: {1}", attribmap.name, "vector4");
+            // Get katana indexedValue
+            KATANA_ATTRIB_TYPE indexValueAttr = static_cast<KATANA_ATTRIB_TYPE> (attribmap.indexedValueHandle);
+            auto sampleData = indexValueAttr.getNearestSample(time);
+
+            for (PRE_TYPE::Face_descriptor& f : mesh.faces()) {
+                // face vertices
+                for (PRE_TYPE::Vertex_descriptor v : CGAL::vertices_around_face(mesh.halfedge(f), mesh)) {
+                    int vertnum = vertexnumAttrib[v];  // get current vertex number of current point:v
+                    float x = sampleData[vertnum * 4 + 0];
+                    float y = sampleData[vertnum * 4 + 1];
+                    float z = sampleData[vertnum * 4 + 2];
+                    float w = sampleData[vertnum * 4 + 3];
+                    CGAL_FOUND_ATTRIB_MAP[v].value.x = x;
+                    CGAL_FOUND_ATTRIB_MAP[v].value.y = y;
+                    CGAL_FOUND_ATTRIB_MAP[v].value.z = z;
+                    CGAL_FOUND_ATTRIB_MAP[v].value.w = w;
+                }
+            }
+        }
+
+
+
+
+
+    };
+
+
+
+
+
 
     /**
          * @brief build a cgal mesh from katana
@@ -105,10 +234,10 @@ namespace Cartesian {
          * @param index input index
          * @return
     */
-    void BuildSurfaceMeshFromKatana(PRE_TYPE::Mesh& meshToBuild, 
-        Foundry::Katana::GeolibCookInterface& iface, 
-        const std::string &location = " ", 
-        const int &index = -1);
+    void BuildSurfaceMeshFromKatana(PRE_TYPE::Mesh& meshToBuild,
+        Foundry::Katana::GeolibCookInterface& iface,
+        const std::string& location = " ",
+        const int& index = -1);
 
 
 
@@ -221,7 +350,7 @@ namespace Cartesian {
                         auto y = data[i * 4 + 1];
                         auto z = data[i * 4 + 2];
                         auto w = data[i * 4 + 3];
-                        CGAL_FOUND_ATTRIB_MAP[GEO_SCOPE(i)] = glm::vec4(x, y, z,w);
+                        CGAL_FOUND_ATTRIB_MAP[GEO_SCOPE(i)] = glm::vec4(x, y, z, w);
                     }
                 }
                 else {
@@ -301,7 +430,7 @@ namespace Cartesian {
                         auto y = data[i * 4 + 1];
                         auto z = data[i * 4 + 2];
                         auto w = data[i * 4 + 3];
-                        CGAL_FOUND_ATTRIB_MAP[GEO_SCOPE(i)] = glm::vec4(x, y, z,w);
+                        CGAL_FOUND_ATTRIB_MAP[GEO_SCOPE(i)] = glm::vec4(x, y, z, w);
                     }
                 }
                 else {
@@ -339,7 +468,7 @@ namespace Cartesian {
                 // find and modifier it
                 FIND_CGAL_ATTRIBUTE(mesh, attribmap.name, GEO_SCOPE, glm::vec2);
                 if (found) {
-                    for (auto i = 0; i < data.size() /2; i++) {
+                    for (auto i = 0; i < data.size() / 2; i++) {
                         auto x = data[i * 2 + 0];
                         auto y = data[i * 2 + 1];
                         CGAL_FOUND_ATTRIB_MAP[GEO_SCOPE(i)] = glm::vec2(x, y);
@@ -436,19 +565,19 @@ namespace Cartesian {
     };
 
 
-    
+
     // ------------------------------- For Transfer cgal mesh attribute to katana --------------------------------------------------------------------------------
     template <typename GEO_SCOPE>
     class SetKatanaScope {
     public:
-        static void set(Foundry::Katana::GeolibCookInterface& iface, const std::string &attribName){
-           
+        static void set(Foundry::Katana::GeolibCookInterface& iface, const std::string& attribName) {
+
         }
     };
     template <>
     class SetKatanaScope<PRE_TYPE::Face_descriptor> {
     public:
-        static void set(Foundry::Katana::GeolibCookInterface& iface, const std::string& attribName){
+        static void set(Foundry::Katana::GeolibCookInterface& iface, const std::string& attribName) {
             std::string arbitraryAttName = "geometry.arbitrary";
             arbitraryAttName += "."; arbitraryAttName += attribName;
             arbitraryAttName += ".scope";
@@ -459,7 +588,7 @@ namespace Cartesian {
     template <>
     class SetKatanaScope<PRE_TYPE::Vertex_descriptor> {
     public:
-        static void set(Foundry::Katana::GeolibCookInterface& iface, const std::string& attribName){
+        static void set(Foundry::Katana::GeolibCookInterface& iface, const std::string& attribName) {
             std::string arbitraryAttName = "geometry.arbitrary";
             arbitraryAttName += "."; arbitraryAttName += attribName;
             arbitraryAttName += ".scope";
@@ -532,7 +661,7 @@ namespace Cartesian {
                     CARTESIAN_CORE_INFO("set attribute for katana: {0}, type: {1}", floatattrname, "float");
                     SET_KATANA_FLOAT_ATTRIB(floatattrname, rawdata, datasize, 1);
                     delete[]rawdata;
-                   
+
                 }
 
                 found = false;
@@ -552,7 +681,7 @@ namespace Cartesian {
                     FnAttribute::DoubleAttribute attr(rawdata, datasize, 1);
                     iface.setAttr(attribValueName, attr, false);
                     delete[]rawdata;
-                   
+
                 }
 
                 found = false;
@@ -604,15 +733,14 @@ namespace Cartesian {
                     SET_KATANA_FLOAT_ATTRIB(attribValueName, rawdata, datasize * 3, 3);
                     delete[]rawdata;
 
-                   
-                }
 
+                }
 
                 // vector4 
                 found = false;
                 PRE_TYPE::Mesh::Property_map<GEO_SCOPE, glm::vec4> Vec4AttribMap;
                 boost::tie(Vec4AttribMap, found) = mesh.property_map<GEO_SCOPE, glm::vec4>(name);
-                if (found) { // vec3
+                if (found) { // vec4
 
                     // geometry.arbitrary.name.scope
                     SetKatanaScope<GEO_SCOPE>::set(iface, name);
@@ -631,10 +759,8 @@ namespace Cartesian {
                     // geometry.arbitrary.name.value
                     std::string attribValueName = arbitraryAttName + "." + name + ".value";
                     CARTESIAN_CORE_INFO("set attribute for katana: {0}, type: {1}", attribValueName, "float vector4");
-                    SET_KATANA_FLOAT_ATTRIB(attribValueName,rawdata, datasize * 4, 1);
+                    SET_KATANA_FLOAT_ATTRIB(attribValueName, rawdata, datasize * 4, 1);
                     delete[]rawdata;
-
-
                 }
             }
 
@@ -642,6 +768,274 @@ namespace Cartesian {
 
         }
     };
+
+
+
+
+    
+
+
+    /*
+    * this class transfer the cgal IndexAttribute to katana
+    */
+    class IndexedAttribToKatana {
+    public:
+
+        using VertexNumPropMap = PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, int>;
+
+        static void buildIndex(const PRE_TYPE::Mesh &mesh, std::vector<int> &indexdata, VertexNumPropMap & vertexnumAttrib){
+            // build the "geometry.arbitrary.name.index" data
+            for (PRE_TYPE::Face_descriptor& f : mesh.faces()) {
+                // face vertices
+                for (PRE_TYPE::Vertex_descriptor v : CGAL::vertices_around_face(mesh.halfedge(f), mesh)) {
+                    indexdata.emplace_back(vertexnumAttrib[v]);
+                }
+            }
+        }
+        // build the katana attribute "geometry.arbitrary.name.index"
+        static void buildIndexKatanaAttrib(const PRE_TYPE::Mesh& mesh, const std::string &name, VertexNumPropMap& vertexnumAttrib, Foundry::Katana::GeolibCookInterface& iface) {
+            const std::string arbitraryAttName = "geometry.arbitrary";
+            std::vector <int> datatobuild;
+            buildIndex(mesh, datatobuild, vertexnumAttrib);
+            std::string indexAttribName = arbitraryAttName + "." + name + ".index";
+            FnAttribute::IntAttribute indexAttrb(datatobuild.data(), datatobuild.size(), 1);
+            iface.setAttr(indexAttribName, indexAttrb, false);
+        }
+
+        // build the katana attribute "geometry.arbitrary.name.scope" , keep to vertex
+        static void buildScopeKatanaAttrib( const std::string& name, Foundry::Katana::GeolibCookInterface& iface) {
+            const std::string arbitraryAttName = "geometry.arbitrary";
+            std::string indexAttribName = arbitraryAttName + "." + name + ".scope";
+            FnAttribute::StringAttribute indexAttrb("vertex");
+            iface.setAttr(indexAttribName, indexAttrb, false);
+        }
+
+        // find this type in https://learn.foundry.com/katana/dev-guide/AttributeConventions/ArbitraryAttributes.html
+        static void buildInputTypeKatanaAttrib(const std::string& name, const std::string &typeValue, Foundry::Katana::GeolibCookInterface& iface) {
+            const std::string arbitraryAttName = "geometry.arbitrary";
+            std::string indexAttribName = arbitraryAttName + "." + name + ".inputType";
+            FnAttribute::StringAttribute indexAttrb(typeValue);
+            iface.setAttr(indexAttribName, indexAttrb, false);
+        }
+
+
+        /*
+        * Get the attribute "vertexnum" fo max
+        */
+        static int getMaxVertexIndexNum(const PRE_TYPE::Mesh& mesh)  // not point index(not PRE_TYPE::Vertex_Descriptor)
+        {
+            PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, int> vertexnumAttrib;
+            bool foundVertexNumAttrib = false;
+            boost::tie(vertexnumAttrib, foundVertexNumAttrib) = mesh.property_map<PRE_TYPE::Vertex_descriptor, int>("vertexnum");
+            if (!foundVertexNumAttrib) CARTESIAN_CORE_ERROR("can not getMaxVertexIndexNum from vertexnum attribute, line: {0}", __LINE__);
+            int maxvertxnum = -1;
+            for (auto& vd : mesh.vertices()) {
+                auto vertnum = vertexnumAttrib[vd];
+                if (vertnum > maxvertxnum) {
+                    maxvertxnum = vertnum;
+                }
+            }
+            return maxvertxnum;
+        }
+
+
+        static void setvalues(const PRE_TYPE::Mesh& mesh, Foundry::Katana::GeolibCookInterface& iface)
+        {
+            const std::string polyStartIndexAttName = "geometry.poly.startIndex";
+            const std::string polyPolyVertexIndexAttName = "geometry.poly.vertexList";
+            const std::string pointPosAttName = "geometry.point.P";
+            const std::string arbitraryAttName = "geometry.arbitrary";
+            // -------------------------- for indexed value ------------------------------------
+
+            auto maxVertNum = getMaxVertexIndexNum(mesh);
+
+            PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, int> vertexnumAttrib;
+            bool foundVertexNumAttrib = false;
+            boost::tie(vertexnumAttrib, foundVertexNumAttrib) = mesh.property_map<PRE_TYPE::Vertex_descriptor, int>("vertexnum");
+            if (!foundVertexNumAttrib)
+            {
+                CARTESIAN_CORE_ERROR("can not build index attribute from vertexnum attribute, line: {0}", __LINE__);
+                return;
+            }
+
+            for (auto& name : mesh.properties<PRE_TYPE::Vertex_descriptor>())
+            {
+                // Get CGAL int indexValue
+                bool found = false;
+                PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, IndexedValueType<int>> intIndexValueMap;
+                boost::tie(intIndexValueMap, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, IndexedValueType<int> >(name);
+
+                if (found) {
+                    buildScopeKatanaAttrib( name, iface);
+                    buildInputTypeKatanaAttrib(name, "int", iface);
+                    // build the "geometry.arbitrary.name.index"
+                    buildIndexKatanaAttrib(mesh, name, vertexnumAttrib, iface);
+
+                    std::vector<int> indexedValueData;
+                    indexedValueData.resize(maxVertNum + 1);
+                    for (auto& vd : mesh.vertices()) {
+                        auto vertnum = vertexnumAttrib[vd];
+                        indexedValueData[vertnum] = intIndexValueMap[vd].value;
+                     }
+                    // build the "geometry.arbitrary.name.indexedValue"
+                    std::string indexedValueAttribName = arbitraryAttName + "." + name + ".indexedValue";
+                    CARTESIAN_CORE_WARN("create attribute: {0}, value type: {1}", indexedValueAttribName, "in");
+                    FnAttribute::IntAttribute indexedValueAttr(indexedValueData.data(), indexedValueData.size(), 1);
+                    iface.setAttr(indexedValueAttribName, indexedValueAttr, false);
+
+                }
+
+                found = false;
+                PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, IndexedValueType<float>> floatIndexValueMap;
+                boost::tie(floatIndexValueMap, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, IndexedValueType<float> >(name);
+                if (found) {
+                    buildScopeKatanaAttrib(name, iface);
+                    buildInputTypeKatanaAttrib(name, "float", iface);
+                    // build the "geometry.arbitrary.name.index"
+                    buildIndexKatanaAttrib(mesh, name, vertexnumAttrib, iface);
+
+                    std::vector<float> indexedValueData;
+                    indexedValueData.resize(maxVertNum + 1);
+                    for (auto& vd : mesh.vertices()) {
+                        auto vertnum = vertexnumAttrib[vd];
+                        indexedValueData[vertnum] = floatIndexValueMap[vd].value;
+                    }
+                    // build the "geometry.arbitrary.name.indexedValue"
+                    std::string indexedValueAttribName = arbitraryAttName + "." + name + ".indexedValue";
+                    CARTESIAN_CORE_WARN("create attribute: {0}, value type: {1}", indexedValueAttribName, "float");
+                    FnAttribute::FloatAttribute indexedValueAttr(indexedValueData.data(), indexedValueData.size(), 1);
+                    iface.setAttr(indexedValueAttribName, indexedValueAttr, false);
+                }
+
+
+                found = false;
+                PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, IndexedValueType<double>> doubleIndexValueMap;
+                boost::tie(doubleIndexValueMap, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, IndexedValueType<double> >(name);
+                if (found) {
+                    buildScopeKatanaAttrib(name, iface);
+                    buildInputTypeKatanaAttrib(name, "double", iface);
+                    // build the "geometry.arbitrary.name.index"
+                    buildIndexKatanaAttrib(mesh, name, vertexnumAttrib, iface);
+
+                    std::vector<double> indexedValueData;
+                    indexedValueData.resize(maxVertNum + 1);
+                    for (auto& vd : mesh.vertices()) {
+                        auto vertnum = vertexnumAttrib[vd];
+                        indexedValueData[vertnum] = doubleIndexValueMap[vd].value;
+                    }
+                    // build the "geometry.arbitrary.name.indexedValue"
+                    std::string indexedValueAttribName = arbitraryAttName + "." + name + ".indexedValue";
+                    CARTESIAN_CORE_WARN("create attribute: {0}, value type: {1}", indexedValueAttribName, "double");
+                    FnAttribute::DoubleAttribute indexedValueAttr(indexedValueData.data(), indexedValueData.size(), 1);
+                    iface.setAttr(indexedValueAttribName, indexedValueAttr, false);
+                }
+
+
+                found = false;
+                PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, IndexedValueType<std::string>> stringIndexValueMap;
+                boost::tie(stringIndexValueMap, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, IndexedValueType<std::string> >(name);
+                if (found) {
+                    buildScopeKatanaAttrib(name, iface);
+                    buildInputTypeKatanaAttrib(name, "string", iface);
+                    // build the "geometry.arbitrary.name.index"
+                    buildIndexKatanaAttrib(mesh, name, vertexnumAttrib, iface);
+
+                    std::vector<std::string> indexedValueData;
+                    indexedValueData.resize(maxVertNum + 1);
+                    for (auto& vd : mesh.vertices()) {
+                        auto vertnum = vertexnumAttrib[vd];
+                        indexedValueData[vertnum] = stringIndexValueMap[vd].value;
+                    }
+                    // build the "geometry.arbitrary.name.indexedValue"
+                    std::string indexedValueAttribName = arbitraryAttName + "." + name + ".indexedValue";
+                    CARTESIAN_CORE_WARN("create attribute: {0}, value type: {1}", indexedValueAttribName, "string");
+                    FnAttribute::StringAttribute indexedValueAttr(indexedValueData.data(), indexedValueData.size(), 1);
+                    iface.setAttr(indexedValueAttribName, indexedValueAttr, false);
+                }
+
+
+
+                found = false;
+                PRE_TYPE::Mesh::Property_map < PRE_TYPE::Vertex_descriptor, IndexedValueType < glm::vec2 >> vec2IndexValueMap;
+                boost::tie(vec2IndexValueMap, found) = mesh.property_map < PRE_TYPE::Vertex_descriptor, IndexedValueType<glm::vec2> >(name);
+                if (found) {
+                    buildInputTypeKatanaAttrib(name, "vector2", iface);
+                    buildScopeKatanaAttrib(name, iface);
+                    // build the "geometry.arbitrary.name.index"
+                    buildIndexKatanaAttrib(mesh, name, vertexnumAttrib, iface);
+
+                    std::vector<float> indexedValueData;
+                    indexedValueData.resize( (maxVertNum + 1) * 2);  // 0-max vertex num * 2, katana require flat raw data
+                    for (auto& vd : mesh.vertices()) {
+                        auto vertnum = vertexnumAttrib[vd];
+                        indexedValueData[vertnum * 2 + 0] = vec2IndexValueMap[vd].value.x;
+                        indexedValueData[vertnum * 2 + 1] = vec2IndexValueMap[vd].value.y;
+                    }
+                    // build the "geometry.arbitrary.name.indexedValue"
+                    std::string indexedValueAttribName = arbitraryAttName + "." + name + ".indexedValue";
+                    CARTESIAN_CORE_WARN("create attribute: {0}, value type: {1}", indexedValueAttribName, "vector2");
+                    FnAttribute::FloatAttribute indexedValueAttr(indexedValueData.data(), indexedValueData.size(), 2);
+                    iface.setAttr(indexedValueAttribName, indexedValueAttr, false);
+                }
+
+
+
+                found = false;
+                PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, IndexedValueType<glm::vec3>> vec3IndexValueMap;
+                boost::tie(vec3IndexValueMap, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, IndexedValueType<glm::vec3> >(name);
+                if (found) {
+                    buildInputTypeKatanaAttrib(name, "vector3", iface);
+                    buildScopeKatanaAttrib(name, iface);
+                    // build the "geometry.arbitrary.name.index"
+                    buildIndexKatanaAttrib(mesh, name, vertexnumAttrib, iface);
+
+                    std::vector<float> indexedValueData;
+                    indexedValueData.resize((maxVertNum + 1) * 3);  // 0-max vertex num * 2, katana require flat raw data
+                    for (auto& vd : mesh.vertices()) {
+                        auto vertnum = vertexnumAttrib[vd];
+                        indexedValueData[vertnum * 3 + 0] = vec3IndexValueMap[vd].value.x;
+                        indexedValueData[vertnum * 3 + 1] = vec3IndexValueMap[vd].value.y;
+                        indexedValueData[vertnum * 3 + 2] = vec3IndexValueMap[vd].value.y;
+                    }
+                    // build the "geometry.arbitrary.name.indexedValue"
+                    std::string indexedValueAttribName = arbitraryAttName + "." + name + ".indexedValue";
+                    CARTESIAN_CORE_WARN("create attribute: {0}, value type: {1}", indexedValueAttribName, "vector");
+                    FnAttribute::FloatAttribute indexedValueAttr(indexedValueData.data(), indexedValueData.size(), 3);
+                    iface.setAttr(indexedValueAttribName, indexedValueAttr, false);
+                }
+
+
+                found = false;
+                PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, IndexedValueType<glm::vec4>> vec4IndexValueMap;
+                boost::tie(vec4IndexValueMap, found) = mesh.property_map<PRE_TYPE::Vertex_descriptor, IndexedValueType<glm::vec4> >(name);
+                if (found) {
+                    buildInputTypeKatanaAttrib(name, "vector4", iface);
+                    buildScopeKatanaAttrib(name, iface);
+                    // build the "geometry.arbitrary.name.index"
+                    buildIndexKatanaAttrib(mesh, name, vertexnumAttrib, iface);
+
+                    std::vector<float> indexedValueData;
+                    indexedValueData.resize((maxVertNum + 1) * 4);  // 0-max vertex num * 2, katana require flat raw data
+                    for (auto& vd : mesh.vertices()) {
+                        auto vertnum = vertexnumAttrib[vd];
+                        indexedValueData[vertnum * 4 + 0] = vec4IndexValueMap[vd].value.x;
+                        indexedValueData[vertnum * 4 + 1] = vec4IndexValueMap[vd].value.y;
+                        indexedValueData[vertnum * 4 + 2] = vec4IndexValueMap[vd].value.y;
+                        indexedValueData[vertnum * 4 + 3] = vec4IndexValueMap[vd].value.z;
+                    }
+                    // build the "geometry.arbitrary.name.indexedValue"
+                    std::string indexedValueAttribName = arbitraryAttName + "." + name + ".indexedValue";
+                    CARTESIAN_CORE_WARN("create attribute: {0}, value type: {1}", indexedValueAttribName, "vector4");
+                    FnAttribute::FloatAttribute indexedValueAttr(indexedValueData.data(), indexedValueData.size(), 3);
+                    iface.setAttr(indexedValueAttribName, indexedValueAttr, false);
+                }
+            }
+        }
+
+    };
+
+
+
 
     void SurfaceMeshToKatana(PRE_TYPE::Mesh& mesh, Foundry::Katana::GeolibCookInterface& iface);
 

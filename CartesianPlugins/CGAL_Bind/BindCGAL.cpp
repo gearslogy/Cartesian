@@ -152,6 +152,7 @@ namespace Cartesian {
         mesh["nprims"] = &PRE_TYPE::Mesh::number_of_faces;
         mesh["nedges"] = &PRE_TYPE::Mesh::number_of_edges;
         mesh["nhedges"] = &PRE_TYPE::Mesh::number_of_halfedges;
+        mesh["join"] = &PRE_TYPE::Mesh::join;
         // todo addprim() need imp in DCC software,and return mesh handle.
 
         // mesh functions
@@ -360,6 +361,11 @@ namespace Cartesian {
         };
         lua->set_function("savemesh", save_mesh);
 
+
+        auto join_mesh = [](PRE_TYPE::Mesh& mesh, const PRE_TYPE::Mesh& tobeJoin) {
+            mesh.join(tobeJoin);
+        };
+        lua->set_function("joinmesh", join_mesh);
 
     }
 
