@@ -36,11 +36,79 @@ addvertex(geoself(), prim, 2 );
 
 namespace Cartesian {
 
+    static std::string VertexToString(const PRE_TYPE::Vertex_descriptor &vert) {
+        std::string ret;
+        ret += "PointIDType:";
+        ret += std::to_string(vert.idx());
+        ret += " ,convert to int use PointIDType:idx()\n";
+        return ret;
+    }
+
+    static std::string FaceToString(const PRE_TYPE::Face_descriptor& face) {
+        std::string ret;
+        ret += "FaceIDType:";
+        ret += std::to_string(face.idx());
+        ret += " ,convert to int use FaceIDType:idx()\n";
+        return ret;
+    }
+
+
+    static std::string MeshToString(const PRE_TYPE::Mesh& mesh) {
+        std::string ret = "-----------------\n";
+        ret += "NumPoints:";
+        ret += std::to_string(mesh.number_of_vertices());
+        ret += "\n";
+
+        ret += "NumFaces:";
+        ret += std::to_string(mesh.number_of_faces());
+        ret += "\n";
+
+        ret += "NumEdges:";
+        ret += std::to_string(mesh.number_of_edges());
+        ret += "\n";
+
+        ret += "NumHalfEdges:";
+        ret += std::to_string(mesh.number_of_halfedges());
+        ret += "\n";
+
+        ret += "point attribute:";
+        ret += "\n{\n";
+        for (auto& attriName : mesh.properties<PRE_TYPE::Vertex_descriptor>()) {
+            ret += "\t";
+            ret += attriName;
+            ret += "\n";
+        }
+        ret[ret.size() - 1] = ' '; 
+        ret += "\n}\n";
+
+
+        ret += "prim attribute:";
+        ret += "\n{\n";
+        for (auto& attriName : mesh.properties<PRE_TYPE::Face_descriptor>()) {
+            ret += "\t";
+            ret += attriName;
+            ret += "\n";
+        }
+        ret[ret.size() - 1] = ' ';
+        ret += "\n}\n";
+        ret += "-----------------\n";
+        return ret;
+    }
+
+    static PRE_TYPE::Mesh MeshPlusMesh(const PRE_TYPE::Mesh& mesh1, const PRE_TYPE::Mesh &mesh2) {
+        PRE_TYPE::Mesh mesh;
+        mesh.join(mesh1);
+        mesh.join(mesh2);
+        return mesh;
+    }
+
+
     void BindCGAL::bind(sol::state* lua) {
         // bind vertex index
         sol::usertype<PRE_TYPE::Vertex_descriptor> vertex = (*lua).new_usertype<PRE_TYPE::Vertex_descriptor>(
             "vertex",
-            sol::constructors<PRE_TYPE::Vertex_descriptor, PRE_TYPE::Vertex_descriptor(int)>()
+            sol::constructors<PRE_TYPE::Vertex_descriptor, PRE_TYPE::Vertex_descriptor(int)>(),
+            sol::meta_function::to_string, VertexToString
             );
         vertex["idx"] = &PRE_TYPE::Vertex_descriptor::idx;
 
@@ -48,14 +116,15 @@ namespace Cartesian {
         // bind face index
         sol::usertype<PRE_TYPE::Face_descriptor> face = (*lua).new_usertype<PRE_TYPE::Face_descriptor>(
             "face",
-            sol::constructors<PRE_TYPE::Face_descriptor(), PRE_TYPE::Face_descriptor(int)>()
+            sol::constructors<PRE_TYPE::Face_descriptor(), PRE_TYPE::Face_descriptor(int)>(),
+            sol::meta_function::to_string, FaceToString
             );
         face["idx"] = &PRE_TYPE::Face_descriptor::idx;
 
 
         // bind half-edge index
         sol::usertype<PRE_TYPE::Halfedge_descriptor> half_edge = (*lua).new_usertype<PRE_TYPE::Halfedge_descriptor>(
-            "hdge",
+            "hedge",
             sol::constructors<PRE_TYPE::Halfedge_descriptor(), PRE_TYPE::Halfedge_descriptor(int)>()
             );
         half_edge["idx"] = &PRE_TYPE::Halfedge_descriptor::idx;
@@ -65,13 +134,17 @@ namespace Cartesian {
         sol::usertype<PRE_TYPE::Edge_descriptor> edge = (*lua).new_usertype<PRE_TYPE::Edge_descriptor>(
             "edge",
             sol::constructors<PRE_TYPE::Edge_descriptor(), PRE_TYPE::Edge_descriptor(int), PRE_TYPE::Edge_descriptor(PRE_TYPE::Halfedge_descriptor)>()
+
             );
         edge["idx"] = &PRE_TYPE::Edge_descriptor::idx;
 
 
         // bind mesh pointer
         sol::usertype<PRE_TYPE::Mesh> mesh = (*lua).new_usertype<PRE_TYPE::Mesh>(
-            "mesh"
+            "mesh",
+            sol::constructors<PRE_TYPE::Mesh()>(),
+            sol::meta_function::to_string, MeshToString,
+            sol::meta_function::addition, MeshPlusMesh
             );
         mesh["clear"] = &PRE_TYPE::Mesh::clear;
         mesh["has_garbage"] = &PRE_TYPE::Mesh::has_garbage;
