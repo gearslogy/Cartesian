@@ -41,6 +41,12 @@ void newOp(void *lua){
 ### KatanaCartesianJIT
 * the whole new lua function for katana
 * Similar to Houdini vex function, BUT NOW IT WAS BASED LUAJIT
+* current can not understand the st attribute structure, and query other input cause Exception:
+> https://community.foundry.com/discuss/topic/153762/what-s-the-structure-of-geometry-arbitrary-st
+> 
+> https://community.foundry.com/discuss/topic/153670/is-it-possible-to-force-cooking-the-second-input-node-of-a-node
+> 
+> https://community.foundry.com/discuss/topic/153662/plugin-about-cook-queryabortexception
 
 ![](imgs/katana_01.png)
 
