@@ -64,6 +64,13 @@ void MesserOp::cook(Foundry::Katana::GeolibCookInterface & iface) {
     const int inputIndex = int(FnAttribute::FloatAttribute(
         iface.getOpArg("inputIndex")).getValue(1.0, false));
 
+
+
+    //Foundry::Katana::CreateLocationInfo infof;
+    //Foundry::Katana::CreateLocation(infof, iface, "/root/world/geo/houdini");
+
+
+    /*
     // In order to run the Op we need a valid CEL statement
     FnAttribute::StringAttribute celAttr = iface.getOpArg("CEL");
     if (!celAttr.isValid())
@@ -74,8 +81,6 @@ void MesserOp::cook(Foundry::Katana::GeolibCookInterface & iface) {
     }
     //Foundry::Katana::GeolibOp::flush();
 
-
-    
 
 
     // If a CEL attribute was provided (and so it's valid), check
@@ -104,7 +109,7 @@ void MesserOp::cook(Foundry::Katana::GeolibCookInterface & iface) {
     {
         return;
     }
-
+    */
 
     if (!__is_init_cartesian) {
         InitCartesian();

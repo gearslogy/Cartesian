@@ -18,7 +18,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-
 #define MAKE_ATTRIB_MAP(ATTRIB_NAME,ATTRIB_SCOPE,ATTRIB_TYPE,ATTRIB_HANDLE,ATTRIB_TUPLESIZE)\
 AttribMap ATTRIB_MAP;\
 ATTRIB_MAP.name = ATTRIB_NAME;\
@@ -116,6 +115,14 @@ namespace Cartesian {
         T value;
 
     };
+
+    void CreateAndBuildCGAL_vertexnum(PRE_TYPE::Mesh& mesh);
+
+    // if topo update, the vertex num order need update. emp: removepoint()
+    void ReBuildCGAL_vertexnum(PRE_TYPE::Mesh& mesh);
+
+    // if read new mesh to katana, emp: readmesh(m, "d:/test.off")
+    void TryToBuildCGAL_vertexnum(PRE_TYPE::Mesh& mesh);
 
 
     template <typename KATANA_ATTRIB_TYPE, typename CGAL_ATTRIB_DATA_TYPE>
@@ -820,26 +827,27 @@ namespace Cartesian {
 
 
         /*
-        * Get the attribute "vertexnum" fo max
+        * Get the attribute "CGAL_vertexnum" fo max
         */
-        static int getMaxVertexIndexNum(const PRE_TYPE::Mesh& mesh)  // not point index(not PRE_TYPE::Vertex_Descriptor)
+        static int getMaxVertexIndexNum(PRE_TYPE::Mesh& mesh)  // not point index(not PRE_TYPE::Vertex_Descriptor)
         {
             PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, int> vertexnumAttrib;
             bool foundVertexNumAttrib = false;
-            boost::tie(vertexnumAttrib, foundVertexNumAttrib) = mesh.property_map<PRE_TYPE::Vertex_descriptor, int>("vertexnum");
-            if (!foundVertexNumAttrib) CARTESIAN_CORE_ERROR("can not getMaxVertexIndexNum from vertexnum attribute, line: {0}", __LINE__);
+            boost::tie(vertexnumAttrib, foundVertexNumAttrib) = mesh.property_map<PRE_TYPE::Vertex_descriptor, int>("CGAL_vertexnum");
+
+
             int maxvertxnum = -1;
             for (auto& vd : mesh.vertices()) {
                 auto vertnum = vertexnumAttrib[vd];
-                if (vertnum > maxvertxnum) {
+                if (vertnum > maxvertxnum)
                     maxvertxnum = vertnum;
-                }
+                
             }
             return maxvertxnum;
         }
 
 
-        static void setvalues(const PRE_TYPE::Mesh& mesh, Foundry::Katana::GeolibCookInterface& iface)
+        static void setvalues(PRE_TYPE::Mesh& mesh, Foundry::Katana::GeolibCookInterface& iface)
         {
             const std::string polyStartIndexAttName = "geometry.poly.startIndex";
             const std::string polyPolyVertexIndexAttName = "geometry.poly.vertexList";
@@ -851,10 +859,10 @@ namespace Cartesian {
 
             PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, int> vertexnumAttrib;
             bool foundVertexNumAttrib = false;
-            boost::tie(vertexnumAttrib, foundVertexNumAttrib) = mesh.property_map<PRE_TYPE::Vertex_descriptor, int>("vertexnum");
+            boost::tie(vertexnumAttrib, foundVertexNumAttrib) = mesh.property_map<PRE_TYPE::Vertex_descriptor, int>("CGAL_vertexnum");
             if (!foundVertexNumAttrib)
             {
-                CARTESIAN_CORE_ERROR("can not build index attribute from vertexnum attribute, line: {0}", __LINE__);
+                CARTESIAN_CORE_ERROR("can not build index attribute from CGAL_vertexnum attribute, line: {0}", __LINE__);
                 return;
             }
 
@@ -1035,9 +1043,83 @@ namespace Cartesian {
     };
 
 
+   
+    class AttributeVertexNFromKatanaToGCGAL {
+    public:
+        static void build(PRE_TYPE::Mesh& meshToBuild, Foundry::Katana::GeolibCookInterface& iface, const std::string& location,
+            const int& index, const float time) {
+
+            const std::string vertexNAttName = "geometry.vertex.N";
+            // now parse the geometry.vertex.N, cartesian will only support parse goemetry.vertex.N
+            // save the N to face, because face can use CGAL graph iterator 
+            FnAttribute::FloatAttribute VertexNAttrib;
+            if (index == -1)
+                VertexNAttrib = iface.getAttr(vertexNAttName);
+            else
+                VertexNAttrib = iface.getAttr(vertexNAttName, location, index);
+            if (VertexNAttrib.isValid()) {
+                CARTESIAN_CORE_WARN("build geometry.vertex.N, save to cgal sope:vertex, named:CGAL_N");
+                CREATE_CGAL_ATTRIB(meshToBuild, "CGAL_N", PRE_TYPE::Vertex_descriptor, glm::vec3, glm::vec3(0));
+                FIND_CGAL_ATTRIBUTE(meshToBuild, "CGAL_N", PRE_TYPE::Vertex_descriptor,glm::vec3);
+                auto vertexNormalSample = VertexNAttrib.getNearestSample(time);
+
+                int iterindex = 0;
+                for (PRE_TYPE::Face_descriptor& f : meshToBuild.faces()) {
+                    for (PRE_TYPE::Vertex_descriptor v : CGAL::vertices_around_face(meshToBuild.halfedge(f), meshToBuild)) {
+                        auto xindex = iterindex * 3 + 0;
+                        auto yindex = iterindex * 3 + 1;
+                        auto zindex = iterindex * 3 + 2;
+                        auto x = vertexNormalSample[xindex];
+                        auto y = vertexNormalSample[yindex];
+                        auto z = vertexNormalSample[zindex];
+                        CGAL_FOUND_ATTRIB_MAP[v] = glm::vec3(x, y, z);
+                        iterindex++;
+                    }
+                }
+            }
+            else {
+                CARTESIAN_CORE_ERROR("can not find geometry.vertex.N, cartesian will not use katana N attribute");
+            }
+        }
+    };
+    
 
 
-    void SurfaceMeshToKatana(PRE_TYPE::Mesh& mesh, Foundry::Katana::GeolibCookInterface& iface);
+    
+    class AttributeVertexNFromGCGALToKatana {
+    public:
+        static void calNormal(const PRE_TYPE::Mesh &mesh) {
+
+        }
+
+
+
+        static void setvalues(const PRE_TYPE::Mesh& mesh, Foundry::Katana::GeolibCookInterface& iface) {
+            FIND_CGAL_ATTRIBUTE(mesh, "CGAL_N", PRE_TYPE::Vertex_descriptor, glm::vec3);
+            if (!found) {
+                CARTESIAN_CORE_ERROR("can not find cgalN to construct geometry.vertex.N, use the CGAL function cal the normal");
+                return;
+            }
+            CARTESIAN_CORE_INFO("build construct geometry.vertex.N from CGAL_N");
+            const std::string vertexNAttName = "geometry.vertex.N";
+            std::vector<float>datatobuild;
+            for (PRE_TYPE::Face_descriptor& f : mesh.faces()) {
+                auto numedges = mesh.degree(f);
+                for (PRE_TYPE::Vertex_descriptor v : CGAL::vertices_around_face(mesh.halfedge(f), mesh)) {
+                    auto& vec = CGAL_FOUND_ATTRIB_MAP[v];
+                    datatobuild.emplace_back(vec.x);
+                    datatobuild.emplace_back(vec.y);
+                    datatobuild.emplace_back(vec.z);
+                }
+            }
+
+            SET_KATANA_FLOAT_ATTRIB(vertexNAttName, datatobuild.data(), datatobuild.size(), 3);
+        }
+    };
+    
+
+
+    void SurfaceMeshToKatana(PRE_TYPE::Mesh& mesh, bool buildFace, Foundry::Katana::GeolibCookInterface& iface);
 
 
 

@@ -367,6 +367,9 @@ namespace Cartesian {
         };
         lua->set_function("joinmesh", join_mesh);
 
+        //Triangulate a mesh
+
+
     }
 
 }

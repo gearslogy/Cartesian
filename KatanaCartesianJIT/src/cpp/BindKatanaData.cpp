@@ -114,6 +114,8 @@ namespace Cartesian {
             Foundry::Katana::CreateLocation(info, iface, locpath);
         };
         lua->set_function("createlocation", createLocationFunc);
+        
+        
 
 
 
@@ -248,7 +250,7 @@ namespace Cartesian {
             return mat;
         };
         // get another node xform attrib
-        lua->set_function("xform", sol::overload(xform, xform_anotherNode));
+        lua->set_function("getxform", sol::overload(xform, xform_anotherNode));
 
 
 
@@ -334,26 +336,83 @@ namespace Cartesian {
         lua->set_function("setxform", apply_xform);
 
 
+        // match cel
+        auto match_cel = [&iface]() {
+            FnAttribute::StringAttribute celAttr = iface.getOpArg("CEL");
+            if (!celAttr.isValid())
+            {
+                std::cout << "Can not find CEL\n";
+                iface.stopChildTraversal();
+                return;
+            }
+            //Foundry::Katana::GeolibOp::flush();
+
+
+
+            // If a CEL attribute was provided (and so it's valid), check
+            // our current output location against the CEL. If it doesn't match
+            // the CEL, then don't continue cooking at this location.
+            // Use the utility function matchesCEL() to populate a
+            // MatchesCELInfo object that contains useful attributes we can
+            // query
+            FnGeolibServices::FnGeolibCookInterfaceUtils::MatchesCELInfo info;
+
+            FnGeolibServices::FnGeolibCookInterfaceUtils::matchesCEL(info,
+                iface,
+                celAttr);
+
+            // If there's no chance that the CEL expression matches any child
+            // locations, stop the Op from continuing its recursion past this
+            // point in the hierarchy. This isn't required, but improves
+            // efficiency.
+            if (!info.canMatchChildren)
+            {
+                iface.stopChildTraversal();
+            }
+
+            // If the CEL doesn't match the current location, stop cooking
+            if (!info.matches)
+            {
+                return;
+            }
+        };
+
+        lua->set_function("matchcel",match_cel);
+
+
 
         // Geometry exchange
-        auto geoself = [&iface]() {
-            PRE_TYPE::Mesh mesh;
+        auto geoself = [&iface](PRE_TYPE::Mesh &mesh) {
             BuildSurfaceMeshFromKatana(mesh, iface);
-            return mesh;
         };
 
-        auto geoself_fromotherinput = [&iface](const std::string &location, const int &inputindex) {
-            PRE_TYPE::Mesh mesh;
+        auto geoself_fromotherinput = [&iface](PRE_TYPE::Mesh& mesh , const std::string &location, const int &inputindex) {
             BuildSurfaceMeshFromKatana(mesh, iface,location, inputindex);
-            return mesh;
         };
-        lua->set_function("geoself", sol::overload(geoself,geoself_fromotherinput));
+        lua->set_function("inputmesh", sol::overload(geoself,geoself_fromotherinput));
 
 
+        // attach mesh
         auto meshend = [&iface](PRE_TYPE::Mesh &mesh) {
-            SurfaceMeshToKatana(mesh, iface);
+            SurfaceMeshToKatana(mesh, 1, iface);
         };
+
+        auto pointsend = [&iface](PRE_TYPE::Mesh& mesh) {
+            SurfaceMeshToKatana(mesh, 0, iface);
+        };
+
         lua->set_function("attachmesh", meshend);
+        lua->set_function("attachpoints", pointsend);
+
+
+        // for quickly instance
+        auto setinstance_source = [&iface](const std::string &path) {
+            iface.setAttr("geometry.instanceSource", FnAttribute::StringAttribute(path));
+        };
+        lua->set_function("instancesource", setinstance_source);
+
+
+
     }
 
 }

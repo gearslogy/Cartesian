@@ -9,12 +9,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
+#include <CGAL/Polygon_mesh_processing/bbox.h>
 
 
 namespace Cartesian {
 
-    int getTupleSize(FnAttribute::Attribute& attrib, const int baseType)  {
+    int getTupleSize(FnAttribute::Attribute& attrib, const int baseType) {
         if (baseType == 1) // int
         {
             FnAttribute::IntAttribute rhs = static_cast<FnAttribute::IntAttribute> (attrib);
@@ -51,9 +51,82 @@ namespace Cartesian {
         return "ERROR BASE TYPE";
     }
 
-    void BuildSurfaceMeshFromKatana(PRE_TYPE::Mesh& meshToBuild, 
+    void CreateAndBuildCGAL_vertexnum(PRE_TYPE::Mesh& mesh) {
+        CARTESIAN_CORE_INFO("Build CGAL_vertexnum attribute");
+        PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, int> vertexnumAttrib;
+        bool createdVertexNumAttrib = false;
+        boost::tie(vertexnumAttrib, createdVertexNumAttrib) = mesh.add_property_map<PRE_TYPE::Vertex_descriptor, int>("CGAL_vertexnum", -1);
+        if (!createdVertexNumAttrib) CARTESIAN_CORE_ERROR("can not create attribute:CGAL_vertexnum");
+
+        int curlVertexNum = 0;
+        for (PRE_TYPE::Face_descriptor& f : mesh.faces()) {
+            auto roundRange = CGAL::vertices_around_face(mesh.halfedge(f), mesh);
+            for (PRE_TYPE::Vertex_descriptor v : roundRange) {
+                if (vertexnumAttrib[v] == -1)
+                {
+                    vertexnumAttrib[v] = curlVertexNum;
+                    curlVertexNum++;
+                }
+            }
+        }
+    }
+    void ReBuildCGAL_vertexnum(PRE_TYPE::Mesh& mesh) {
+        CARTESIAN_CORE_INFO("rebuild CGAL_vertexnum attribute");
+        PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, int> vertexnumAttrib;
+        bool foundVertexNumAttrib = false;
+        boost::tie(vertexnumAttrib, foundVertexNumAttrib) = mesh.property_map<PRE_TYPE::Vertex_descriptor, int>("CGAL_vertexnum");
+        if (foundVertexNumAttrib) {
+            // set to -1
+            for (PRE_TYPE::Face_descriptor& f : mesh.faces()) {
+                // face vertices
+                for (PRE_TYPE::Vertex_descriptor v : CGAL::vertices_around_face(mesh.halfedge(f), mesh)) {
+                    vertexnumAttrib[v] = -1;
+                }
+            }
+
+            int curlVertexNum = 0;
+            for (PRE_TYPE::Face_descriptor& f : mesh.faces()) {
+                // face vertices
+                for (PRE_TYPE::Vertex_descriptor v : CGAL::vertices_around_face(mesh.halfedge(f), mesh)) {
+                    if (vertexnumAttrib[v] == -1)
+                        vertexnumAttrib[v] = curlVertexNum;
+                    curlVertexNum++;
+                }
+            }
+        }
+        else CARTESIAN_CORE_ERROR("rebuild vertex order error, can not find the attribute: {0}", "CGAL_vertexnum");
+    }
+
+    void TryToBuildCGAL_vertexnum(PRE_TYPE::Mesh& mesh) {
+        CARTESIAN_CORE_INFO("Try to Build CGAL_vertexnum attribute");
+        PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, int> trytofind_VertexnumAttribMap;
+        bool foundVertexNumAttrib = false;
+        boost::tie(trytofind_VertexnumAttribMap, foundVertexNumAttrib) = mesh.property_map<PRE_TYPE::Vertex_descriptor, int>("CGAL_vertexnum");
+        if (!foundVertexNumAttrib) { // if not ready the vertex num attribmap
+
+            PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, int> rebulid_vertexnumAttrib; // Rebuild attribute
+            bool createdVertexNumAttrib = false;
+            boost::tie(rebulid_vertexnumAttrib, createdVertexNumAttrib) = mesh.add_property_map<PRE_TYPE::Vertex_descriptor, int>("CGAL_vertexnum", -1); // default give the -1
+            if (!createdVertexNumAttrib) CARTESIAN_CORE_ERROR("can not rebuild attribute:CGAL_vertexnum {0},{1}", __LINE__, __FUNCTION__);
+            int curlVertexNum = 0;
+            for (PRE_TYPE::Face_descriptor& f : mesh.faces()) {
+                for (PRE_TYPE::Vertex_descriptor v : CGAL::vertices_around_face(mesh.halfedge(f), mesh)) {
+                    if (rebulid_vertexnumAttrib[v] == -1)
+                    {
+                        rebulid_vertexnumAttrib[v] = curlVertexNum;  // change the order
+                        curlVertexNum++;
+                    }
+                }
+            }
+
+        }
+    }
+
+
+
+    void BuildSurfaceMeshFromKatana(PRE_TYPE::Mesh& meshToBuild,
         Foundry::Katana::GeolibCookInterface& iface,
-        const std::string& location, 
+        const std::string& location,
         const int& index)
     {
 
@@ -61,41 +134,43 @@ namespace Cartesian {
         const std::string polyPolyVertexIndexAttName = "geometry.poly.vertexList";
         const std::string pointPosAttName = "geometry.point.P";
         const std::string arbitraryAttName = "geometry.arbitrary";
-
+        const std::string vertexNAttName = "geometry.vertex.N";
 
         auto time = Foundry::Katana::GetCurrentTime(iface);
 
         // how many num of per face;
+        bool haveFace = true;
         FnAttribute::IntAttribute faceVerticesNumArrayAttrib;
-        if (index == -1) 
+
+        if (index == -1)
             faceVerticesNumArrayAttrib = iface.getAttr(polyStartIndexAttName);
-        else 
-            faceVerticesNumArrayAttrib = iface.getAttr(polyStartIndexAttName,location,index);
+        else
+            faceVerticesNumArrayAttrib = iface.getAttr(polyStartIndexAttName, location, index);
+
 
         if (!faceVerticesNumArrayAttrib.isValid()) {
             CARTESIAN_CORE_ERROR("Can not find attribute: {0}", polyStartIndexAttName);
-            return;
+            bool haveFace = false;
         }
+
         auto faceVerticesNumArray = faceVerticesNumArrayAttrib.getNearestSample(time); // first = 0
-
-
         // this will construct vertexlist order of the geo;
         FnAttribute::IntAttribute indicesArrayAttrib;
-        if(index == -1)
+        if (index == -1)
             indicesArrayAttrib = iface.getAttr(polyPolyVertexIndexAttName);
         else
-            indicesArrayAttrib = iface.getAttr(polyPolyVertexIndexAttName,location,index);
+            indicesArrayAttrib = iface.getAttr(polyPolyVertexIndexAttName, location, index);
 
         if (!indicesArrayAttrib.isValid()) {
             CARTESIAN_CORE_ERROR("Can not find attribute: {0}", polyPolyVertexIndexAttName);
-            return;
+            haveFace = false;
         }
         auto indicesArray = indicesArrayAttrib.getNearestSample(time);
 
 
         // how many points of this geometry
         FnAttribute::FloatAttribute positionArrayAttrib;
-        if(index == -1)
+        if (index == -1)
             positionArrayAttrib = iface.getAttr(pointPosAttName);
         else
         {
@@ -122,11 +197,11 @@ namespace Cartesian {
                 std::string attribName = arbitraryAttrib.getChildName(i);
 
                 // just pass the Texture attribute, because the "geometry.arbitrary.st" same as Texture attribute;
-                if (attribName == "Texture") continue; 
+                if (attribName == "Texture") continue;
 
 
                 FnAttribute::GroupAttribute attrib = arbitraryAttrib.getChildByIndex(i);  // emp: geometry.arbitrary.Cd/st/other*
-                
+
                 FnAttribute::StringAttribute scopeAttrib = attrib.getChildByName("scope"); // geometry.arbitrary.Cd.scope
                 if (!scopeAttrib.isValid()) {
                     std::string erroratt = arbitraryAttName + attribName + ".scope";
@@ -137,17 +212,17 @@ namespace Cartesian {
 
                 FnAttribute::Attribute valueAttrib = attrib.getChildByName("value"); // geometry.arbitrary.Cd.value
                 if (!valueAttrib.isValid()) {
-                    std::string erroratt = arbitraryAttName +"." +attribName + ".value";
+                    std::string erroratt = arbitraryAttName + "." + attribName + ".value";
                     CARTESIAN_CORE_WARN("can not find the value attribute: {0}, may be texture or uv attribute, cartesian will try to as uv method", erroratt);
                 }
                 else {
                     int valueType = valueAttrib.getType();
-                    int tupleSize =getTupleSize(valueAttrib, valueType);
+                    int tupleSize = getTupleSize(valueAttrib, valueType);
                     CARTESIAN_CORE_INFO("gen attribute map: {0}, type: {1}, tuple size: {2}, scope: {3}", attribName, "int", tupleSize, scope);
                     MAKE_ATTRIB_MAP(attribName, scope, valueType, valueAttrib, tupleSize);
                     katanaAttribMaps.emplace_back(ATTRIB_MAP);
                 }
-           
+
 
                 // try to parse this: geometry.arbitrary.Cd.st
                 FnAttribute::IntAttribute indexAttrib = attrib.getChildByName("index"); // geometry.arbitrary.st.value  // int 
@@ -156,7 +231,7 @@ namespace Cartesian {
                     continue;
                 }
                 else {
-                    
+
                     // struct for our 
                     AttribMap indexMap;                                                                      // create a indexmap
                     indexMap.name = attribName;
@@ -171,6 +246,7 @@ namespace Cartesian {
                 }
             }
         }
+
         CARTESIAN_CORE_INFO("success parsing attribute num: {0}", katanaAttribMaps.size());
 
 
@@ -190,19 +266,22 @@ namespace Cartesian {
 
 
         // ------------------- Create Geometry Face ----------------------------------
-        int indicesArrayIndex = 0;
-        for (int f = 1; f < faceVerticesNumArray.size(); f++) {
-            int faceNum = faceVerticesNumArray[f] - faceVerticesNumArray[f - 1];
-            // run loop on per face 
-            std::vector <PRE_TYPE::Vertex_descriptor> vertices;
-            for (int i = 0; i < faceNum; i++) {
-                int ptindex = indicesArray[indicesArrayIndex];
-                PRE_TYPE::Vertex_descriptor CGAL_VertexID(ptindex);
-                vertices.emplace_back(CGAL_VertexID);
-                indicesArrayIndex++;
+        if (haveFace) {
+
+            int indicesArrayIndex = 0;
+            for (int f = 1; f < faceVerticesNumArray.size(); f++) {
+                int faceNum = faceVerticesNumArray[f] - faceVerticesNumArray[f - 1];
+                // run loop on per face 
+                std::vector <PRE_TYPE::Vertex_descriptor> vertices;
+                for (int i = 0; i < faceNum; i++) {
+                    int ptindex = indicesArray[indicesArrayIndex];
+                    PRE_TYPE::Vertex_descriptor CGAL_VertexID(ptindex);
+                    vertices.emplace_back(CGAL_VertexID);
+                    indicesArrayIndex++;
+                }
+                // use range function construct a face
+                meshToBuild.add_face(vertices);
             }
-            // use range function construct a face
-            meshToBuild.add_face(vertices);
         }
         // ------------------- Create Geometry Face ----------------------------------
 
@@ -227,39 +306,42 @@ namespace Cartesian {
         //      |   |   |
         //      6---7---8
         //  in katana index attribute will be:    0 1 2 3     1 4 5 2     3 2 7 6   2 5 7 8
-        // store it cgal int attribute, katana will repr in geometry.arbitrary.vertexnum.value
-        PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, int> vertexnumAttrib; 
-        bool createdVertexNumAttrib = false; 
-        boost::tie(vertexnumAttrib, createdVertexNumAttrib) = meshToBuild.add_property_map<PRE_TYPE::Vertex_descriptor, int>("vertexnum", -1);
-        if (!createdVertexNumAttrib) CARTESIAN_CORE_ERROR("can not create attribute:vertexnum");
-        int curlVertexNum = 0;
-        for (PRE_TYPE::Face_descriptor& f : meshToBuild.faces()) {
-            int numedges = meshToBuild.degree(f);
-            // face vertices
-            for (PRE_TYPE::Vertex_descriptor v : CGAL::vertices_around_face(meshToBuild.halfedge(f), meshToBuild)) {
-                if (vertexnumAttrib[v] == -1)
-                {
-                    vertexnumAttrib[v] = curlVertexNum;
-                    curlVertexNum++;
+        // store it cgal int attribute, katana will repr in geometry.arbitrary.CGAL_vertexnum.value
+        if(haveFace)
+            CreateAndBuildCGAL_vertexnum(meshToBuild);
+
+        PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, int> vertexnumAttrib;
+        bool found_vertexnum_attrib;
+        boost::tie(vertexnumAttrib, found_vertexnum_attrib) = meshToBuild.property_map<PRE_TYPE::Vertex_descriptor, int>("CGAL_vertexnum");
+
+
+        // only build st attribute
+        if (haveFace) {
+            for (auto& attribmap : katanaAttribMaps) {
+                if (!attribmap.isIndexed) continue;
+                if (attribmap.name != "st") continue;
+
+                //meshToBuild.katana_stIndexValues.clear();
+                //meshToBuild.katana_stIndexedValues.clear();
+
+                FnAttribute::IntAttribute indexAttr = static_cast<FnAttribute::IntAttribute> (attribmap.indexHandle);
+                auto sampleIndexData = indexAttr.getNearestSample(time);
+                for (auto& v : sampleIndexData)
+                    meshToBuild.katana_stIndexValues.emplace_back(v);
+
+
+                FnAttribute::FloatAttribute indexedValueAttr = static_cast<FnAttribute::FloatAttribute> (attribmap.indexedValueHandle);
+                auto sampleIndexedValueData = indexedValueAttr.getNearestSample(time);
+                for (auto& v : sampleIndexedValueData) {
+                    meshToBuild.katana_stIndexedValues.emplace_back(v);
                 }
+
+
             }
         }
+       
 
-
-        // expand this vertex map use this method, drop the katana  !geometry.arbitrary.attname.index!, Reconstruct use this method
         /*
-        for (PRE_TYPE::Face_descriptor& f : meshToBuild.faces()) {
-            std::cout << "INDEX FACE : " << f << std::endl;
-            // face vertices
-            for (PRE_TYPE::Vertex_descriptor v : CGAL::vertices_around_face(meshToBuild.halfedge(f), meshToBuild)) {
-                std::cout << vertexnumAttrib[v] <<  " ";
-            }
-            std::cout << std::endl;
-        }*/
-
-
-
-
         // only process the indexedValue attribute, we still store it in CGAL vertex attribute
         for (auto& attribmap : katanaAttribMaps) {
             if (!attribmap.isIndexed)continue;
@@ -276,9 +358,9 @@ namespace Cartesian {
                 if (attribmap.type == 4) { // simple string
                     IndexedValueHelper<FnAttribute::StringAttribute, IndexedValueType<std::string>>::createAndSet_simpleCGALIndexedValue(meshToBuild, vertexnumAttrib, attribmap, time);
                 }
-                
+
             }
-            if (attribmap.tupleSize == 2) { // vector2 attribute, no matter what type(int/float/double) ,  do not support vector string 
+            if (attribmap.tupleSize == 2) { // vector2 attribute, no matter what type(int/float/double) ,  do not support vector string
                 if (attribmap.type == 4) continue;
                 if(attribmap.type == 1) {
                     IndexedValueHelper<FnAttribute::IntAttribute, IndexedValueType<glm::vec2>>::createAndSet_Vector2CGALIndexedValue(meshToBuild, vertexnumAttrib, attribmap, time);
@@ -290,7 +372,7 @@ namespace Cartesian {
                     IndexedValueHelper<FnAttribute::DoubleAttribute, IndexedValueType<glm::vec2>>::createAndSet_Vector2CGALIndexedValue(meshToBuild, vertexnumAttrib, attribmap, time);
                 }
             }
-            if (attribmap.tupleSize == 3) { // vector attribute, no matter what type(int/float/double) ,  do not support vector string 
+            if (attribmap.tupleSize == 3) { // vector attribute, no matter what type(int/float/double) ,  do not support vector string
                 if (attribmap.type == 4) continue;
                 if (attribmap.type == 1) {
                     IndexedValueHelper<FnAttribute::IntAttribute, IndexedValueType<glm::vec3>>::createAndSet_VectorCGALIndexedValue(meshToBuild, vertexnumAttrib, attribmap, time);
@@ -301,9 +383,9 @@ namespace Cartesian {
                 if (attribmap.type == 3) {
                     IndexedValueHelper<FnAttribute::DoubleAttribute, IndexedValueType<glm::vec3>>::createAndSet_VectorCGALIndexedValue(meshToBuild, vertexnumAttrib, attribmap, time);
                 }
-               
+
             }
-            if (attribmap.tupleSize == 4) { // vector4 attribute, no matter what type(int/float/double) ,  do not support vector string 
+            if (attribmap.tupleSize == 4) { // vector4 attribute, no matter what type(int/float/double) ,  do not support vector string
                 if (attribmap.type == 4) continue;
                 if (attribmap.type == 1) {
                     IndexedValueHelper<FnAttribute::IntAttribute, IndexedValueType<glm::vec4>>::createAndSet_Vector4CGALIndexedValue(meshToBuild, vertexnumAttrib, attribmap, time);
@@ -314,16 +396,14 @@ namespace Cartesian {
                 if (attribmap.type == 3) {
                     IndexedValueHelper<FnAttribute::DoubleAttribute, IndexedValueType<glm::vec4>>::createAndSet_Vector4CGALIndexedValue(meshToBuild, vertexnumAttrib, attribmap, time);
                 }
-                
+
             }
         }
+   */
 
 
 
-
-
-
-        // attribute building: create attribute, except the indexedValue attribute
+   // attribute building: create attribute, except the indexedValue attribute
         for (auto& attribmap : katanaAttribMaps) {
             if (attribmap.isIndexed) continue;
 
@@ -392,11 +472,26 @@ namespace Cartesian {
         } // end of create attribute;
 
 
+        // in the last, we build the VertexN
+        if(haveFace)
+            AttributeVertexNFromKatanaToGCGAL::build(meshToBuild, iface, location, index, time);
+
+        CARTESIAN_CORE_INFO("geometry build end");
 
     } // end of build surface mesh
 
-    void SurfaceMeshToKatana(PRE_TYPE::Mesh& mesh, Foundry::Katana::GeolibCookInterface& iface)
+    void SurfaceMeshToKatana(PRE_TYPE::Mesh& mesh, bool buildFace, Foundry::Katana::GeolibCookInterface& iface)
     {
+
+
+
+        // clear katana current attribute
+        iface.deleteAttrs();
+        // set to polymesh
+        if(buildFace)
+            iface.setAttr("type", FnAttribute::StringAttribute("polymesh"), false);
+        else
+            iface.setAttr("type", FnAttribute::StringAttribute("pointcloud"), false);
 
         const std::string polyStartIndexAttName = "geometry.poly.startIndex";
         const std::string polyPolyVertexIndexAttName = "geometry.poly.vertexList";
@@ -404,21 +499,26 @@ namespace Cartesian {
         const std::string arbitraryAttName = "geometry.arbitrary";
 
 
+
+
+
         // ------------------ construct geometry.poly.startIndex attribute -----------------------------
         // this actually is likely primpoints()
         std::vector <int> startIndexData;
         std::vector <int> vertexListData;
-        startIndexData.push_back(0); 
+        startIndexData.push_back(0);
+
 
         // remove unused prims
         for (PRE_TYPE::Face_descriptor& f : mesh.faces()) {
             for (PRE_TYPE::Vertex_descriptor v : CGAL::vertices_around_face(mesh.halfedge(f), mesh)) {
-                if (!v.is_valid() || mesh.is_removed(v)){
+                if (!v.is_valid() || mesh.is_removed(v)) {
                     mesh.remove_face(f);
                     break;
                 }
             }
         }
+
         if (mesh.has_garbage()) {
 
             CARTESIAN_CORE_INFO("num of remove face: {0} ", mesh.number_of_removed_faces());
@@ -431,31 +531,15 @@ namespace Cartesian {
 
 
             //------------------ Rebuild the vertex order, may be use removepoint() removeprim() function-------------------------------------
-            CARTESIAN_CORE_INFO("rebuild vertexnum attribute");
-            PRE_TYPE::Mesh::Property_map<PRE_TYPE::Vertex_descriptor, int> vertexnumAttrib;
-            bool foundVertexNumAttrib = false;
-            boost::tie(vertexnumAttrib, foundVertexNumAttrib) = mesh.property_map<PRE_TYPE::Vertex_descriptor, int>("vertexnum");
-            if (foundVertexNumAttrib) {
-                // set to -1
-                for (PRE_TYPE::Face_descriptor& f : mesh.faces()) {
-                    // face vertices
-                    for (PRE_TYPE::Vertex_descriptor v : CGAL::vertices_around_face(mesh.halfedge(f), mesh)) {
-                        vertexnumAttrib[v] = -1;
-                    }
-                }
-
-                int curlVertexNum = 0;
-                for (PRE_TYPE::Face_descriptor& f : mesh.faces()) {
-                    // face vertices
-                    for (PRE_TYPE::Vertex_descriptor v : CGAL::vertices_around_face(mesh.halfedge(f), mesh)) {
-                        if (vertexnumAttrib[v] == -1)
-                            vertexnumAttrib[v] = curlVertexNum;
-                        curlVertexNum++;
-                    }
-                }
-            }
-            else CARTESIAN_CORE_ERROR("rebuild vertex order error, can not find the attribute: {0}", "vertexnum");
+            ReBuildCGAL_vertexnum(mesh);
         }
+
+        // ------------------ If read mesh from disk , the mesh have not ready for CGAL_vertexnum attribute
+        // need try to find, if not, rebuild the CGAL_vertexnum attrib
+        if(buildFace)
+            TryToBuildCGAL_vertexnum(mesh);
+
+
 
         // ------------------ construct geometry.poly.startIndex attribute -----------------------------
         for (PRE_TYPE::Face_descriptor& f : mesh.faces()) {
@@ -467,14 +551,14 @@ namespace Cartesian {
             }
         }
 
-
-        CARTESIAN_CORE_INFO("set the PolyStartIndexAttr: {0}", polyStartIndexAttName);
-        FnAttribute::IntAttribute startIndexAttr(startIndexData.data(), startIndexData.size(), 1);
-        iface.setAttr(polyStartIndexAttName, startIndexAttr, false);
-
-        CARTESIAN_CORE_INFO("set the PolyVertexIndexAttr: {0}", polyPolyVertexIndexAttName);
-        FnAttribute::IntAttribute vertexListAttr(vertexListData.data(), vertexListData.size(), 1);
-        iface.setAttr(polyPolyVertexIndexAttName, vertexListAttr, false);
+        if (buildFace) {
+            CARTESIAN_CORE_INFO("set the PolyStartIndexAttr: {0}", polyStartIndexAttName);
+            FnAttribute::IntAttribute startIndexAttr(startIndexData.data(), startIndexData.size(), 1);
+            iface.setAttr(polyStartIndexAttName, startIndexAttr, false);
+            CARTESIAN_CORE_INFO("set the PolyVertexIndexAttr: {0}", polyPolyVertexIndexAttName);
+            FnAttribute::IntAttribute vertexListAttr(vertexListData.data(), vertexListData.size(), 1);
+            iface.setAttr(polyPolyVertexIndexAttName, vertexListAttr, false);
+        }
 
         // ------------------ construct geometry.point.P attribute -----------------------------
         CARTESIAN_CORE_INFO("construct the geometry.point.P attribute");
@@ -493,17 +577,52 @@ namespace Cartesian {
 
 
 
-        
-      
 
-        IndexedAttribToKatana::setvalues(mesh, iface);
+
+
+
+        // restore the st attribute
+        if (buildFace) {
+            IndexedAttribToKatana::buildScopeKatanaAttrib("st", iface);
+            IndexedAttribToKatana::buildInputTypeKatanaAttrib("st", "vector2", iface);
+            // build the "geometry.arbitrary.st.index"
+            std::string stIndexAttribName = arbitraryAttName + "." + "st" + ".index";
+            FnAttribute::IntAttribute indexAttr(mesh.katana_stIndexValues.data(), mesh.katana_stIndexValues.size(), 1);
+            iface.setAttr(stIndexAttribName, indexAttr, false);
+
+            // build the "geometry.arbitrary.st.indexedValue"
+            std::string stIndexedValueAttribName = arbitraryAttName + "." + "st" + ".indexedValue";
+            FnAttribute::FloatAttribute indexedValueAttr(mesh.katana_stIndexedValues.data(), mesh.katana_stIndexedValues.size(), 2);
+            iface.setAttr(stIndexedValueAttribName, indexedValueAttr, false);
+        }
 
         // for point attribute
+        CARTESIAN_CORE_TRACE("---SET POINT ATTRIBS---");
         AttributeToKatana<PRE_TYPE::Vertex_descriptor>::setvalues(mesh, iface);
         // for face attribute
-        AttributeToKatana<PRE_TYPE::Face_descriptor>::setvalues(mesh, iface);
+        if (buildFace) {
+            CARTESIAN_CORE_TRACE("---SET FACE ATTRIBS---");
+            AttributeToKatana<PRE_TYPE::Face_descriptor>::setvalues(mesh, iface);
+        }
 
+        // geometry.vertex.N
+        if (buildFace) {
+            CARTESIAN_CORE_TRACE("---SET N ATTRIBS---");
+            AttributeVertexNFromGCGALToKatana::setvalues(mesh, iface);
+        }
 
+        // geometry bound
+        std::vector<double> boundValues; // xmin xmax ymin ymax zmin zmax
+        auto bbox = CGAL::Polygon_mesh_processing::bbox(mesh);
+        boundValues.emplace_back(bbox.xmin());
+        boundValues.emplace_back(bbox.xmax());
+        boundValues.emplace_back(bbox.ymin());
+        boundValues.emplace_back(bbox.ymax());
+        boundValues.emplace_back(bbox.zmin());
+        boundValues.emplace_back(bbox.zmax());
+
+        FnAttribute::DoubleAttribute boundAttr(boundValues.data(), boundValues.size(), 2);
+        iface.setAttr("bound", boundAttr, false);
 
     }// end of surface mesh to katana
 
