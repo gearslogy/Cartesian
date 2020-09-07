@@ -13,6 +13,15 @@
 
 namespace Cartesian{
 
+    class GetAttribException {
+
+    public:
+        std::string what() {
+            return "Get Attrib Error, KATANA_API";
+        }
+
+    };
+
     /*
      *  This function should not set to lua statck per cook !
      *

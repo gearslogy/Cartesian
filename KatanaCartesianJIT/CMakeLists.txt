@@ -24,8 +24,8 @@ if (MSVC)
     remove_definitions(-Dmin -Dmax -Dinterface)
 endif ()
 
-#add_compile_definitions(__cplusplus=201103L)
-
+#add_compile_definitions(SOL_NO_EXCEPTIONS=1 SOL_ALL_SAFETIES_ON=0 SOL_EXCEPTIONS_SAFE_PROPAGATION=1)
+add_compile_definitions(SOL_EXCEPTIONS_SAFE_PROPAGATION=1)
 file(GLOB SRCODE
         src/cpp/*.cpp
         src/hpp/*.h
