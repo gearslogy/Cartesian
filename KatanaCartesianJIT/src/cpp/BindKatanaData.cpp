@@ -23,16 +23,26 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <cassert>
+
+
+
+
+
 namespace Cartesian {
 
 
 
     void BindKatanaFunction::bind(Foundry::Katana::GeolibCookInterface& iface, const std::shared_ptr<sol::state>& lua) {
 
-
-
+  
         // ------------------------------- get/setType() --------------------------------------------------------------------------------
-        auto setTypeFunc = [&iface](const std::string& set)->void {iface.setAttr("type", FnAttribute::StringAttribute(set)); };
+        auto setTypeFunc = [&iface](const std::string& set)->void {
+            auto location = iface.getInputLocationPath();
+            if (iface.doesLocationExist(location)) {
+
+                iface.setAttr("type", FnAttribute::StringAttribute(set), false);
+            }
+        };
         lua->set_function("settype", setTypeFunc);
 
 
@@ -54,16 +64,25 @@ namespace Cartesian {
         };
         auto getTypeFunc2 = [&iface](const std::string& inputLocation, const int& inputIndex) {
             std::string get;
+            try {
+                iface.getAttr("type", inputLocation, inputIndex);
+            }
+            catch (...) {
+                CARTESIAN_CORE_WARN("just check gettype() the return value, if existed, ignore this error: runtime_error");
+                throw GetAttribException();
+            }
             FnAttribute::StringAttribute att = iface.getAttr("type", inputLocation, inputIndex);
             if (att.isValid()) {
                 get = att.getValue("", false);
                 return get;
             }
-            else {
-            }
+            
             return get;
         };
-        lua->set_function("gettype", sol::overload(getTypeFunc1, getTypeFunc2));
+        //lua->set_function("gettype", sol::overload(getTypeFunc1, getTypeFunc2));
+        //sol::protected_function func = getTypeFunc2;
+        
+        lua->set("gettype", getTypeFunc2);
 
 
         // -------------------------------- createChild() ------------------------------------------------
@@ -199,6 +218,8 @@ namespace Cartesian {
         };
         // get another node location xform attrib
         auto xform_anotherNode = [&iface](const std::string& location, const int& index) {
+            //iface.replaceChildren("/root", index);
+
             glm::mat4 mat(1.0f);
 
             glm::mat4 smat(1.0f);
@@ -206,11 +227,11 @@ namespace Cartesian {
             glm::mat4 rymat(1.0f);
             glm::mat4 rzmat(1.0f);
             glm::mat4 tmat(1.0f);
-            FnAttribute::DoubleAttribute trans = iface.getAttr("xform.interactive.translate", location, index);
-            FnAttribute::DoubleAttribute rotZ = iface.getAttr("xform.interactive.rotateZ", location, index);
-            FnAttribute::DoubleAttribute rotY = iface.getAttr("xform.interactive.rotateY", location, index);
-            FnAttribute::DoubleAttribute rotX = iface.getAttr("xform.interactive.rotateX", location, index);
-            FnAttribute::DoubleAttribute scale = iface.getAttr("xform.interactive.scale", location, index);
+            FnAttribute::DoubleAttribute trans = iface.getAttr("xform.interactive.translate", location);
+            FnAttribute::DoubleAttribute rotZ = iface.getAttr("xform.interactive.rotateZ", location);
+            FnAttribute::DoubleAttribute rotY = iface.getAttr("xform.interactive.rotateY", location);
+            FnAttribute::DoubleAttribute rotX = iface.getAttr("xform.interactive.rotateX", location);
+            FnAttribute::DoubleAttribute scale = iface.getAttr("xform.interactive.scale", location);
 
             if (!trans.isValid()) {
                 CARTESIAN_CORE_ERROR("can not get xform.interactive.translate for: {0}", location);
@@ -247,6 +268,7 @@ namespace Cartesian {
             tmat = glm::translate(tmat, glm::vec3(sample_trans[0], sample_trans[1], sample_trans[2]));
 
             mat = tmat * smat * rzmat * rymat * rxmat;
+
             return mat;
         };
         // get another node xform attrib
@@ -337,6 +359,7 @@ namespace Cartesian {
 
 
         // match cel
+        /*
         auto match_cel = [&iface]() {
             FnAttribute::StringAttribute celAttr = iface.getOpArg("CEL");
             if (!celAttr.isValid())
@@ -373,12 +396,62 @@ namespace Cartesian {
             // If the CEL doesn't match the current location, stop cooking
             if (!info.matches)
             {
+                std::cout << "matchcel() stop -> " << iface.getInputLocationPath() << std::endl;
                 return;
             }
         };
+        */
 
-        lua->set_function("matchcel",match_cel);
 
+        auto matchcel = [&iface]() {
+            try
+            {
+                if (&iface == nullptr) {
+
+                    return false;
+                }
+                FnAttribute::StringAttribute celAttr = iface.getOpArg("CEL");
+                if (!celAttr.isValid())
+                {
+                    std::cout << "Can not find CEL\n";
+                    iface.stopChildTraversal();
+                    return false;
+                }
+
+                FnGeolibServices::FnGeolibCookInterfaceUtils::MatchesCELInfo info;
+
+                FnGeolibServices::FnGeolibCookInterfaceUtils::matchesCEL(info,
+                    iface,
+                    celAttr);
+
+                // If there's no chance that the CEL expression matches any child
+                // locations, stop the Op from continuing its recursion past this
+                // point in the hierarchy. This isn't required, but improves
+                // efficiency.
+                bool isMatch = false;
+                if (!info.canMatchChildren)
+                {
+                    //std::cout << "match the ->:" << iface.getInputLocationPath() << std::endl;
+                    iface.stopChildTraversal();
+                    isMatch = true;
+                }
+                if (!info.matches) {
+                    //std::cout << "can not match the ->:" << iface.getInputLocationPath() << std::endl;
+                    isMatch = false;
+                }
+
+
+                return isMatch;
+            }
+            catch (...)
+            {
+                return false;
+            }
+            
+        };
+
+        //lua->set_function("matchcel",match_cel);
+        lua->set_function("docel", matchcel);
 
 
         // Geometry exchange
@@ -411,7 +484,7 @@ namespace Cartesian {
         };
         lua->set_function("instancesource", setinstance_source);
 
-
+       
 
     }
 

@@ -24,7 +24,7 @@ namespace Cartesian{
         // check parent is document
         std::filesystem::directory_entry entry(program_path);
         assert(entry.status().type() == std::filesystem::file_type::directory);
-        std::cout << "CARTESIAN::Loading plugins: " << program_path << std::endl;
+        //std::cout << "CARTESIAN::Loading plugins: " << program_path << std::endl;
 
         // going to the program docment, then find a DIR: dso
         std::filesystem::directory_iterator files(program_path) ;
@@ -45,7 +45,7 @@ namespace Cartesian{
                 // if not a dll
                 if(dsopath.generic_string().find(".dll") == -1)
                     continue;
-                std::cout << "CARTESIAN::Trying to open lib:" << dsopath << std::endl;
+                //std::cout << "CARTESIAN::Trying to open lib:" << dsopath << std::endl;
                 auto dllsig = openlib(dsopath);
                 if(dllsig)
                     dllSignalPools.emplace_back(dllsig);
@@ -54,7 +54,7 @@ namespace Cartesian{
         // Try to find env path
         if(const char* env_p = std::getenv("CARTESIAN_PLUGINS"))
         {
-            std::cout << "CARTESIAN::Loading plugins: " << env_p << std::endl;
+            //std::cout << "CARTESIAN::Loading plugins: " << env_p << std::endl;
             std::filesystem::directory_iterator customPluginFiles(env_p);
             for(auto &dso : customPluginFiles){
                 const pathdir& dsopath = dso.path();
@@ -62,7 +62,7 @@ namespace Cartesian{
                     continue;
                 if(dsopath.generic_string().find(".dll") == -1)
                     continue;
-                std::cout << "CARTESIAN::Trying to open lib:" << dsopath << std::endl;
+                //std::cout << "CARTESIAN::Trying to open lib:" << dsopath << std::endl;
                 auto dllsig = openlib(dsopath);
                 if(dllsig)
                     dllSignalPools.emplace_back(dllsig);
@@ -83,7 +83,7 @@ namespace Cartesian{
 
         if(lib.has(symbol))
         {
-            std::cout <<"CARTESIAN::Register function from:" <<libPath << std::endl;
+            //std::cout <<"CARTESIAN::Register function from:" <<libPath << std::endl;
             std::function<void (void *)> newOpSignal = dll::import<void(void *)>(lib,symbol);
             //newOpSignal(lua); // we do not eval in here
             return std::move(newOpSignal);

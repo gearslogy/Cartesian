@@ -143,10 +143,14 @@ namespace Cartesian {
         FnAttribute::IntAttribute faceVerticesNumArrayAttrib;
 
         if (index == -1)
+        {
             faceVerticesNumArrayAttrib = iface.getAttr(polyStartIndexAttName);
-        else
+        }
+        else {
+
             faceVerticesNumArrayAttrib = iface.getAttr(polyStartIndexAttName, location, index);
 
+        }
 
         if (!faceVerticesNumArrayAttrib.isValid()) {
             CARTESIAN_CORE_ERROR("Can not find attribute: {0}", polyStartIndexAttName);

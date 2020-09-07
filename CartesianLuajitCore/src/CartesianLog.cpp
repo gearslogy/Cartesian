@@ -10,7 +10,9 @@ namespace Cartesian{
 
     std::shared_ptr<spdlog::logger> Log::logger;
     void Log::initialize() {
-        logger = spdlog::stdout_color_mt("CARTESIAN");
+        if (spdlog::get("CARTESIAN") == nullptr) {
+            logger = spdlog::stdout_color_mt("CARTESIAN");
+        }
         spdlog::set_pattern("%^[%T] %n: %v%$" );
         logger->set_level(spdlog::level::trace);
         logger->flush_on(spdlog::level::trace);
