@@ -13,6 +13,7 @@
 #include "CGAL_Bind/BindCGAL_Point_Functions.h"
 #include "CGAL_Bind/BindCGAL_Face_Functions.h"
 #include "CGAL_Bind/BindCGAL_MeshProcessing.h"
+#include "pystring_Bind/PyStringBind.h"
 using namespace std;
 
 void newOp(void* lua) {
@@ -33,4 +34,5 @@ void newOp(void* lua) {
     Cartesian::BindCGAL_Point_Functions::bind(luaPtr);
     Cartesian::BindCGAL_Face_Functions::bind(luaPtr);
     Cartesian::BindCGAL_MeshProcessing::bind(luaPtr);
+    Cartesian::BindPystring(luaPtr);
 }

@@ -1,6 +1,7 @@
 #include "BindKatanaData.h"
 #include "CartesianLog.h"
 #include "ExchangeCGALGeo.h"
+
 #if defined _WIN32 || defined __CYGWIN__
 #undef interface
 #undef GetCurrentTime
@@ -79,11 +80,8 @@ namespace Cartesian {
             
             return get;
         };
-        //lua->set_function("gettype", sol::overload(getTypeFunc1, getTypeFunc2));
-        //sol::protected_function func = getTypeFunc2;
-        
-        lua->set("gettype", getTypeFunc2);
-
+        lua->set_function("gettype", sol::overload(getTypeFunc1, getTypeFunc2));
+      
 
         // -------------------------------- createChild() ------------------------------------------------
         // createChild("name")
@@ -227,6 +225,18 @@ namespace Cartesian {
             glm::mat4 rymat(1.0f);
             glm::mat4 rzmat(1.0f);
             glm::mat4 tmat(1.0f);
+
+            try {
+                iface.getAttr("xform.interactive.translate", location);
+                iface.getAttr("xform.interactive.rotateZ", location);
+                iface.getAttr("xform.interactive.rotateY", location);
+                iface.getAttr("xform.interactive.rotateX", location);
+                iface.getAttr("xform.interactive.scale", location);
+            }
+            catch (...) {
+                CARTESIAN_CORE_WARN("just check getxform() the return value, if existed, ignore this error: runtime_error");
+                throw GetAttribException();
+            }
             FnAttribute::DoubleAttribute trans = iface.getAttr("xform.interactive.translate", location);
             FnAttribute::DoubleAttribute rotZ = iface.getAttr("xform.interactive.rotateZ", location);
             FnAttribute::DoubleAttribute rotY = iface.getAttr("xform.interactive.rotateY", location);
@@ -358,101 +368,6 @@ namespace Cartesian {
         lua->set_function("setxform", apply_xform);
 
 
-        // match cel
-        /*
-        auto match_cel = [&iface]() {
-            FnAttribute::StringAttribute celAttr = iface.getOpArg("CEL");
-            if (!celAttr.isValid())
-            {
-                std::cout << "Can not find CEL\n";
-                iface.stopChildTraversal();
-                return;
-            }
-            //Foundry::Katana::GeolibOp::flush();
-
-
-
-            // If a CEL attribute was provided (and so it's valid), check
-            // our current output location against the CEL. If it doesn't match
-            // the CEL, then don't continue cooking at this location.
-            // Use the utility function matchesCEL() to populate a
-            // MatchesCELInfo object that contains useful attributes we can
-            // query
-            FnGeolibServices::FnGeolibCookInterfaceUtils::MatchesCELInfo info;
-
-            FnGeolibServices::FnGeolibCookInterfaceUtils::matchesCEL(info,
-                iface,
-                celAttr);
-
-            // If there's no chance that the CEL expression matches any child
-            // locations, stop the Op from continuing its recursion past this
-            // point in the hierarchy. This isn't required, but improves
-            // efficiency.
-            if (!info.canMatchChildren)
-            {
-                iface.stopChildTraversal();
-            }
-
-            // If the CEL doesn't match the current location, stop cooking
-            if (!info.matches)
-            {
-                std::cout << "matchcel() stop -> " << iface.getInputLocationPath() << std::endl;
-                return;
-            }
-        };
-        */
-
-
-        auto matchcel = [&iface]() {
-            try
-            {
-                if (&iface == nullptr) {
-
-                    return false;
-                }
-                FnAttribute::StringAttribute celAttr = iface.getOpArg("CEL");
-                if (!celAttr.isValid())
-                {
-                    std::cout << "Can not find CEL\n";
-                    iface.stopChildTraversal();
-                    return false;
-                }
-
-                FnGeolibServices::FnGeolibCookInterfaceUtils::MatchesCELInfo info;
-
-                FnGeolibServices::FnGeolibCookInterfaceUtils::matchesCEL(info,
-                    iface,
-                    celAttr);
-
-                // If there's no chance that the CEL expression matches any child
-                // locations, stop the Op from continuing its recursion past this
-                // point in the hierarchy. This isn't required, but improves
-                // efficiency.
-                bool isMatch = false;
-                if (!info.canMatchChildren)
-                {
-                    //std::cout << "match the ->:" << iface.getInputLocationPath() << std::endl;
-                    iface.stopChildTraversal();
-                    isMatch = true;
-                }
-                if (!info.matches) {
-                    //std::cout << "can not match the ->:" << iface.getInputLocationPath() << std::endl;
-                    isMatch = false;
-                }
-
-
-                return isMatch;
-            }
-            catch (...)
-            {
-                return false;
-            }
-            
-        };
-
-        //lua->set_function("matchcel",match_cel);
-        lua->set_function("docel", matchcel);
-
 
         // Geometry exchange
         auto geoself = [&iface](PRE_TYPE::Mesh &mesh) {
@@ -460,7 +375,13 @@ namespace Cartesian {
         };
 
         auto geoself_fromotherinput = [&iface](PRE_TYPE::Mesh& mesh , const std::string &location, const int &inputindex) {
-            BuildSurfaceMeshFromKatana(mesh, iface,location, inputindex);
+            try {
+                BuildSurfaceMeshFromKatana(mesh, iface, location, inputindex);
+            }
+            catch (...) {
+                CARTESIAN_CORE_WARN("just check inputmesh() , ignore this error: runtime_error");
+                throw GetAttribException();
+            }
         };
         lua->set_function("inputmesh", sol::overload(geoself,geoself_fromotherinput));
 
@@ -482,10 +403,234 @@ namespace Cartesian {
         auto setinstance_source = [&iface](const std::string &path) {
             iface.setAttr("geometry.instanceSource", FnAttribute::StringAttribute(path));
         };
-        lua->set_function("instancesource", setinstance_source);
+        lua->set_function("setinstance_source", setinstance_source);
+        
+        // for instance translate
 
+        
+        auto set_instance_translate2 = [&iface](float x, float y, float z) {
+            std::string name = "xform.group.translate"; // double attribute
+            double values[3] = { x, y, z};
+            iface.setAttr(name, FnAttribute::DoubleAttribute(values, 3, 1));
+        };
+        auto set_instance_translate = [&iface](const glm::vec3& trans) {
+            std::string name = "xform.group.translate"; // double attribute
+            double values[3] = { trans.x, trans.y,trans.z };
+            iface.setAttr(name, FnAttribute::DoubleAttribute(values, 3, 1));
+        };
+        lua->set_function("setinstance_translate", sol::overload(set_instance_translate2, set_instance_translate));
+
+        auto set_instance_rotate = [&iface](const glm::vec3& rot) {
+            std::string nameX = "xform.group.rotateX"; // double attribute
+            std::string nameY = "xform.group.rotateY"; // double attribute
+            std::string nameZ = "xform.group.rotateZ"; // double attribute
+            double valuesX[4] = { rot.x, 1, 0, 0 };
+            double valuesY[4] = { rot.y, 0, 1, 0 };
+            double valuesZ[4] = { rot.z, 0, 0, 1 };
+            iface.setAttr(nameX, FnAttribute::DoubleAttribute(valuesX, 4, 1));
+            iface.setAttr(nameY, FnAttribute::DoubleAttribute(valuesY, 4, 1));
+            iface.setAttr(nameZ, FnAttribute::DoubleAttribute(valuesZ, 4, 1));
+        };
+        auto set_instance_rotate2 = [&iface](double x, double y, double z) {
+            std::string nameX = "xform.group.rotateX"; // double attribute
+            std::string nameY = "xform.group.rotateY"; // double attribute
+            std::string nameZ = "xform.group.rotateZ"; // double attribute
+            double valuesX[4] = { x, 1, 0, 0 };
+            double valuesY[4] = { y, 0, 1, 0 };
+            double valuesZ[4] = { z, 0, 0, 1 };
+            iface.setAttr(nameX, FnAttribute::DoubleAttribute(valuesX, 4, 1));
+            iface.setAttr(nameY, FnAttribute::DoubleAttribute(valuesY, 4, 1));
+            iface.setAttr(nameZ, FnAttribute::DoubleAttribute(valuesZ, 4, 1));
+        };
+        lua->set_function("setinstance_rotate", sol::overload(set_instance_rotate,set_instance_rotate2) );
+
+        auto set_instance_scale = [&iface](const glm::vec3& scale) {
+            std::string name = "xform.group.scale"; // double attribute
+            double values[3] = { scale.x, scale.y,scale.z };
+            iface.setAttr(name, FnAttribute::DoubleAttribute(values, 3, 1));
+        };
+        auto set_instance_scale2 = [&iface](float x, float y, float z) {
+            std::string name = "xform.group.scale"; // double attribute
+            double values[3] = {x,y,z };
+            iface.setAttr(name, FnAttribute::DoubleAttribute(values, 3, 1));
+        };
+        lua->set_function("setinstance_scale", sol::overload(set_instance_scale, set_instance_scale2));
+
+
+
+        // for get bound box, return tables
+        auto getbbox = [&iface]() {
+            auto time = Foundry::Katana::GetCurrentTime(iface);
+            std::vector<double> values;  // minx maxx miny maxy minz maxz
+            FnAttribute::DoubleAttribute att =   Foundry::Katana::GetBoundAttr(iface);
+            if (!att.isValid()) {
+                CARTESIAN_CORE_ERROR("can not get bound attribute");
+            }
+            else {
+                auto samples = att.getNearestSample(time);
+                values.emplace_back(samples[0]); // minx 
+                values.emplace_back(samples[2]); // miny 
+                values.emplace_back(samples[4]); // minz 
+                values.emplace_back(samples[1]); // maxx 
+                values.emplace_back(samples[3]); // maxy 
+                values.emplace_back(samples[5]); // maxz
+            }
+  
+            return sol::as_table(values);
+        };
+        auto getAnotherbbox = [&iface](const std::string &location, const int index) {
+            try {
+                Foundry::Katana::GetBoundAttr(iface,location, index);
+            }
+            catch (...) {
+                CARTESIAN_CORE_WARN("just check getboundattr() , ignore this error: runtime_error");
+                throw GetAttribException();
+            }
+
+            auto time = Foundry::Katana::GetCurrentTime(iface);
+            std::vector<double> values;  // minx maxx miny maxy minz maxz
+            FnAttribute::DoubleAttribute att = Foundry::Katana::GetBoundAttr(iface,location, index);
+            if (!att.isValid()) {
+                CARTESIAN_CORE_ERROR("can not get bound attribute");
+            }
+            for (auto& val : att.getNearestSample(time)) {
+                values.emplace_back(val);// minx maxx miny maxy minz maxz
+            }
+            return sol::as_table(values);
+        };
+        lua->set_function("getboundattr", sol::overload(getbbox, getAnotherbbox));
+        
+        
+        
+        // Direct Get Attribute of current node from katana, only return table
+        auto getPointFloatTuple = [&iface](const std::string &attname) {
+            auto time = Foundry::Katana::GetCurrentTime(iface);
+            std::string PAttName = "geometry.point.P";
+            std::string arbitraryAttName = "geometry.arbitrary";
+            std::string valueAttribName = arbitraryAttName;
+            valueAttribName += ".";
+            valueAttribName += attname;
+            valueAttribName += ".";
+            valueAttribName += "value";
+
+            std::vector<float> values;
+            if (attname == "P") {
+                FnAttribute::FloatAttribute posAttr = iface.getAttr(PAttName);
+                if (posAttr.isValid()) 
+                {
+                    auto samples = posAttr.getNearestSample(time);
+                    for (auto& val : samples) 
+                        values.emplace_back(val)
+;
+                    return sol::as_table(values);
+                }
+            }
+            FnAttribute::FloatAttribute valueAttr = iface.getAttr(valueAttribName);
+
+           
+            if(valueAttr.isValid()){
+                    auto samples = valueAttr.getNearestSample(time);
+                    for (auto& val : samples) values.emplace_back(val);
+          
+            }
+            else {
+                CARTESIAN_CORE_ERROR("query attribute no (value) attribute: {0}", valueAttribName);;
+            }
+            return sol::as_table(values);
+        };
+
+        auto getPointFloatTuple2 = [&iface](const std::string& attname, const std::string &inputLocation, const int inputIndex) {
+            auto time = Foundry::Katana::GetCurrentTime(iface);
+            std::string arbitraryAttName = "geometry.arbitrary";
+            std::string valueAttribName = arbitraryAttName;
+            std::string PAttName = "geometry.point.P";
+            valueAttribName += ".";
+            valueAttribName += attname;
+            valueAttribName += ".";
+            valueAttribName += "value";
+
+
+            try {
+                if(attname == "P")
+                    iface.getAttr(PAttName, inputLocation, inputIndex);
+                iface.getAttr(valueAttribName,inputLocation, inputIndex);
+            }
+            catch (...) {
+                CARTESIAN_CORE_WARN("just check getfloattuple() , ignore this error: runtime_error");
+                throw GetAttribException();
+            }
+
+            std::vector<float> values;
+            if (attname == "P") {
+                FnAttribute::FloatAttribute posAttr = iface.getAttr(PAttName, inputLocation, inputIndex);
+                if (posAttr.isValid()) {
+                    auto samples = posAttr.getNearestSample(time);
+                    for (auto& val : samples) values.emplace_back(val);
+                    return sol::as_table(values);
+                }
+            }
+
+
+            FnAttribute::FloatAttribute valueAttr = iface.getAttr(valueAttribName, inputLocation, inputIndex);
+            if (valueAttr.isValid()) {
+                auto samples = valueAttr.getNearestSample(time);
+                for (auto& val : samples) values.emplace_back(val);
+
+            }
+            else {
+                CARTESIAN_CORE_ERROR("query attribute no (value) attribute: {0}", valueAttribName);;
+            }
+            return sol::as_table(values);
+        };
+
+        lua->set_function("getfloattuple", sol::overload(getPointFloatTuple, getPointFloatTuple2));
+
+
+
+
+        // setboundattr()
+        // set bounding box for current location
+        // table : {minx,miny,minz,maxx,maxy,maxz}
+        auto setbbox = [&iface](const sol::lua_table& table) {
+            if (table.size() != 6) {
+                CARTESIAN_CORE_ERROR("set bounding box attribute for katana , table need six elements");
+                return;
+            }
+            double values[6];
+            values[0] = table.get<double>(1);  // minx
+            values[1] = table.get<double>(4);  // maxx
+
+            values[2] = table.get<double>(2);  // miny
+            values[3] = table.get<double>(5);  // maxy
+
+            values[4] = table.get<double>(3);  // minz
+            values[5] = table.get<double>(6);  // maxz
+
+            FnAttribute::DoubleAttribute boundAttr(values, 6, 2);
+            iface.setAttr("bound", boundAttr, false);
+
+        };
+        auto setbbox2 = [&iface](const glm::vec3& bbmin, const glm::vec3& bbmax) {
+
+            double values[6];
+            values[0] = bbmin.x;  // minx
+            values[1] = bbmax.x;  // maxx
+
+            values[2] = bbmin.y;  // miny
+            values[3] = bbmax.y;  // maxy
+
+            values[4] = bbmin.z;  // minz
+            values[5] = bbmax.z;  // maxz
+
+            FnAttribute::DoubleAttribute boundAttr(values, 6, 2);
+            iface.setAttr("bound", boundAttr, false);
+
+        };
+        lua->set_function("setboundattr", sol::overload(setbbox, setbbox2) );
+
+        
+        
        
-
     }
 
 }

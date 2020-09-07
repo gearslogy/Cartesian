@@ -21,12 +21,19 @@
 #include <FnAttribute/FnGroupBuilder.h>
 #include <FnGeolib/op/FnGeolibOp.h>
 #include <FnGeolib/util/Path.h>
+#include <FnGeolib/op/FnGeolibCookInterface.h>
 #include <FnPluginSystem/FnPlugin.h>
 #include <pystring/pystring.h>
 #include <FnGeolibServices/FnGeolibCookInterfaceUtilsService.h>
 #include "sol.hpp"
 #include "CartesianPluginLoader.h"
+
 #include "CartesianLog.h"
+
+
+
+
+
 
 class MesserOp : public Foundry::Katana::GeolibOp
 {

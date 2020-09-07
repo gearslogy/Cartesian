@@ -48,6 +48,12 @@ else()
     link_directories(D:/plugin_dev/libs/lua-5.3.5_Win64_vc16_lib_static)
 endif()
 
+# ------------------------PyString ----------------------------
+include_directories(D:/plugin_dev/libs/pystring)
+file(GLOB pystringsrc D:/plugin_dev/libs/pystring/pystring.cpp)
+# ------------------------PyString ----------------------------
+
+
 
 # ----------------------------- MyCore --------------------------------------------
 include_directories(${CMAKE_SOURCE_DIR}/CartesianLuajitCore/include)
@@ -58,7 +64,11 @@ FILE(GLOB SRC
         GLM_Bind/*.cpp
         CGAL_Bind/*.h
         GLM_Bind/*.h
-        main.cpp)
+        pystring_Bind/*.h
+        pystring_Bind/*.cpp
+        main.cpp
+        ${pystringsrc}
+        )
 
 add_library(stdlib SHARED ${SRC})
 target_link_libraries(stdlib CartesianLuaJIT)

@@ -4,6 +4,7 @@
 * sol3 & luajit
 * GLM
 * CGAL
+* pystring 
 * project based C++17
 
 ## CartesianLuajitCore

@@ -153,8 +153,8 @@ namespace Cartesian {
         }
 
         if (!faceVerticesNumArrayAttrib.isValid()) {
-            CARTESIAN_CORE_ERROR("Can not find attribute: {0}", polyStartIndexAttName);
-            bool haveFace = false;
+            //CARTESIAN_CORE_ERROR("can not find attribute: {0}", polyStartIndexAttName);
+            haveFace = false;
         }
 
         auto faceVerticesNumArray = faceVerticesNumArrayAttrib.getNearestSample(time); // first = 0
@@ -166,8 +166,8 @@ namespace Cartesian {
             indicesArrayAttrib = iface.getAttr(polyPolyVertexIndexAttName, location, index);
 
         if (!indicesArrayAttrib.isValid()) {
-            CARTESIAN_CORE_ERROR("Can not find attribute: {0}", polyPolyVertexIndexAttName);
             haveFace = false;
+            //CARTESIAN_CORE_ERROR("can not find attribute: {0}", polyPolyVertexIndexAttName);
         }
         auto indicesArray = indicesArrayAttrib.getNearestSample(time);
 
@@ -222,7 +222,7 @@ namespace Cartesian {
                 else {
                     int valueType = valueAttrib.getType();
                     int tupleSize = getTupleSize(valueAttrib, valueType);
-                    CARTESIAN_CORE_INFO("gen attribute map: {0}, type: {1}, tuple size: {2}, scope: {3}", attribName, "int", tupleSize, scope);
+                    //CARTESIAN_CORE_INFO("gen attribute map: {0}, type: {1}, tuple size: {2}, scope: {3}", attribName, "int", tupleSize, scope);
                     MAKE_ATTRIB_MAP(attribName, scope, valueType, valueAttrib, tupleSize);
                     katanaAttribMaps.emplace_back(ATTRIB_MAP);
                 }
@@ -251,7 +251,7 @@ namespace Cartesian {
             }
         }
 
-        CARTESIAN_CORE_INFO("success parsing attribute num: {0}", katanaAttribMaps.size());
+        //CARTESIAN_CORE_INFO("success parsing attribute num: {0}", katanaAttribMaps.size());
 
 
         auto positionArray = positionArrayAttrib.getNearestSample(time);
@@ -480,7 +480,7 @@ namespace Cartesian {
         if(haveFace)
             AttributeVertexNFromKatanaToGCGAL::build(meshToBuild, iface, location, index, time);
 
-        CARTESIAN_CORE_INFO("geometry build end");
+        //CARTESIAN_CORE_INFO("geometry build end");
 
     } // end of build surface mesh
 

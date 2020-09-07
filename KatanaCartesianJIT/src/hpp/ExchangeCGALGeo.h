@@ -12,6 +12,7 @@
 #include <FnGeolib/op/FnGeolibOp.h>
 #include "BindCGAL_DefineType.h"
 #include <vector>
+#define CARTESIAN_CLOSE_LOG
 #include "CartesianLog.h"
 
 #include <glm/glm.hpp>
