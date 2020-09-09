@@ -3,6 +3,7 @@
 //
 //#define SOL_EXCEPTIONS_SAFE_PROPAGATION 1
 //#define SOL_ALL_SAFETIES_ON 0
+#include<mutex>
 #undef interface
 #include "KatanaCartesian.h"
 #include "BindKatanaGlobal.h"
@@ -11,55 +12,19 @@
 
 
 
-#undef interface
-
-
-bool isInitCartesian = false;
+static bool isInitCartesian = false;
 static bool __is_bind_once = false;
 static bool __is_init_cartesian = false;
+static std::mutex mutex;
 
-inline void my_panic(sol::optional<std::string> maybe_msg) {
-    std::cerr << "Lua is in a panic state and will now abort() the application" << std::endl;
-    if (maybe_msg) {
-        const std::string& msg = maybe_msg.value();
-        std::cerr << "\terror message: " << msg << std::endl;
-    }
-    // When this function exits, Lua will exhibit default behavior and abort()
-}
-
-
-int my_exception_handler(lua_State* L, sol::optional<const std::exception&> maybe_exception, sol::string_view description) {
-    // L is the lua state, which you can wrap in a state_view if necessary
-    // maybe_exception will contain exception, if it exists
-    // description will either be the what() of the exception or a description saying that we hit the general-case catch(...)
-
-    if (maybe_exception) {
-        std::cout << "Found the exception, will QueryAbort Exception\n";
-        //throw Foundry::Katana::GeolibCookInterface::QueryAbortException();
-        //const std::exception& ex = *maybe_exception;
-        //std::cout << ex.what() << std::endl;
-    }
-    else {
-        std::cout << "(from the description parameter): ";
-        std::cout.write(description.data(), description.size());
-        std::cout << std::endl;
-    }
-
-    // you must push 1 element onto the stack to be 
-    // transported through as the error object in Lua
-    // note that Lua -- and 99.5% of all Lua users and libraries -- expects a string
-    // so we push a single string (in our case, the description of the error)
-    return sol::stack::push(L, description);
-}
-
-
-static auto lua = std::make_shared<  sol::state   >();
+static std::shared_ptr<sol::state> luaPtr = nullptr;
 static std::vector<Cartesian::dllsymbolfunc> dllfuncs;
 
 
-void MesserOp::InitCartesian(std::shared_ptr<sol::state> lua, std::vector<Cartesian::dllsymbolfunc>& dllfuncs) {
+void MesserOp::InitCartesian(sol::state* lua, std::vector<Cartesian::dllsymbolfunc>& dllfuncs) {
     //lua->set_exception_handler(&my_exception_handler);
     //lua->set_panic(sol::c_call<decltype(&my_panic), &my_panic>);
+    std::cout << "----------- open lub libs -------------------\n";
     lua->open_libraries(sol::lib::table,
         sol::lib::base,
         sol::lib::jit,
@@ -71,14 +36,14 @@ void MesserOp::InitCartesian(std::shared_ptr<sol::state> lua, std::vector<Cartes
         sol::lib::utf8,
         sol::lib::coroutine);
     Cartesian::Log::initialize();
-    //CARTESIAN_CORE_INFO("Loading plugins for cartesian");
+    std::cout << "----------- loading cartesian plugins -------------------\n";
     dllfuncs = Cartesian::PluginLoader::loadPlugins();
-    Cartesian::PluginLoader::dispatch(dllfuncs, lua.get());
+    Cartesian::PluginLoader::dispatch(dllfuncs, lua);
 }
 
 
 
-void MesserOp::RegisterPerCookFunctionOrVar(Foundry::Katana::GeolibCookInterface& iface, const std::shared_ptr<sol::state>& lua)
+void MesserOp::RegisterPerCookFunctionOrVar(Foundry::Katana::GeolibCookInterface& iface, sol::state* lua)
 {
     //std::cout << "RegisterPerCookFunctionOrVar:" << &iface << std::endl;
     // Bind Katana Global Variable , it's should every update when katana cooking
@@ -86,7 +51,7 @@ void MesserOp::RegisterPerCookFunctionOrVar(Foundry::Katana::GeolibCookInterface
 
 }
 
-void MesserOp::RegisterOnceFunctionOrVar(Foundry::Katana::GeolibCookInterface& iface, const std::shared_ptr<sol::state>& lua) {
+void MesserOp::RegisterOnceFunctionOrVar(Foundry::Katana::GeolibCookInterface& iface, sol::state* lua) {
     //std::cout << "RegisterOnceFunctionOrVar:" << &iface << std::endl;
     Cartesian::BindKatanaCH::bind(iface, lua);
     Cartesian::BindKatanaFunction::bind(iface, lua);
@@ -97,6 +62,18 @@ void MesserOp::RegisterOnceFunctionOrVar(Foundry::Katana::GeolibCookInterface& i
 void MesserOp::cook(Foundry::Katana::GeolibCookInterface& iface)
 {
 
+
+ 
+    mutex.lock();
+    if (!isInitCartesian) { // only create at root
+        std::cout << "at root init cartesian\n";
+        luaPtr = std::make_shared<sol::state>();
+        InitCartesian(luaPtr.get(), dllfuncs);
+        
+        isInitCartesian = true;
+        
+    }
+    mutex.unlock();
     const int inputIndex = int(FnAttribute::FloatAttribute(
         iface.getOpArg("inputIndex")).getValue(1.0, false));
 
@@ -141,18 +118,40 @@ void MesserOp::cook(Foundry::Katana::GeolibCookInterface& iface)
     }
 
 
+    mutex.lock();
+    RegisterPerCookFunctionOrVar(iface, luaPtr.get());
+    RegisterOnceFunctionOrVar(iface, luaPtr.get());
+    mutex.unlock();
+
+    try {
+        FnAttribute::StringAttribute scriptAttr = iface.getOpArg("script");
+        luaPtr->safe_script(scriptAttr.getValue());
+  
+    }
+    catch (const std::runtime_error& e) {
+        throw Foundry::Katana::GeolibCookInterface::QueryAbortException();
+    }
 
 
- 
 
+
+
+
+    /*
     if (!isInitCartesian) {
-        InitCartesian(lua, dllfuncs);
+        //InitCartesian(lua.get(), dllfuncs);
+        //auto dllfuncs = dllfuncsptrs.get();
+        static std::vector<Cartesian::dllsymbolfunc> dllfuncs;
+        InitCartesian(lua.get(), dllfuncs);
 
         isInitCartesian = true;
+       
+
     }
+    std::cout << "start bind cartesian\n";
     if (!__is_bind_once) {
-        RegisterPerCookFunctionOrVar(iface, std::move(lua));
-        RegisterOnceFunctionOrVar(iface, std::move(lua));
+        RegisterPerCookFunctionOrVar(iface, lua.get());
+        RegisterOnceFunctionOrVar(iface, lua.get());
         __is_bind_once = true;
     }
 
@@ -160,15 +159,22 @@ void MesserOp::cook(Foundry::Katana::GeolibCookInterface& iface)
     if (!scriptAttr.isValid()) {
         Foundry::Katana::ReportError(iface, " Can not get script");
     }
-    if (isInitCartesian && __is_bind_once) 
+    if (isInitCartesian && __is_bind_once)
     {
         try {
+       
             lua->safe_script(scriptAttr.getValue());
+            //lua.safe_script(scriptAttr.getValue());
         }
         catch (const std::runtime_error& e) {
             throw Foundry::Katana::GeolibCookInterface::QueryAbortException();
         }
     }
+    //std::cout << "release lua\n";
+    //ReleaseCartesian(lua, dllfuncs);
+
+    */
+   
 }
 
 

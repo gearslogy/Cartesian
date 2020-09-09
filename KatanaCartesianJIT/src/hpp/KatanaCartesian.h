@@ -43,14 +43,18 @@ public:
         iface.setThreading(
                 Foundry::Katana::GeolibSetupInterface::ThreadModeGlobalUnsafe);
     }
-    static void InitCartesian(std::shared_ptr<sol::state> lua,  std::vector<Cartesian::dllsymbolfunc>& dllfuncs);
-
+    static void InitCartesian(sol::state* lua ,  std::vector<Cartesian::dllsymbolfunc>& dllfuncs);
+    static void ReleaseCartesian(sol::state* lua, std::vector<Cartesian::dllsymbolfunc>& dllfuncs) {
+            delete lua;
+            lua = nullptr;
+            dllfuncs.clear();
+    }
     // every katana cook life time, maybe update this function or vars;
     // Emp: Time/ type
-    static void RegisterPerCookFunctionOrVar(Foundry::Katana::GeolibCookInterface& iface, const std::shared_ptr<sol::state>& lua);
+    static void RegisterPerCookFunctionOrVar(Foundry::Katana::GeolibCookInterface& iface, sol::state* lua);
 
     // Only register function once!
-    static void RegisterOnceFunctionOrVar(Foundry::Katana::GeolibCookInterface& iface, const std::shared_ptr<sol::state>& lua);
+    static void RegisterOnceFunctionOrVar(Foundry::Katana::GeolibCookInterface& iface, sol::state* lua);
 
     // katana cook function
     static void cook(Foundry::Katana::GeolibCookInterface & iface);
