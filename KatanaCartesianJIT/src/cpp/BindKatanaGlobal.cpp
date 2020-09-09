@@ -2,7 +2,7 @@
 
 namespace Cartesian {
 
-    void BindGlobalVars::bind(Foundry::Katana::GeolibCookInterface& interface, const std::shared_ptr<sol::state>& lua) {
+    void BindGlobalVars::bind(Foundry::Katana::GeolibCookInterface& interface, sol::state * lua) {
         auto time = Foundry::Katana::GetCurrentTime(interface);
         lua->set("Time", time);
 

@@ -9,7 +9,7 @@
 namespace Cartesian {
 
 
-    void BindKatanaCH::bind(Foundry::Katana::GeolibCookInterface& Geolibface, const std::shared_ptr<sol::state>& lua)
+    void BindKatanaCH::bind(Foundry::Katana::GeolibCookInterface& Geolibface, sol::state *lua)
     {
         // ---------------------------- chf()---------------------------------------------------------
         auto chf = [&Geolibface](const std::string& chanName) -> float {

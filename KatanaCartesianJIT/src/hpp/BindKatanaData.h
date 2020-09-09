@@ -30,7 +30,7 @@ namespace Cartesian{
 
     class BindKatanaFunction{
     public:
-        static void bind(Foundry::Katana::GeolibCookInterface& iface, const std::shared_ptr<sol::state>& lua);
+        static void bind(Foundry::Katana::GeolibCookInterface& iface, sol::state *lua);
 
     };
 

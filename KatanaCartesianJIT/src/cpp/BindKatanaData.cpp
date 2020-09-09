@@ -25,7 +25,7 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <cassert>
 
-
+#include "BindKatanaTuple.h"
 
 
 
@@ -33,16 +33,14 @@ namespace Cartesian {
 
 
 
-    void BindKatanaFunction::bind(Foundry::Katana::GeolibCookInterface& iface, const std::shared_ptr<sol::state>& lua) {
+    void BindKatanaFunction::bind(Foundry::Katana::GeolibCookInterface& iface, sol::state* lua) {
 
   
         // ------------------------------- get/setType() --------------------------------------------------------------------------------
         auto setTypeFunc = [&iface](const std::string& set)->void {
-            auto location = iface.getInputLocationPath();
-            if (iface.doesLocationExist(location)) {
-
-                iface.setAttr("type", FnAttribute::StringAttribute(set), false);
-            }
+ 
+            iface.setAttr("type", FnAttribute::StringAttribute(set), false);
+            
         };
         lua->set_function("settype", setTypeFunc);
 
@@ -503,89 +501,9 @@ namespace Cartesian {
         
         
         // Direct Get Attribute of current node from katana, only return table
-        auto getPointFloatTuple = [&iface](const std::string &attname) {
-            auto time = Foundry::Katana::GetCurrentTime(iface);
-            std::string PAttName = "geometry.point.P";
-            std::string arbitraryAttName = "geometry.arbitrary";
-            std::string valueAttribName = arbitraryAttName;
-            valueAttribName += ".";
-            valueAttribName += attname;
-            valueAttribName += ".";
-            valueAttribName += "value";
-
-            std::vector<float> values;
-            if (attname == "P") {
-                FnAttribute::FloatAttribute posAttr = iface.getAttr(PAttName);
-                if (posAttr.isValid()) 
-                {
-                    auto samples = posAttr.getNearestSample(time);
-                    for (auto& val : samples) 
-                        values.emplace_back(val)
-;
-                    return sol::as_table(values);
-                }
-            }
-            FnAttribute::FloatAttribute valueAttr = iface.getAttr(valueAttribName);
-
-           
-            if(valueAttr.isValid()){
-                    auto samples = valueAttr.getNearestSample(time);
-                    for (auto& val : samples) values.emplace_back(val);
-          
-            }
-            else {
-                CARTESIAN_CORE_ERROR("query attribute no (value) attribute: {0}", valueAttribName);;
-            }
-            return sol::as_table(values);
-        };
-
-        auto getPointFloatTuple2 = [&iface](const std::string& attname, const std::string &inputLocation, const int inputIndex) {
-            auto time = Foundry::Katana::GetCurrentTime(iface);
-            std::string arbitraryAttName = "geometry.arbitrary";
-            std::string valueAttribName = arbitraryAttName;
-            std::string PAttName = "geometry.point.P";
-            valueAttribName += ".";
-            valueAttribName += attname;
-            valueAttribName += ".";
-            valueAttribName += "value";
-
-
-            try {
-                if(attname == "P")
-                    iface.getAttr(PAttName, inputLocation, inputIndex);
-                iface.getAttr(valueAttribName,inputLocation, inputIndex);
-            }
-            catch (...) {
-                CARTESIAN_CORE_WARN("just check getfloattuple() , ignore this error: runtime_error");
-                throw GetAttribException();
-            }
-
-            std::vector<float> values;
-            if (attname == "P") {
-                FnAttribute::FloatAttribute posAttr = iface.getAttr(PAttName, inputLocation, inputIndex);
-                if (posAttr.isValid()) {
-                    auto samples = posAttr.getNearestSample(time);
-                    for (auto& val : samples) values.emplace_back(val);
-                    return sol::as_table(values);
-                }
-            }
-
-
-            FnAttribute::FloatAttribute valueAttr = iface.getAttr(valueAttribName, inputLocation, inputIndex);
-            if (valueAttr.isValid()) {
-                auto samples = valueAttr.getNearestSample(time);
-                for (auto& val : samples) values.emplace_back(val);
-
-            }
-            else {
-                CARTESIAN_CORE_ERROR("query attribute no (value) attribute: {0}", valueAttribName);;
-            }
-            return sol::as_table(values);
-        };
-
-        lua->set_function("getfloattuple", sol::overload(getPointFloatTuple, getPointFloatTuple2));
-
-
+        GetFloatTuple::bind(iface, lua);
+        GetIntTuple::bind(iface, lua);
+        GetStringTuple::bind(iface, lua);
 
 
         // setboundattr()

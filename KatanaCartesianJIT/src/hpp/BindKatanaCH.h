@@ -21,7 +21,7 @@ namespace Cartesian {
 
     class BindKatanaCH {
     public:
-        static void bind(Foundry::Katana::GeolibCookInterface& Geolibface, const std::shared_ptr<sol::state>& lua);    
+        static void bind(Foundry::Katana::GeolibCookInterface& Geolibface,sol::state *lua);    
     };
 }
 #endif //BUILDINGCTSLUAJIT_BINDKATACH_H

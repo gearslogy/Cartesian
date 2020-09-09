@@ -13,7 +13,7 @@ namespace Cartesian{
 
     class BindGlobalVars{
     public:
-        static void bind(Foundry::Katana::GeolibCookInterface& interface, const std::shared_ptr<sol::state>& lua);
+        static void bind(Foundry::Katana::GeolibCookInterface& interface, sol::state* lua);
     };
 
 
