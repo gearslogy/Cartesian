@@ -24,7 +24,7 @@ static std::vector<Cartesian::dllsymbolfunc> dllfuncs;
 void MesserOp::InitCartesian(sol::state* lua, std::vector<Cartesian::dllsymbolfunc>& dllfuncs) {
     //lua->set_exception_handler(&my_exception_handler);
     //lua->set_panic(sol::c_call<decltype(&my_panic), &my_panic>);
-    std::cout << "----------- open lub libs -------------------\n";
+    //std::cout << "----------- open lub libs -------------------\n";
     lua->open_libraries(sol::lib::table,
         sol::lib::base,
         sol::lib::jit,
@@ -36,7 +36,7 @@ void MesserOp::InitCartesian(sol::state* lua, std::vector<Cartesian::dllsymbolfu
         sol::lib::utf8,
         sol::lib::coroutine);
     Cartesian::Log::initialize();
-    std::cout << "----------- loading cartesian plugins -------------------\n";
+    //std::cout << "----------- loading cartesian plugins -------------------\n";
     dllfuncs = Cartesian::PluginLoader::loadPlugins();
     Cartesian::PluginLoader::dispatch(dllfuncs, lua);
 }
@@ -66,12 +66,9 @@ void MesserOp::cook(Foundry::Katana::GeolibCookInterface& iface)
  
     mutex.lock();
     if (!isInitCartesian) { // only create at root
-        std::cout << "at root init cartesian\n";
         luaPtr = std::make_shared<sol::state>();
         InitCartesian(luaPtr.get(), dllfuncs);
-        
         isInitCartesian = true;
-        
     }
     mutex.unlock();
     const int inputIndex = int(FnAttribute::FloatAttribute(

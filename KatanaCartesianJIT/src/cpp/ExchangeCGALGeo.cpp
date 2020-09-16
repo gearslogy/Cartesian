@@ -587,6 +587,7 @@ namespace Cartesian {
 
         // restore the st attribute
         if (buildFace) {
+            if (mesh.katana_stIndexedValues.empty() || mesh.katana_stIndexValues.empty()) return;
             IndexedAttribToKatana::buildScopeKatanaAttrib("st", iface);
             IndexedAttribToKatana::buildInputTypeKatanaAttrib("st", "vector2", iface);
             // build the "geometry.arbitrary.st.index"
