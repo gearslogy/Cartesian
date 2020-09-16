@@ -41,7 +41,7 @@ public:
     static void setup(Foundry::Katana::GeolibSetupInterface & iface)
     {
         iface.setThreading(
-                Foundry::Katana::GeolibSetupInterface::ThreadModeConcurrent);
+                Foundry::Katana::GeolibSetupInterface::ThreadModeGlobalUnsafe);
     }
     static void InitCartesian(sol::state* lua ,  std::vector<Cartesian::dllsymbolfunc>& dllfuncs);
     static void ReleaseCartesian(sol::state* lua, std::vector<Cartesian::dllsymbolfunc>& dllfuncs) {
