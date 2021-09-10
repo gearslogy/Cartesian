@@ -196,5 +196,4 @@ savemesh(m,"triangle.off");
 ```
 ![](imgs/addpoint.png)
 
-## Final
-爱用不用
+
